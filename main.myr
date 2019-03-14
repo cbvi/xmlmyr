@@ -1,0 +1,8 @@
+use std
+use xml
+
+const main = {
+	var x = xml.mkstr("<testing thing=\"stuff\"></testing>")
+
+	std.put("{}\n", xml.parse(x))
+}

@@ -1,3 +1,8 @@
+lib xml =
+	xml.myr
+;;
+
 bin 2myrl = 
-	new.myr
+	main.myr
+	lib xml
 ;;

@@ -1,6 +1,12 @@
 use std
 use bio
 
+pkg xml =
+	const mkstr : (s : byte[:] -> xml#)
+	const parse : (x : xml# -> std.result(event, errtype))
+	const free  : (x : xml# -> void)
+;;
+
 type xml = struct
 	file	:	bio.file#
 	buf	:	byte[:]
@@ -223,11 +229,11 @@ const free = {x
 	std.free(x)
 }
 
-const main = {
+const mkstr = {s
 	var x : xml#
 
 	x = std.mk([
-		.file = bio.mkmem("<testing thing=\"stuff\"></testing>"),
+		.file = bio.mkmem(s),
 		.buf = [][:],
 		.bidx = 0,
 		.bcur = 0,
@@ -237,7 +243,6 @@ const main = {
 	])
 
 	skipspace(x)
-	std.put("{}\n", parse(x))
 
-	free(x)
+	-> x
 }
