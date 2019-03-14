@@ -82,8 +82,7 @@ const elemname = {x
 	| `std.Ok s:
 		newbuf(x, s)
 		match bnext(x)
-		| c:
-			if namestartchar(c)
+		| c:	if namestartchar(c)
 				start = stop = x.bcur
 			else
 				-> `std.Err `Inval c
