@@ -78,6 +78,7 @@ const open = {x
 const elemname = {x
 	var start, stop
 	var gotspace = false
+	var attrs = [][:]
 
 	match bio.readto(x.file, ">")
 	| `std.Ok s:
@@ -94,6 +95,7 @@ const elemname = {x
 			if namechar(c)
 				stop = x.bidx
 			elif isspace(c)
+				attributes(&attrs)
 				gotspace = true
 				break
 			else
@@ -109,7 +111,11 @@ const elemname = {x
 		eatspace(x)
 	;;
 
-	-> `std.Ok `Start (x.buf[start:stop], [][:])
+	-> `std.Ok `Start (x.buf[start:stop], attrs)
+}
+
+const attributes = {attrs
+
 }
 
 /*const fnext = {x
