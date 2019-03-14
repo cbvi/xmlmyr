@@ -77,6 +77,7 @@ const open = {x
 
 const elemname = {x
 	var start, stop
+	var gotspace = false
 
 	match bio.readto(x.file, ">")
 	| `std.Ok s:
@@ -90,24 +91,25 @@ const elemname = {x
 		;;
 		for c : std.bychar(x.buf[x.bidx:])
 			x.bidx += std.charlen(c)
-			match c
-			| '>':	break
-			| _:
-				if namechar(c)
-					stop = x.bidx
-				elif isspace(c)
-					eatspace(x)
-					break
-				else
-					-> `std.Err `Inval c
-				;;
+			if namechar(c)
+				stop = x.bidx
+			elif isspace(c)
+				gotspace = true
+				break
+			else
+				-> `std.Err `Inval c
 			;;
 		;;
 
-		-> `std.Ok `Start (x.buf[start:stop], [][:])
 	| `std.Err e:
 		-> `std.Err `Trunc e
 	;;
+
+	if gotspace
+		eatspace(x)
+	;;
+
+	-> `std.Ok `Start (x.buf[start:stop], [][:])
 }
 
 /*const fnext = {x
