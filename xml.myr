@@ -77,7 +77,6 @@ const open = {x
 
 const elemname = {x
 	var start, stop
-	var gotspace = false
 	var attrs = [][:]
 
 	match bio.readto(x.file, ">")
@@ -95,8 +94,8 @@ const elemname = {x
 			if namechar(c)
 				stop = x.bidx
 			elif isspace(c)
+				eatspace(x)
 				attributes(&attrs)
-				gotspace = true
 				break
 			else
 				-> `std.Err `Inval c
@@ -107,15 +106,10 @@ const elemname = {x
 		-> `std.Err `Trunc e
 	;;
 
-	if gotspace
-		eatspace(x)
-	;;
-
 	-> `std.Ok `Start (x.buf[start:stop], attrs)
 }
 
 const attributes = {attrs
-
 }
 
 /*const fnext = {x
