@@ -1,0 +1,201 @@
+use std
+use bio
+
+type xml = struct
+	file	:	bio.file#
+	buf	:	byte[:]
+	bidx	:	std.size
+	bcur	:	std.size
+	line	:	std.size
+	off	:	std.size
+	state	:	state
+;;
+
+type errtype = union
+	`Empty
+	`Junk	char
+	`Trunc	bio.err
+	`NYI
+;;
+
+type state = union
+	`Open
+	`Close
+;;
+
+type event = union
+	`Start		(byte[:], (byte[:], byte[:])[:])
+	`Characters	byte[:]
+;;
+
+const parse = {x
+	match x.state
+	| `Open:	-> open(x)
+	| `Close:	-> close(x)
+	;;
+}
+
+const close = {x
+	x.state = `Open
+
+	match bio.readto(x.file, "<")
+	| `std.Ok s:
+		if std.strstrip(s).len > 0
+			-> `std.Ok `Characters s
+		else
+			std.slfree(s)
+			-> parse(x)
+		;;
+	| `std.Err e:
+		-> `std.Err `Trunc e
+	;;
+}
+
+const open = {x
+	x.state = `Close
+
+	match bio.peekc(x.file)
+	| `std.Ok '!':	/* XXX */
+	| `std.Ok '/':	/* XXX */
+	| `std.Ok '?':	/* XXX */
+	| `std.Ok '>':	-> `std.Err `Empty
+	| `std.Ok _:	-> elemname(x)
+	| `std.Err e:	-> `std.Err `Trunc e
+	;;
+
+	-> `std.Err `NYI
+}
+
+const elemname = {x
+	var start, stop
+
+	match bio.readto(x.file, ">")
+	| `std.Ok s:
+		newbuf(x, s)
+		start = stop = x.bcur
+		for c : std.bychar(x.buf[x.bidx:])
+			x.bidx += std.charlen(c)
+			match c
+			| '>':	break
+			| _:
+				if isspace(c)
+					eatspace(x)
+					break
+				else
+					stop = x.bidx
+				;;
+			;;
+		;;
+
+		-> `std.Ok `Start (x.buf[start:stop], [][:])
+	| `std.Err e:
+		-> `std.Err `Trunc e
+	;;
+}
+
+/*const fnext = {x
+	var c
+
+	match bio.getc(x.file)
+	| `std.Ok a:	c = a
+	| `std.Err e:	-> `std.Err e
+	;;
+
+	if c == '\n'
+		x.line++
+		x.off = 0
+	else
+		x.off++
+	;;
+
+	-> `std.Ok c
+}*/
+
+const bnext = {x
+	if x.bidx >= x.buf.len
+		-> std.Badchar
+	;;
+
+	var c = std.decode(x.buf[x.bidx:])
+	x.bcur = x.bidx
+	x.bidx += std.charlen(c)
+
+	if c == '\n'
+		x.line++
+		x.off = 0
+	else
+		x.off++
+	;;
+
+	-> c
+}
+
+const newbuf = {x, buf
+	std.slfree(x.buf)
+	x.bidx = x.bcur = 0
+	x.buf = buf
+}
+
+const isspace = {c
+	-> c == ' ' || c == '\n' || c == '\t' || c == '\r'
+}
+
+const eatspace = {x
+	while true
+		match bnext(x)
+		| ' ':
+		| '\n':
+		| '\t':
+		| '\r':
+		| _:	break
+		;;
+	;;
+}
+
+/* like bio.skipspace but includes \r and increments the offsets */
+const skipspace = {x
+	while true
+		match bio.peekc(x.file)
+		| `std.Ok ' ':
+		| `std.Ok '\n':
+			x.line++
+			x.off = 0
+			goto nl
+		| `std.Ok '\t':
+		| `std.Ok '\r':
+		| `std.Ok _:
+			break
+		| `std.Err _:
+			break
+		;;
+
+		x.off++
+:nl
+		bio.getc(x.file)
+	;;
+}
+
+const free = {x
+	bio.close(x.file)
+	std.slfree(x.buf)
+	std.free(x)
+}
+
+const main = {
+	var x : xml#
+
+	x = std.mk([
+		.file = bio.mkmem("<testing></testing>"),
+		.buf = [][:],
+		.bidx = 0,
+		.bcur = 0,
+		.line = 1,
+		.off = 0,
+		.state = `Close
+	])
+
+	skipspace(x)
+	std.put("{}\n", parse(x))
+
+	free(x)
+}
