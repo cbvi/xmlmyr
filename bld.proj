@@ -1,5 +1,6 @@
 lib xml =
 	xml.myr
+	chars.myr
 ;;
 
 bin 2myrl = 

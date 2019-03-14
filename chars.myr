@@ -1,0 +1,42 @@
+
+pkg xml =
+	pkglocal const namechar		:	(c : char -> bool)
+	pkglocal const namestartchar	:	(c : char -> bool)
+	pkglocal const isspace		:	(c : char -> bool)
+;;
+
+/* common chars that a name is allowed to start with */
+const namestartcommonchar = {c
+	-> c >= 'a' && c <= 'z' || \
+	   c >= 'A' && c <= 'Z' || \
+	   c == ':' || c == '_'
+}
+
+/* the rest of the chars a name can start with */
+const namestartotherchar = {c
+	-> c >= 0xC0 && c <= 0xD6 || c >= 0xD8 && c <= 0xF6 || \
+	   c >= 0xF8 && c <= 0x2FF || \
+	   c >= 0x370 && c <= 0x37D || c >= 0x37F && c <= 0x1FFF || \
+	   c >= 0x200C && c <= 0x200D || c >= 0x2070 && c <= 0x218F || \
+	   c >= 0x2C00 && c <= 0x2FEF || c >= 0x3001 && c <= 0xD7FF || \
+	   c >= 0xF900 && c <= 0xFDCF || c >= 0xFDF0 && c <= 0xFFFD || \
+	   c >= 0x10000 && c <= 0xEFFFF
+}
+
+/* all the chars a name can start with, ascii chars are checked first */
+const namestartchar = {c
+	-> namestartcommonchar(c) || namestartotherchar(c)
+}
+
+/* all the chars that can be in a name, ascii chars are checked first */
+const namechar = {c
+	-> namestartcommonchar(c) || c >= '0' && c <= '9' || \
+	   c == '-' || c == '.' || namestartotherchar(c) || \
+	   c == 0xB7 || c >= 0x0300 && c <= 0x036F || \
+	   c >= 0x203F && c <= 0x2040
+}
+
+/* like std.isspace but for the whitespace characters defined in XML 1.0 */
+const isspace = {c
+	-> c == ' ' || c == '\n' || c == '\t' || c == '\r'
+}
