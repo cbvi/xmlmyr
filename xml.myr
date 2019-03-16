@@ -4,12 +4,29 @@ use bio
 use "chars"
 
 pkg xml =
-	const mkbuf : (s : byte[:] -> xml#)
-	const parse : (x : xml# -> std.result(event, error))
-	const free  : (x : xml# -> void)
+	const mkbuf	:	(s : byte[:] -> xml#)
+	const byevent	:	(x : xml# -> xml)
+	const free 	:	(x : xml# -> void)
 
-	type xmleventiter = xml
-	//impl iterable xmleventiter -> std.result(event, error)
+	impl iterable xml -> std.result(event, error)
+;;
+
+impl iterable xml -> std.result(event, error) =
+	__iternext__ = {iterp, valp
+			if iterp.error
+				-> false
+			;;
+
+			valp# = parse(iterp)
+			if iterp.more
+				-> true
+			else
+				-> false
+			;;
+	}
+
+	__iterfin__ = {iterp, valp
+	}
 ;;
 
 type xml = struct
@@ -20,6 +37,8 @@ type xml = struct
 	line	:	std.size
 	off	:	std.size
 	state	:	state
+	more	:	bool
+	error	:	bool
 ;;
 
 type error = struct
@@ -43,6 +62,7 @@ type state = union
 ;;
 
 type event = union
+	`Eof
 	`Start		(byte[:], (byte[:], byte[:])[:])
 	`Characters	byte[:]
 ;;
@@ -65,6 +85,9 @@ const close = {x
 			std.slfree(s)
 			-> parse(x)
 		;;
+	| `std.Err `bio.Eof:
+		x.more = false
+		-> `std.Ok `Eof
 	| `std.Err e:
 		-> `std.Err error(x, `Trunc e)
 	;;
@@ -302,6 +325,7 @@ const skipspace = {x
 }
 
 const error = {x, e
+	x.error = true
 	-> [.line = x.line, .off = x.off, .err = e]
 }
 
@@ -321,10 +345,16 @@ const mkbuf = {s
 		.bcur = 0,
 		.line = 1,
 		.off = 0,
-		.state = `Close
+		.state = `Close,
+		.more = true,
+		.error = false
 	])
 
 	skipspace(x)
 
 	-> x
+}
+
+const byevent = {x
+	-> x#
 }

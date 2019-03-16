@@ -4,7 +4,9 @@ use xml
 const main = {
 	var x = xml.mkbuf("<testing thing=\"ztuff\" foo=\"bar\" works=\"yes\"></testing>")
 
-	std.put("{}\n", xml.parse(x))
+	for event : xml.byevent(x)
+		std.put("{}\n", event)
+	;;
 
 	xml.free(x)
 }
