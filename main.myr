@@ -2,7 +2,7 @@ use std
 use xml
 
 const main = {
-	var x = xml.mkbuf("<testing thing=\"ztuff\" foo=\"bar\" works=\"yes\"></testing>")
+	var x = xml.mkbuf("<testing thing=\"ztuff\" foo=\"bar\" works=\"yes\"><this>hello world</this></testing>")
 
 	for event : xml.byevent(x)
 		std.put("{}\n", event)

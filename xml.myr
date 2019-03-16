@@ -5,6 +5,7 @@ use "chars"
 
 pkg xml =
 	const mkbuf	:	(s : byte[:] -> xml#)
+	const mkfile	:	(f : bio.file# -> xml#)
 	const byevent	:	(x : xml# -> xml)
 	const free 	:	(x : xml# -> void)
 
@@ -17,7 +18,7 @@ impl iterable xml -> std.result(event, error) =
 				-> false
 			;;
 
-			valp# = parse(iterp)
+			valp# = dispatch(iterp)
 			if iterp.more
 				-> true
 			else
@@ -64,10 +65,11 @@ type state = union
 type event = union
 	`Eof
 	`Start		(byte[:], (byte[:], byte[:])[:])
+	`End		byte[:]
 	`Characters	byte[:]
 ;;
 
-const parse = {x
+const dispatch = {x
 	match x.state
 	| `Open:	-> open(x)
 	| `Close:	-> close(x)
@@ -80,10 +82,11 @@ const close = {x
 	match bio.readto(x.file, "<")
 	| `std.Ok s:
 		if std.strstrip(s).len > 0
-			-> `std.Ok `Characters s
+			newbuf(x, s)
+			-> `std.Ok `Characters x.buf
 		else
 			std.slfree(s)
-			-> parse(x)
+			-> dispatch(x)
 		;;
 	| `std.Err `bio.Eof:
 		x.more = false
@@ -98,17 +101,20 @@ const open = {x
 
 	match bio.peekc(x.file)
 	| `std.Ok '!':	/* XXX */
-	| `std.Ok '/':	/* XXX */
+	| `std.Ok '/':	-> parseend(x)
 	| `std.Ok '?':	/* XXX */
 	| `std.Ok '>':	-> `std.Err error(x, `Empty)
-	| `std.Ok _:	-> elemname(x)
+	| `std.Ok _:	-> parseelemname(x)
+	| `std.Err `bio.Eof:
+		x.more = false
+		-> `std.Ok `Eof
 	| `std.Err e:	-> `std.Err error(x, `Trunc e)
 	;;
 
 	-> `std.Err error(x, `NYI)
 }
 
-const elemname = {x
+const parseelemname = {x
 	var start, stop
 	var attrs = [][:]
 
@@ -130,7 +136,7 @@ const elemname = {x
 		if namechar(c)
 			stop = x.bidx
 		elif isspace(c)
-			match attributes(x, &attrs)
+			match parseattrs(x, &attrs)
 			| `std.Ok _:
 			| `std.Err e:
 				std.slfree(attrs)
@@ -145,7 +151,41 @@ const elemname = {x
 	-> `std.Ok `Start (x.buf[start:stop], attrs)
 }
 
-const attributes = {x, attrs
+const parseend = {x
+	var start, stop
+	var spaced = false
+
+	match bio.readto(x.file, ">")
+	| `std.Ok s:	newbuf(x, s)
+	| `std.Err e:	-> `std.Err error(x, `Trunc e)
+	;;
+
+	std.assert(bnext(x) == '/', "/ not found")
+
+	match bnext(x)
+	| c:	if namestartchar(c)
+			start = x.bcur
+			stop = x.bidx
+		else
+			-> `std.Err error(x, `Inval c)
+		;;
+	;;
+	while x.bidx < x.buf.len
+		var c = bnext(x)
+		if isspace(c)
+			spaced = true
+			eatspace(x)
+		elif !spaced && namechar(c)
+			stop = x.bidx
+		else
+			-> `std.Err error(x, `Inval c)
+		;;
+	;;
+
+	-> `std.Ok `End x.buf[start:stop]
+}
+
+const parseattrs = {x, attrs
 	var name, val
 
 	eatspace(x)
@@ -156,12 +196,12 @@ const attributes = {x, attrs
 		| _:
 		;;
 
-		match attrname(x)
+		match parseattrname(x)
 		| `std.Ok n:	name = n
 		| `std.Err e:	-> `std.Err e
 		;;
 
-		match attrval(x)
+		match parseattrval(x)
 		| `std.Ok v:	val = v
 		| `std.Err e:	-> `std.Err e
 		;;
@@ -174,7 +214,7 @@ const attributes = {x, attrs
 	-> `std.Ok void
 }
 
-const attrname = {x
+const parseattrname = {x
 	var start, stop
 	var spaced = false
 
@@ -211,7 +251,7 @@ const attrname = {x
 	-> `std.Err error(x, `Trunc `bio.Eof)
 }
 
-const attrval = {x
+const parseattrval = {x
 	var start, stop
 	var q
 
@@ -336,10 +376,26 @@ const free = {x
 }
 
 const mkbuf = {s
-	var x : xml#
-
-	x = std.mk([
+	var x = std.mk([
 		.file = bio.mkmem(s),
+		.buf = [][:],
+		.bidx = 0,
+		.bcur = 0,
+		.line = 1,
+		.off = 0,
+		.state = `Close,
+		.more = true,
+		.error = false
+	])
+
+	skipspace(x)
+
+	-> x
+}
+
+const mkfile = {f
+	var x = std.mk([
+		.file = f,
 		.buf = [][:],
 		.bidx = 0,
 		.bcur = 0,
