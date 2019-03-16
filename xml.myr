@@ -27,6 +27,11 @@ impl iterable xml -> std.result(event, error) =
 	}
 
 	__iterfin__ = {iterp, valp
+		match valp#
+		| `std.Ok `Start (n, a):
+			std.slfree(a)
+		| _:
+		;;
 	}
 ;;
 
