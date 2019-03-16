@@ -83,6 +83,7 @@ const close = {x
 	| `std.Ok s:
 		if std.strstrip(s).len > 0
 			newbuf(x, s)
+			/* TODO */
 			-> `std.Ok `Characters x.buf
 		else
 			std.slfree(s)
@@ -100,7 +101,7 @@ const open = {x
 	x.state = `Close
 
 	match bio.peekc(x.file)
-	| `std.Ok '!':	/* XXX */
+	| `std.Ok '!':	-> parseexclamation(x)
 	| `std.Ok '/':	-> parseend(x)
 	| `std.Ok '?':	/* XXX */
 	| `std.Ok '>':	-> `std.Err error(x, `Empty)
@@ -149,6 +150,20 @@ const parseelemname = {x
 	;;
 
 	-> `std.Ok `Start (x.buf[start:stop], attrs)
+}
+
+const parseexclamation = {x
+	std.assert(std.try(bio.getc(x.file)) == '!', "! not found")
+
+	match bio.peekc(x.file)
+	| `std.Ok '[':	-> parsecdata(x)
+	| `std.Ok '-':	/* XXX */
+	| `std.Ok 'D':	/* XXX */
+	| `std.Ok c:	-> `std.Err error(x, `Junk c)
+	| `std.Err e:	-> `std.Err error(x, `Trunc e)
+	;;
+
+	-> `std.Err error(x, `NYI)
 }
 
 const parseend = {x
@@ -276,23 +291,28 @@ const parseattrval = {x
 	-> `std.Err error(x, `Trunc `bio.Eof)
 }
 
-/*const fnext = {x
+const parsecdata = {x
+	const cdst = "[CDATA["
 	var c
 
-	match bio.getc(x.file)
-	| `std.Ok a:	c = a
-	| `std.Err e:	-> `std.Err error(x, e)
+	match bio.readto(x.file, "]]>")
+	| `std.Ok s:	newbuf(x, s)
+	| `std.Err e:	-> `std.Err error(x, `Trunc e)
 	;;
 
-	if c == '\n'
-		x.line++
-		x.off = 0
+	for cc : std.bychar(cdst)
+		c = bnext(x)
+		if c != cc
+			-> `std.Err error(x, `Unexpected (c, cc))
+		;;
+	;;
+
+	if x.bidx < x.buf.len
+		-> `std.Ok `Characters x.buf[x.bidx:]
 	else
-		x.off++
+		-> `std.Err error(x, `Trunc `bio.Eof)
 	;;
-
-	-> `std.Ok c
-}*/
+}
 
 const bpeek = {x
 	if x.bidx < x.buf.len

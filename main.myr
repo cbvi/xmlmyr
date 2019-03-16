@@ -2,10 +2,18 @@ use std
 use xml
 
 const main = {
-	var x = xml.mkbuf("<testing thing=\"ztuff\" foo=\"bar\" works=\"yes\"><this>hello world</this></testing>")
+	var x = xml.mkbuf("<testing thing=\"ztuff\" foo=\"bar\" works=\"yes\">" \
+			"<this>hello world</this>" \
+			"<blah><![CDATA[hello world]]></blah>" \
+			"</testing><![CDATA[x")
 
 	for event : xml.byevent(x)
-		std.put("{}\n", event)
+		match event
+		| `std.Ok `xml.Characters c:
+			std.put("\"{}\"\n", c)
+		| _:
+			std.put("{}\n", event)
+		;;
 	;;
 
 	xml.free(x)
