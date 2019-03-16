@@ -4,9 +4,12 @@ use bio
 use "chars"
 
 pkg xml =
-	const mkstr : (s : byte[:] -> xml#)
-	const parse : (x : xml# -> std.result(event, errtype))
+	const mkbuf : (s : byte[:] -> xml#)
+	const parse : (x : xml# -> std.result(event, error))
 	const free  : (x : xml# -> void)
+
+	type xmleventiter = xml
+	//impl iterable xmleventiter -> std.result(event, error)
 ;;
 
 type xml = struct
@@ -19,11 +22,18 @@ type xml = struct
 	state	:	state
 ;;
 
+type error = struct
+	line	:	std.size
+	off	:	std.size
+	err	:	errtype
+;;
+
 type errtype = union
 	`Empty
 	`Inval	char
 	`Junk	char
 	`Trunc	bio.err
+	`Unexpected (char, char)
 	`NYI
 ;;
 
@@ -56,7 +66,7 @@ const close = {x
 			-> parse(x)
 		;;
 	| `std.Err e:
-		-> `std.Err `Trunc e
+		-> `std.Err error(x, `Trunc e)
 	;;
 }
 
@@ -67,12 +77,12 @@ const open = {x
 	| `std.Ok '!':	/* XXX */
 	| `std.Ok '/':	/* XXX */
 	| `std.Ok '?':	/* XXX */
-	| `std.Ok '>':	-> `std.Err `Empty
+	| `std.Ok '>':	-> `std.Err error(x, `Empty)
 	| `std.Ok _:	-> elemname(x)
-	| `std.Err e:	-> `std.Err `Trunc e
+	| `std.Err e:	-> `std.Err error(x, `Trunc e)
 	;;
 
-	-> `std.Err `NYI
+	-> `std.Err error(x, `NYI)
 }
 
 const elemname = {x
@@ -80,36 +90,127 @@ const elemname = {x
 	var attrs = [][:]
 
 	match bio.readto(x.file, ">")
-	| `std.Ok s:
-		newbuf(x, s)
-		match bnext(x)
-		| c:	if namestartchar(c)
-				start = stop = x.bcur
-			else
-				-> `std.Err `Inval c
-			;;
-		;;
-		for c : std.bychar(x.buf[x.bidx:])
-			x.bidx += std.charlen(c)
-			if namechar(c)
-				stop = x.bidx
-			elif isspace(c)
-				eatspace(x)
-				attributes(&attrs)
-				break
-			else
-				-> `std.Err `Inval c
-			;;
-		;;
+	| `std.Ok s:	newbuf(x, s)
+	| `std.Err e:	-> `std.Err error(x, `Trunc e)
+	;;
 
-	| `std.Err e:
-		-> `std.Err `Trunc e
+	match bnext(x)
+	| c:	if namestartchar(c)
+			start =  x.bcur
+			stop = x.bidx
+		else
+			-> `std.Err error(x, `Inval c)
+		;;
+	;;
+	while x.bidx < x.buf.len
+		var c = bnext(x)
+		if namechar(c)
+			stop = x.bidx
+		elif isspace(c)
+			match attributes(x, &attrs)
+			| `std.Ok _:
+			| `std.Err e:
+				std.slfree(attrs)
+				-> `std.Err e
+			;;
+			break
+		else
+			-> `std.Err error(x, `Inval c)
+		;;
 	;;
 
 	-> `std.Ok `Start (x.buf[start:stop], attrs)
 }
 
-const attributes = {attrs
+const attributes = {x, attrs
+	var name, val
+
+	eatspace(x)
+
+	while x.bidx < x.buf.len
+		match bpeek(x)
+		| '/':	-> `std.Err error(x, `NYI)	/* XXX */
+		| _:
+		;;
+
+		match attrname(x)
+		| `std.Ok n:	name = n
+		| `std.Err e:	-> `std.Err e
+		;;
+
+		match attrval(x)
+		| `std.Ok v:	val = v
+		| `std.Err e:	-> `std.Err e
+		;;
+
+		std.slpush(attrs, (name, val))
+
+		eatspace(x)
+	;;
+
+	-> `std.Ok void
+}
+
+const attrname = {x
+	var start, stop
+	var spaced = false
+
+	eatspace(x)
+
+	match bnext(x)
+	| '/':	-> `std.Err error(x, `NYI)	/* XXX */
+	| c:
+		if namestartchar(c)
+			start =  x.bcur
+			stop = x.bidx
+		else
+			-> `std.Err error(x, `Inval c)
+		;;
+	;;
+
+	while x.bidx < x.buf.len
+		match bnext(x)
+		| '=':	-> `std.Ok x.buf[start:stop]
+		| c:
+			if spaced
+				-> `std.Err error(x, `Unexpected (c, '='))
+			elif namechar(c)
+				stop = x.bidx
+			elif isspace(c)
+				spaced = true
+				eatspace(x)
+			else
+				-> `std.Err error(x, `Inval c)
+			;;
+		;;
+	;;
+
+	-> `std.Err error(x, `Trunc `bio.Eof)
+}
+
+const attrval = {x
+	var start, stop
+	var q
+
+	eatspace(x)
+
+	match bnext(x)
+	| '"':	q = '"'
+	| '\'':	q = '\''
+	| c:	-> `std.Err error(x, `Unexpected (c, '"'))
+	;;
+
+	start = stop = x.bidx
+
+	while x.bidx < x.buf.len
+		if bnext(x) == q
+			-> `std.Ok x.buf[start:stop]
+		else
+			stop = x.bidx
+		;;
+	;;
+
+	-> `std.Err error(x, `Trunc `bio.Eof)
 }
 
 /*const fnext = {x
@@ -117,7 +218,7 @@ const attributes = {attrs
 
 	match bio.getc(x.file)
 	| `std.Ok a:	c = a
-	| `std.Err e:	-> `std.Err e
+	| `std.Err e:	-> `std.Err error(x, e)
 	;;
 
 	if c == '\n'
@@ -129,6 +230,14 @@ const attributes = {attrs
 
 	-> `std.Ok c
 }*/
+
+const bpeek = {x
+	if x.bidx < x.buf.len
+		-> std.decode(x.buf[x.bidx:])
+	else
+		-> std.Badchar
+	;;
+}
 
 const bnext = {x
 	if x.bidx >= x.buf.len
@@ -157,13 +266,15 @@ const newbuf = {x, buf
 
 const eatspace = {x
 	while true
-		match bnext(x)
+		match bpeek(x)
 		| ' ':
 		| '\n':
 		| '\t':
 		| '\r':
 		| _:	break
 		;;
+
+		bnext(x)
 	;;
 }
 
@@ -190,13 +301,17 @@ const skipspace = {x
 	;;
 }
 
+const error = {x, e
+	-> [.line = x.line, .off = x.off, .err = e]
+}
+
 const free = {x
 	bio.close(x.file)
 	std.slfree(x.buf)
 	std.free(x)
 }
 
-const mkstr = {s
+const mkbuf = {s
 	var x : xml#
 
 	x = std.mk([
