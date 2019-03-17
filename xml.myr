@@ -86,12 +86,12 @@ const close = {x
 
 	match bio.readto(x.file, "<")
 	| `std.Ok s:
+		newbuf(x, s)
+		taste(x)
 		if std.strstrip(s).len > 0
-			newbuf(x, s)
 			/* TODO */
 			-> `std.Ok `Characters x.buf
 		else
-			std.slfree(s)
 			-> dispatch(x)
 		;;
 	| `std.Err `bio.Eof:
@@ -317,6 +317,8 @@ const parsecdata = {x
 	| `std.Err e:	-> `std.Err error(x, `Trunc e)
 	;;
 
+	taste(x)
+
 	for cc : std.bychar(cdst)
 		c = bnext(x)
 		if c != cc
@@ -375,6 +377,17 @@ const eatspace = {x
 		;;
 
 		bnext(x)
+	;;
+}
+
+const taste = {x
+	for c : std.bychar(x.buf)
+		if c == '\n'
+			x.line++
+			x.off = 0
+		else
+			x.off++
+		;;
 	;;
 }
 
