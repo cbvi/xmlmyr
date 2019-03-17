@@ -130,7 +130,9 @@ const parseelemname = {x
 	;;
 
 	match bnext(x)
-	| c:	if namestartchar(c)
+	| '/':	-> `std.Err error(x, `Empty)
+	| c:
+		if namestartchar(c)
 			start =  x.bcur
 			stop = x.bidx
 		else
@@ -138,19 +140,28 @@ const parseelemname = {x
 		;;
 	;;
 	while x.bidx < x.buf.len
-		var c = bnext(x)
-		if namechar(c)
-			stop = x.bidx
-		elif isspace(c)
-			match parseattrs(x, &attrs)
-			| `std.Ok _:
-			| `std.Err e:
-				std.slfree(attrs)
-				-> `std.Err e
+		match bnext(x)
+		| '/':
+			if x.buf[start:stop].len > 0
+				/* XXX */
+				-> `std.Err error(x, `NYI)
+			else
+				-> `std.Err error(x, `Empty)
 			;;
-			break
-		else
-			-> `std.Err error(x, `Inval c)
+		| c:
+			if namechar(c)
+				stop = x.bidx
+			elif isspace(c)
+				match parseattrs(x, &attrs)
+				| `std.Ok _:
+				| `std.Err e:
+					std.slfree(attrs)
+					-> `std.Err e
+				;;
+				break
+			else
+				-> `std.Err error(x, `Inval c)
+			;;
 		;;
 	;;
 
@@ -159,6 +170,7 @@ const parseelemname = {x
 
 const parseexclamation = {x
 	std.assert(std.try(bio.getc(x.file)) == '!', "! not found")
+	x.off++
 
 	match bio.peekc(x.file)
 	| `std.Ok '[':	-> parsecdata(x)
