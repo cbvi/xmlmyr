@@ -4,9 +4,9 @@ use xml
 const main = {
 	var x = xml.mkbuf("<testing thing=\"ztuff\" foo=\"bar\" works=\"yes\">\n" \
 			"<this>hello world</this>\n" \
-			"<empty/>\n" \
+			"<empty></empty>\n" \
 			"<blah><![CDATA[hello world]]></blah>\n" \
-			"</testing><![CDATA[x\n")
+			"</testing>\n")
 
 	for event : xml.byevent(x)
 		match event

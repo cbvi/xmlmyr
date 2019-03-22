@@ -82,23 +82,41 @@ const dispatch = {x
 }
 
 const close = {x
+	var start, stop
+
 	x.state = `Open
 
-	match bio.readto(x.file, "<")
+	match bio.readterm(x.file, "<")
 	| `std.Ok s:
 		newbuf(x, s)
-		taste(x)
-		if std.strstrip(s).len > 0
-			/* TODO */
-			-> `std.Ok `Characters x.buf
-		else
-			-> dispatch(x)
-		;;
 	| `std.Err `bio.Eof:
 		x.more = false
 		-> `std.Ok `Eof
 	| `std.Err e:
 		-> `std.Err error(x, `Trunc e)
+	;;
+
+	start = stop = x.bidx
+
+	while x.bidx < x.buf.len
+		match bnext(x)
+		| '<':
+			if std.strstrip(x.buf[start:stop]).len > 0
+				/* TODO entities */
+				-> `std.Ok `Characters x.buf[start:stop]
+			else
+				-> dispatch(x)
+			;;
+		| c:
+			stop = x.bidx
+		;;
+	;;
+
+	if std.strstrip(x.buf).len > 0
+		-> `std.Err error(x, `Trunc `bio.Eof)
+	else
+		x.more = false
+		-> `std.Ok `Eof
 	;;
 }
 
@@ -123,13 +141,15 @@ const open = {x
 const parseelemname = {x
 	var start, stop
 	var attrs = [][:]
+	var ex = false
 
-	match bio.readto(x.file, ">")
+	match bio.readterm(x.file, ">")
 	| `std.Ok s:	newbuf(x, s)
 	| `std.Err e:	-> `std.Err error(x, `Trunc e)
 	;;
 
 	match bnext(x)
+	| '>':	-> `std.Err error(x, `Empty)
 	| '/':	-> `std.Err error(x, `Empty)
 	| c:
 		if namestartchar(c)
@@ -139,8 +159,11 @@ const parseelemname = {x
 			-> `std.Err error(x, `Inval c)
 		;;
 	;;
+
 	while x.bidx < x.buf.len
 		match bnext(x)
+		| '>':
+			-> `std.Ok `Start (x.buf[start:stop], attrs)
 		| '/':
 			if x.buf[start:stop].len > 0
 				/* XXX */
@@ -149,23 +172,25 @@ const parseelemname = {x
 				-> `std.Err error(x, `Empty)
 			;;
 		| c:
-			if namechar(c)
+			if ex
+				-> `std.Err error(x, `Unexpected (c, '>'))
+			elif namechar(c)
 				stop = x.bidx
 			elif isspace(c)
 				match parseattrs(x, &attrs)
 				| `std.Ok _:
+					ex = true
 				| `std.Err e:
 					std.slfree(attrs)
 					-> `std.Err e
 				;;
-				break
 			else
 				-> `std.Err error(x, `Inval c)
 			;;
 		;;
 	;;
 
-	-> `std.Ok `Start (x.buf[start:stop], attrs)
+	-> `std.Err error(x, `Trunc `bio.Eof)
 }
 
 const parseexclamation = {x
@@ -187,7 +212,7 @@ const parseend = {x
 	var start, stop
 	var spaced = false
 
-	match bio.readto(x.file, ">")
+	match bio.readterm(x.file, ">")
 	| `std.Ok s:	newbuf(x, s)
 	| `std.Err e:	-> `std.Err error(x, `Trunc e)
 	;;
@@ -195,26 +220,32 @@ const parseend = {x
 	std.assert(bnext(x) == '/', "/ not found")
 
 	match bnext(x)
-	| c:	if namestartchar(c)
+	| c:
+		if namestartchar(c)
 			start = x.bcur
 			stop = x.bidx
 		else
 			-> `std.Err error(x, `Inval c)
 		;;
 	;;
+
 	while x.bidx < x.buf.len
-		var c = bnext(x)
-		if isspace(c)
-			spaced = true
-			eatspace(x)
-		elif !spaced && namechar(c)
-			stop = x.bidx
-		else
-			-> `std.Err error(x, `Inval c)
+		match bnext(x)
+		| '>':
+			-> `std.Ok `End x.buf[start:stop]
+		| c:
+			if isspace(c)
+				spaced = true
+				eatspace(x)
+			elif !spaced && namechar(c)
+				stop = x.bidx
+			else
+				-> `std.Err error(x, `Inval c)
+			;;
 		;;
 	;;
 
-	-> `std.Ok `End x.buf[start:stop]
+	-> `std.Err error(x, `Trunc `bio.Eof)
 }
 
 const parseattrs = {x, attrs
@@ -224,6 +255,7 @@ const parseattrs = {x, attrs
 
 	while x.bidx < x.buf.len
 		match bpeek(x)
+		| '>':	-> `std.Ok void
 		| '/':	-> `std.Err error(x, `NYI)	/* XXX */
 		| _:
 		;;
@@ -243,7 +275,7 @@ const parseattrs = {x, attrs
 		eatspace(x)
 	;;
 
-	-> `std.Ok void
+	-> `std.Err error(x, `Trunc `bio.Eof)
 }
 
 const parseattrname = {x
@@ -310,9 +342,10 @@ const parseattrval = {x
 
 const parsecdata = {x
 	const cdst = "[CDATA["
+	const cden = "]]>"
 	var c
 
-	match bio.readto(x.file, "]]>")
+	match bio.readterm(x.file, cden)
 	| `std.Ok s:	newbuf(x, s)
 	| `std.Err e:	-> `std.Err error(x, `Trunc e)
 	;;
@@ -326,8 +359,8 @@ const parsecdata = {x
 		;;
 	;;
 
-	if x.bidx < x.buf.len
-		-> `std.Ok `Characters x.buf[x.bidx:]
+	if std.hassuffix(x.buf, cden) && x.bidx < x.buf.len
+		-> `std.Ok `Characters x.buf[x.bidx:x.buf.len-cden.len]
 	else
 		-> `std.Err error(x, `Trunc `bio.Eof)
 	;;
