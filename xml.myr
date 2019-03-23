@@ -347,7 +347,6 @@ const prefixtoterm = {x, pref, suf
 	| `std.Err e:	-> `std.Err error(x, `Trunc e)
 	;;
 
-	taste(x)
 
 	for cc : std.bychar(pref)
 		match bnext(x)
@@ -356,6 +355,8 @@ const prefixtoterm = {x, pref, suf
 			;;
 		;;
 	;;
+
+	taste(x)
 
 	if std.hassuffix(x.buf, suf) && x.bidx < x.buf.len
 		-> `std.Ok x.buf[x.bidx:x.buf.len-suf.len]
@@ -426,7 +427,7 @@ const eatspace = {x
 }
 
 const taste = {x
-	for c : std.bychar(x.buf)
+	for c : std.bychar(x.buf[x.bidx:])
 		if c == '\n'
 			x.line++
 			x.off = 0
