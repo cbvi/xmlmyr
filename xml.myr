@@ -365,20 +365,14 @@ const prefixtoterm = {x, pref, suf
 }
 
 const parsecdata = {x
-	const cdst = "[CDATA["
-	const cden = "]]>"
-
-	match prefixtoterm(x, cdst, cden)
+	match prefixtoterm(x, "[CDATA[", "]]>")
 	| `std.Ok b:	-> `std.Ok `Characters b
 	| `std.Err e:	-> `std.Err e
 	;;
 }
 
 const parsecomment = {x
-	const cost = "--"
-	const coen = "-->"
-
-	match prefixtoterm(x, cost, coen)
+	match prefixtoterm(x, "--", "-->")
 	| `std.Ok b:	-> `std.Ok `Comment b
 	| `std.Err e:	-> `std.Err e
 	;;
