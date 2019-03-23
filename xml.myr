@@ -14,16 +14,16 @@ pkg xml =
 
 impl iterable xml -> std.result(event, error) =
 	__iternext__ = {iterp, valp
-			if iterp.error
-				-> false
-			;;
+		if iterp.error
+			-> false
+		;;
 
-			valp# = dispatch(iterp)
-			if iterp.more
-				-> true
-			else
-				-> false
-			;;
+		valp# = dispatch(iterp)
+		if iterp.more
+			-> true
+		else
+			-> false
+		;;
 	}
 
 	__iterfin__ = {iterp, valp
