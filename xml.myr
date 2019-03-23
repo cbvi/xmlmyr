@@ -341,29 +341,36 @@ const parseattrval = {x
 	-> `std.Err error(x, `Trunc `bio.Eof)
 }
 
-const parsecdata = {x
-	const cdst = "[CDATA["
-	const cden = "]]>"
-	var c
-
-	match bio.readterm(x.file, cden)
+const prefixtoterm = {x, pref, suf
+	match bio.readterm(x.file, suf)
 	| `std.Ok s:	newbuf(x, s)
 	| `std.Err e:	-> `std.Err error(x, `Trunc e)
 	;;
 
 	taste(x)
 
-	for cc : std.bychar(cdst)
-		c = bnext(x)
-		if c != cc
-			-> `std.Err error(x, `Unexpected (c, cc))
+	for cc : std.bychar(pref)
+		match bnext(x)
+		| c:	if c != cc
+				-> `std.Err error(x, `Unexpected (c, cc))
+			;;
 		;;
 	;;
 
-	if std.hassuffix(x.buf, cden) && x.bidx < x.buf.len
-		-> `std.Ok `Characters x.buf[x.bidx:x.buf.len-cden.len]
+	if std.hassuffix(x.buf, suf) && x.bidx < x.buf.len
+		-> `std.Ok x.buf[x.bidx:x.buf.len-suf.len]
 	else
 		-> `std.Err error(x, `Trunc `bio.Eof)
+	;;
+}
+
+const parsecdata = {x
+	const cdst = "[CDATA["
+	const cden = "]]>"
+
+	match prefixtoterm(x, cdst, cden)
+	| `std.Ok b:	-> `std.Ok `Characters b
+	| `std.Err e:	-> `std.Err e
 	;;
 }
 
@@ -371,26 +378,9 @@ const parsecomment = {x
 	const cost = "--"
 	const coen = "-->"
 
-	match bio.readterm(x.file, coen)
-	| `std.Ok s:	newbuf(x, s)
-	| `std.Err e:	-> `std.Err error(x, `Trunc e)
-	;;
-
-	taste(x)
-
-	for cc : std.bychar(cost)
-		match bnext(x)
-		| c:
-			if c != cc
-				-> `std.Err error(x, `Unexpected (c, cc))
-			;;
-		;;
-	;;
-
-	if std.hassuffix(x.buf, coen) && x.bidx < x.buf.len
-		-> `std.Ok `Comment x.buf[x.bidx:x.buf.len-coen.len]
-	else
-		-> `std.Err error(x, `Trunc `bio.Eof)
+	match prefixtoterm(x, cost, coen)
+	| `std.Ok b:	-> `std.Ok `Comment b
+	| `std.Err e:	-> `std.Err e
 	;;
 }
 
