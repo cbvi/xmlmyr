@@ -5,7 +5,7 @@ const main = {
 	var x = xml.mkbuf("<?xml version=\"1.0\"?>\n" \
 			"<?test stuff and things and more stuff ?>\n" \
 			"<?test?>\n" \
-			"<!DOCTYPE testing 123>\n" \
+			"<!DOCTYPE\ttesting 123   >\n" \
 			"<testing thing=\"ztuff\" foo=\"bar\" works=\"yes\">\n" \
 			"<this>hello world</this>\n" \
 			"<empty></empty>\n" \
@@ -19,6 +19,8 @@ const main = {
 			std.put("\"{}\"\n", c)
 		| `std.Ok `xml.Instruction (t, d):
 			std.put("<?'{}' '{}'?>\n", t, d)
+		| `std.Ok `xml.Doctype d:
+			std.put("<!DOCTYPE {}>\n", d)
 		| _:
 			std.put("{}\n", event)
 		;;

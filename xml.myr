@@ -352,7 +352,7 @@ const prefixtoterm = {x, pref, suf
 
 	for cc : std.bychar(pref)
 		match bnext(x)
-		| c:	if c != cc
+		| c:	if c != cc && (cc == ' ' && !isspace(c))
 				-> `std.Err error(x, `Unexpected (c, cc))
 			;;
 		;;
@@ -383,7 +383,7 @@ const parsecomment = {x
 
 const parsedoctype = {x
 	match prefixtoterm(x, "DOCTYPE ", ">")
-	| `std.Ok b:	-> `std.Ok `Doctype b
+	| `std.Ok b:	-> `std.Ok `Doctype std.strstrip(b)
 	| `std.Err e:	-> `std.Err e
 	;;
 }
