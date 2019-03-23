@@ -72,6 +72,7 @@ type event = union
 	`Start		(byte[:], (byte[:], byte[:])[:])
 	`End		byte[:]
 	`Characters	byte[:]
+	`Comment	byte[:]
 ;;
 
 const dispatch = {x
@@ -199,7 +200,7 @@ const parseexclamation = {x
 
 	match bio.peekc(x.file)
 	| `std.Ok '[':	-> parsecdata(x)
-	| `std.Ok '-':	/* XXX */
+	| `std.Ok '-':	-> parsecomment(x)
 	| `std.Ok 'D':	/* XXX */
 	| `std.Ok c:	-> `std.Err error(x, `Junk c)
 	| `std.Err e:	-> `std.Err error(x, `Trunc e)
@@ -361,6 +362,33 @@ const parsecdata = {x
 
 	if std.hassuffix(x.buf, cden) && x.bidx < x.buf.len
 		-> `std.Ok `Characters x.buf[x.bidx:x.buf.len-cden.len]
+	else
+		-> `std.Err error(x, `Trunc `bio.Eof)
+	;;
+}
+
+const parsecomment = {x
+	const cost = "--"
+	const coen = "-->"
+
+	match bio.readterm(x.file, coen)
+	| `std.Ok s:	newbuf(x, s)
+	| `std.Err e:	-> `std.Err error(x, `Trunc e)
+	;;
+
+	taste(x)
+
+	for cc : std.bychar(cost)
+		match bnext(x)
+		| c:
+			if c != cc
+				-> `std.Err error(x, `Unexpected (c, cc))
+			;;
+		;;
+	;;
+
+	if std.hassuffix(x.buf, coen) && x.bidx < x.buf.len
+		-> `std.Ok `Comment x.buf[x.bidx:x.buf.len-coen.len]
 	else
 		-> `std.Err error(x, `Trunc `bio.Eof)
 	;;

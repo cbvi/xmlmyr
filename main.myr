@@ -6,6 +6,7 @@ const main = {
 			"<this>hello world</this>\n" \
 			"<empty></empty>\n" \
 			"<blah><![CDATA[hello world]]></blah>\n" \
+			"<!-- Testing 123 -->" \
 			"</testing>\n")
 
 	for event : xml.byevent(x)
