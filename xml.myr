@@ -59,7 +59,6 @@ type errtype = union
 	`Junk	char
 	`Trunc	bio.err
 	`Unexpected (char, char)
-	`NYI
 ;;
 
 type state = union
@@ -139,8 +138,6 @@ const open = {x
 		-> `std.Ok `Eof
 	| `std.Err e:	-> `std.Err error(x, `Trunc e)
 	;;
-
-	-> `std.Err error(x, `NYI)
 }
 
 const closing = {x, name
@@ -218,8 +215,6 @@ const parseexclamation = {x
 	| `std.Ok c:	-> `std.Err error(x, `Junk c)
 	| `std.Err e:	-> `std.Err error(x, `Trunc e)
 	;;
-
-	-> `std.Err error(x, `NYI)
 }
 
 const parseend = {x
