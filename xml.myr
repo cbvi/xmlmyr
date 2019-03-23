@@ -68,6 +68,7 @@ type state = union
 ;;
 
 type event = union
+	`Instruction	(byte[:], byte[:])
 	`Doctype	byte[:]
 	`Eof
 	`Start		(byte[:], (byte[:], byte[:])[:])
@@ -128,7 +129,7 @@ const open = {x
 	match bio.peekc(x.file)
 	| `std.Ok '!':	-> parseexclamation(x)
 	| `std.Ok '/':	-> parseend(x)
-	| `std.Ok '?':	/* XXX */
+	| `std.Ok '?':	-> parseinstruction(x)
 	| `std.Ok '>':	-> `std.Err error(x, `Empty)
 	| `std.Ok _:	-> parseelemname(x)
 	| `std.Err `bio.Eof:
@@ -385,6 +386,43 @@ const parsedoctype = {x
 	| `std.Ok b:	-> `std.Ok `Doctype b
 	| `std.Err e:	-> `std.Err e
 	;;
+}
+
+const parseinstruction = {x
+	var start, stop
+
+	match prefixtoterm(x, "?", "?>")
+	| `std.Ok b:	newbuf(x, std.sldup(b))
+	| `std.Err e:	-> `std.Err error(x, `Trunc `bio.Eof)
+	;;
+
+	if x.bidx < x.buf.len
+		match bnext(x)
+		| c:	if namestartchar(c)
+				start = x.bcur
+				stop = x.bidx
+			else
+				-> `std.Err error(x, `Inval c)
+			;;
+		;;
+	else
+		-> `std.Err error(x, `Trunc `bio.Eof)
+	;;
+
+	while x.bidx < x.buf.len
+		match bnext(x)
+		| c:	if namechar(c)
+				stop = x.bidx
+			elif isspace(c)
+				eatspace(x)
+				break
+			else
+				-> `std.Err error(x, `Inval c)
+			;;
+		;;
+	;;
+
+	-> `std.Ok `Instruction (x.buf[start:stop], x.buf[x.bidx:])
 }
 
 const bpeek = {x

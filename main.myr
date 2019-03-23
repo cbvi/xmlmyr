@@ -2,7 +2,10 @@ use std
 use xml
 
 const main = {
-	var x = xml.mkbuf("<!DOCTYPE testing 123>" \
+	var x = xml.mkbuf("<?xml version=\"1.0\"?>\n" \
+			"<?test stuff and things and more stuff ?>\n" \
+			"<?test?>\n" \
+			"<!DOCTYPE testing 123>\n" \
 			"<testing thing=\"ztuff\" foo=\"bar\" works=\"yes\">\n" \
 			"<this>hello world</this>\n" \
 			"<empty></empty>\n" \
@@ -14,6 +17,8 @@ const main = {
 		match event
 		| `std.Ok `xml.Characters c:
 			std.put("\"{}\"\n", c)
+		| `std.Ok `xml.Instruction (t, d):
+			std.put("<?'{}' '{}'?>\n", t, d)
 		| _:
 			std.put("{}\n", event)
 		;;
