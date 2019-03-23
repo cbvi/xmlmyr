@@ -2,7 +2,8 @@ use std
 use xml
 
 const main = {
-	var x = xml.mkbuf("<testing thing=\"ztuff\" foo=\"bar\" works=\"yes\">\n" \
+	var x = xml.mkbuf("<!DOCTYPE testing 123>" \
+			"<testing thing=\"ztuff\" foo=\"bar\" works=\"yes\">\n" \
 			"<this>hello world</this>\n" \
 			"<empty></empty>\n" \
 			"<blah><![CDATA[this is cdata]]></blah>\n" \

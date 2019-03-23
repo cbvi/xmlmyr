@@ -68,6 +68,7 @@ type state = union
 ;;
 
 type event = union
+	`Doctype	byte[:]
 	`Eof
 	`Start		(byte[:], (byte[:], byte[:])[:])
 	`End		byte[:]
@@ -201,7 +202,7 @@ const parseexclamation = {x
 	match bio.peekc(x.file)
 	| `std.Ok '[':	-> parsecdata(x)
 	| `std.Ok '-':	-> parsecomment(x)
-	| `std.Ok 'D':	/* XXX */
+	| `std.Ok 'D':	-> parsedoctype(x)
 	| `std.Ok c:	-> `std.Err error(x, `Junk c)
 	| `std.Err e:	-> `std.Err error(x, `Trunc e)
 	;;
@@ -375,6 +376,13 @@ const parsecdata = {x
 const parsecomment = {x
 	match prefixtoterm(x, "--", "-->")
 	| `std.Ok b:	-> `std.Ok `Comment b
+	| `std.Err e:	-> `std.Err e
+	;;
+}
+
+const parsedoctype = {x
+	match prefixtoterm(x, "DOCTYPE ", ">")
+	| `std.Ok b:	-> `std.Ok `Doctype b
 	| `std.Err e:	-> `std.Err e
 	;;
 }
