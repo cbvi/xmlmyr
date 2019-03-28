@@ -1,0 +1,36 @@
+use std
+use bio
+
+pkg xml =
+	type xml = struct
+		file	:	bio.file#
+		buf	:	byte[:]
+		bidx	:	std.size
+		bcur	:	std.size
+		line	:	std.size
+		off	:	std.size
+		state	:	state
+		more	:	bool
+		error	:	bool
+	;;
+
+	type error = struct
+		line	:	std.size
+		off	:	std.size
+		err	:	errtype
+	;;
+
+	type errtype = union
+		`Empty
+		`Inval		char
+		`Junk		char
+		`Trunc		bio.err
+		`Unexpected	(char, char)
+	;;
+
+	type state = union
+		`Open
+		`Close
+		`Closing	byte[:]
+	;;
+;;

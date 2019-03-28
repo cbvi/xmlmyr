@@ -2,6 +2,7 @@ use std
 use bio
 
 use "chars"
+use "types"
 
 pkg xml =
 	const mkbuf	:	(s : byte[:] -> xml#)
@@ -33,38 +34,6 @@ impl iterable xml -> std.result(event, error) =
 		| _:
 		;;
 	}
-;;
-
-type xml = struct
-	file	:	bio.file#
-	buf	:	byte[:]
-	bidx	:	std.size
-	bcur	:	std.size
-	line	:	std.size
-	off	:	std.size
-	state	:	state
-	more	:	bool
-	error	:	bool
-;;
-
-type error = struct
-	line	:	std.size
-	off	:	std.size
-	err	:	errtype
-;;
-
-type errtype = union
-	`Empty
-	`Inval	char
-	`Junk	char
-	`Trunc	bio.err
-	`Unexpected (char, char)
-;;
-
-type state = union
-	`Open
-	`Close
-	`Closing	byte[:]
 ;;
 
 type event = union
