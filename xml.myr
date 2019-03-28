@@ -447,7 +447,7 @@ const skipspace = {x
 }
 
 const error = {x, e
-	x.error = true
+	x.more = false
 	-> [.line = x.line, .off = x.off, .err = e]
 }
 
@@ -467,7 +467,6 @@ const mkbuf = {s
 		.off = 0,
 		.state = `Close,
 		.more = true,
-		.error = false
 	])
 
 	skipspace(x)
@@ -485,7 +484,6 @@ const mkfile = {f
 		.off = 0,
 		.state = `Close,
 		.more = true,
-		.error = false
 	])
 
 	skipspace(x)

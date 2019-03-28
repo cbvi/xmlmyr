@@ -11,16 +11,12 @@ pkg xml =
 
 impl iterable xmleventiter -> std.result(event, err) =
 	__iternext__ = {iterp, valp
-		if iterp.error
+		if !iterp.more
 			-> false
 		;;
 
 		valp# = dispatch((iterp : xmlctx#))
-		if iterp.more
-			-> true
-		else
-			-> false
-		;;
+		-> true
 	}
 
 	__iterfin__ = {iterp, valp
