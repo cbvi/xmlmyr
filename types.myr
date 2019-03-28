@@ -14,7 +14,7 @@ pkg xml =
 		error	:	bool
 	;;
 
-	type error = struct
+	type err = struct
 		line	:	std.size
 		off	:	std.size
 		err	:	errtype

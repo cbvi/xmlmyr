@@ -10,10 +10,10 @@ pkg xml =
 	const byevent	:	(x : xmlctx# -> xmlctx)
 	const free 	:	(x : xmlctx# -> void)
 
-	impl iterable xmlctx -> std.result(event, error)
+	impl iterable xmlctx -> std.result(event, err)
 ;;
 
-impl iterable xmlctx -> std.result(event, error) =
+impl iterable xmlctx -> std.result(event, err) =
 	__iternext__ = {iterp, valp
 		if iterp.error
 			-> false
