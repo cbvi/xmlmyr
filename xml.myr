@@ -7,43 +7,9 @@ use "types"
 pkg xml =
 	const mkbuf	:	(s : byte[:] -> xmlctx#)
 	const mkfile	:	(f : bio.file# -> xmlctx#)
-	const byevent	:	(x : xmlctx# -> xmleventiter)
 	const free 	:	(x : xmlctx# -> void)
 
-	impl iterable xmleventiter -> std.result(event, err)
-;;
-
-impl iterable xmleventiter -> std.result(event, err) =
-	__iternext__ = {iterp, valp
-		if iterp.error
-			-> false
-		;;
-
-		valp# = dispatch((iterp : xmlctx#))
-		if iterp.more
-			-> true
-		else
-			-> false
-		;;
-	}
-
-	__iterfin__ = {iterp, valp
-		match valp#
-		| `std.Ok `Start (n, a):
-			std.slfree(a)
-		| _:
-		;;
-	}
-;;
-
-type event = union
-	`Instruction	(byte[:], byte[:])
-	`Doctype	byte[:]
-	`Eof
-	`Start		(byte[:], (byte[:], byte[:])[:])
-	`End		byte[:]
-	`Characters	byte[:]
-	`Comment	byte[:]
+	pkglocal const dispatch	: (x : xmlctx# -> std.result(event, err))
 ;;
 
 const dispatch = {x
@@ -525,8 +491,4 @@ const mkfile = {f
 	skipspace(x)
 
 	-> x
-}
-
-const byevent = {x
-	-> (x# : xmleventiter)
 }

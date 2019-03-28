@@ -16,6 +16,16 @@ pkg xml =
 		error	:	bool
 	;;
 
+	type event = union
+		`Instruction	(byte[:], byte[:])
+		`Doctype	byte[:]
+		`Eof
+		`Start		(byte[:], (byte[:], byte[:])[:])
+		`End		byte[:]
+		`Characters	byte[:]
+		`Comment	byte[:]
+	;;
+
 	type err = struct
 		line	:	std.size
 		off	:	std.size

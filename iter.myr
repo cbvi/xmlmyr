@@ -1,0 +1,37 @@
+use std
+
+use "xml"
+use "types"
+
+pkg xml =
+	impl iterable xmleventiter -> std.result(event, err)
+
+	const byevent	:	(x : xmlctx# -> xmleventiter)
+;;
+
+impl iterable xmleventiter -> std.result(event, err) =
+	__iternext__ = {iterp, valp
+		if iterp.error
+			-> false
+		;;
+
+		valp# = dispatch((iterp : xmlctx#))
+		if iterp.more
+			-> true
+		else
+			-> false
+		;;
+	}
+
+	__iterfin__ = {iterp, valp
+		match valp#
+		| `std.Ok `Start (_, a):
+			std.slfree(a)
+		| _:
+		;;
+	}
+;;
+
+const byevent = {x
+	-> (x# : xmleventiter)
+}
