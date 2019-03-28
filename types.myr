@@ -2,6 +2,8 @@ use std
 use bio
 
 pkg xml =
+	type xmleventiter = xmlctx
+
 	type xmlctx = struct
 		file	:	bio.file#
 		buf	:	byte[:]

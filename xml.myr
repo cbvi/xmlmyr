@@ -7,19 +7,19 @@ use "types"
 pkg xml =
 	const mkbuf	:	(s : byte[:] -> xmlctx#)
 	const mkfile	:	(f : bio.file# -> xmlctx#)
-	const byevent	:	(x : xmlctx# -> xmlctx)
+	const byevent	:	(x : xmlctx# -> xmleventiter)
 	const free 	:	(x : xmlctx# -> void)
 
-	impl iterable xmlctx -> std.result(event, err)
+	impl iterable xmleventiter -> std.result(event, err)
 ;;
 
-impl iterable xmlctx -> std.result(event, err) =
+impl iterable xmleventiter -> std.result(event, err) =
 	__iternext__ = {iterp, valp
 		if iterp.error
 			-> false
 		;;
 
-		valp# = dispatch(iterp)
+		valp# = dispatch((iterp : xmlctx#))
 		if iterp.more
 			-> true
 		else
@@ -528,5 +528,5 @@ const mkfile = {f
 }
 
 const byevent = {x
-	-> x#
+	-> (x# : xmleventiter)
 }
