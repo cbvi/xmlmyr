@@ -9,14 +9,8 @@ pkg xml =
 	const mkfile	:	(f : bio.file# -> xmlctx#)
 	const free 	:	(x : xmlctx# -> void)
 
-	const next : (x : xmlctx# -> std.result(event, err))
-
 	pkglocal const dispatch	: (x : xmlctx# -> std.result(event, err))
 ;;
-
-const next = {x
-	-> dispatch(x)
-}
 
 const dispatch = {x
 	match x.p.state

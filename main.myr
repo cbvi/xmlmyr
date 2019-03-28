@@ -16,6 +16,7 @@ const main = {
 			"</testing>\n")
 	*/
 
+	//var f = std.try(bio.open("test/recset.xml", bio.Rd))
 	var f = std.try(bio.open("test/feed.xml", bio.Rd))
 
 	var x = xml.mkfile(f)
@@ -44,8 +45,6 @@ const main = {
 			std.put("{}\n", event)
 		;;
 	;;
-
-	std.put("{}\n", x.p#)
 
 	xml.free(x)
 }
