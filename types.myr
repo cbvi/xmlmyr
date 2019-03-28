@@ -2,7 +2,7 @@ use std
 use bio
 
 pkg xml =
-	type xml = struct
+	type xmlctx = struct
 		file	:	bio.file#
 		buf	:	byte[:]
 		bidx	:	std.size

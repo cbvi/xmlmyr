@@ -5,15 +5,15 @@ use "chars"
 use "types"
 
 pkg xml =
-	const mkbuf	:	(s : byte[:] -> xml#)
-	const mkfile	:	(f : bio.file# -> xml#)
-	const byevent	:	(x : xml# -> xml)
-	const free 	:	(x : xml# -> void)
+	const mkbuf	:	(s : byte[:] -> xmlctx#)
+	const mkfile	:	(f : bio.file# -> xmlctx#)
+	const byevent	:	(x : xmlctx# -> xmlctx)
+	const free 	:	(x : xmlctx# -> void)
 
-	impl iterable xml -> std.result(event, error)
+	impl iterable xmlctx -> std.result(event, error)
 ;;
 
-impl iterable xml -> std.result(event, error) =
+impl iterable xmlctx -> std.result(event, error) =
 	__iternext__ = {iterp, valp
 		if iterp.error
 			-> false
