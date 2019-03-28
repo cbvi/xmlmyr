@@ -1,8 +1,9 @@
 use std
+use bio
 use xml
 
 const main = {
-	var x = xml.mkbuf("<?xml version=\"1.0\"?>\n" \
+	/*var x = xml.mkbuf("<?xml version=\"1.0\"?>\n" \
 			"<?test stuff and things and more stuff ?>\n" \
 			"<?test?>\n" \
 			"<!DOCTYPE\ttesting 123   >\n" \
@@ -13,11 +14,28 @@ const main = {
 			"<blah><![CDATA[this is cdata]]></blah>\n" \
 			"<!-- Testing 123 -->" \
 			"</testing>\n")
+	*/
+
+	var f = std.try(bio.open("test/feed.xml", bio.Rd))
+
+	var x = xml.mkfile(f)
 
 	for event : xml.byevent(x)
 		match event
+		| `std.Ok `xml.Start ("rss", attr):
+			for a : attr
+				match a
+				| ("version", v):
+					std.put("{}\n", v)
+				| _:
+				;;
+			;;
 		| `std.Ok `xml.Characters c:
-			std.put("\"{}\"\n", c)
+			if c.len > 32
+				std.put("\t\"{}\"\n", c[:32])
+			else
+				std.put("\t\"{}\"\n", c)
+			;;
 		| `std.Ok `xml.Instruction (t, d):
 			std.put("<?{} {}?>\n", t, d)
 		| `std.Ok `xml.Doctype d:
