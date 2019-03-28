@@ -11,7 +11,7 @@ pkg xml =
 
 impl iterable xmleventiter -> std.result(event, err) =
 	__iternext__ = {iterp, valp
-		if !iterp.more
+		if !iterp.p.more
 			-> false
 		;;
 

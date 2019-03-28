@@ -6,6 +6,10 @@ pkg xml =
 
 	type xmlctx = struct
 		file	:	bio.file#
+		p	:	parser#
+	;;
+
+	type parser = struct
 		buf	:	byte[:]
 		bidx	:	std.size
 		bcur	:	std.size

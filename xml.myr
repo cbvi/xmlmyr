@@ -9,11 +9,17 @@ pkg xml =
 	const mkfile	:	(f : bio.file# -> xmlctx#)
 	const free 	:	(x : xmlctx# -> void)
 
+	const next : (x : xmlctx# -> std.result(event, err))
+
 	pkglocal const dispatch	: (x : xmlctx# -> std.result(event, err))
 ;;
 
+const next = {x
+	-> dispatch(x)
+}
+
 const dispatch = {x
-	match x.state
+	match x.p.state
 	| `Open:	-> open(x)
 	| `Close:	-> close(x)
 	| `Closing n:	-> closing(x, n)
@@ -23,44 +29,44 @@ const dispatch = {x
 const close = {x
 	var start, stop
 
-	x.state = `Open
+	x.p.state = `Open
 
 	match bio.readterm(x.file, "<")
 	| `std.Ok s:
 		newbuf(x, s)
 	| `std.Err `bio.Eof:
-		x.more = false
+		x.p.more = false
 		-> `std.Ok `Eof
 	| `std.Err e:
 		-> `std.Err error(x, `Trunc e)
 	;;
 
-	start = stop = x.bidx
+	start = stop = x.p.bidx
 
-	while x.bidx < x.buf.len
+	while x.p.bidx < x.p.buf.len
 		match bnext(x)
 		| '<':
-			if std.strstrip(x.buf[start:stop]).len > 0
+			if std.strstrip(x.p.buf[start:stop]).len > 0
 				/* TODO entities */
-				-> `std.Ok `Characters x.buf[start:stop]
+				-> `std.Ok `Characters x.p.buf[start:stop]
 			else
 				-> dispatch(x)
 			;;
 		| c:
-			stop = x.bidx
+			stop = x.p.bidx
 		;;
 	;;
 
-	if std.strstrip(x.buf).len > 0
+	if std.strstrip(x.p.buf).len > 0
 		-> `std.Err error(x, `Trunc `bio.Eof)
 	else
-		x.more = false
+		x.p.more = false
 		-> `std.Ok `Eof
 	;;
 }
 
 const open = {x
-	x.state = `Close
+	x.p.state = `Close
 
 	match bio.peekc(x.file)
 	| `std.Ok '!':	-> parseexclamation(x)
@@ -69,14 +75,14 @@ const open = {x
 	| `std.Ok '>':	-> `std.Err error(x, `Empty)
 	| `std.Ok _:	-> parseelemname(x)
 	| `std.Err `bio.Eof:
-		x.more = false
+		x.p.more = false
 		-> `std.Ok `Eof
 	| `std.Err e:	-> `std.Err error(x, `Trunc e)
 	;;
 }
 
 const closing = {x, name
-	x.state = `Close
+	x.p.state = `Close
 
 	match bnext(x)
 	| '>':	-> `std.Ok `End name
@@ -99,21 +105,21 @@ const parseelemname = {x
 	| '/':	-> `std.Err error(x, `Empty)
 	| c:
 		if namestartchar(c)
-			start =  x.bcur
-			stop = x.bidx
+			start =  x.p.bcur
+			stop = x.p.bidx
 		else
 			-> `std.Err error(x, `Inval c)
 		;;
 	;;
 
-	while x.bidx < x.buf.len
+	while x.p.bidx < x.p.buf.len
 		match bnext(x)
 		| '>':
-			-> `std.Ok `Start (x.buf[start:stop], attrs)
+			-> `std.Ok `Start (x.p.buf[start:stop], attrs)
 		| '/':
-			if x.buf[start:stop].len > 0
-				x.state = `Closing x.buf[start:stop]
-				-> `std.Ok `Start (x.buf[start:stop], attrs)
+			if x.p.buf[start:stop].len > 0
+				x.p.state = `Closing x.p.buf[start:stop]
+				-> `std.Ok `Start (x.p.buf[start:stop], attrs)
 			else
 				-> `std.Err error(x, `Empty)
 			;;
@@ -121,7 +127,7 @@ const parseelemname = {x
 			if ex
 				-> `std.Err error(x, `Unexpected (c, '>'))
 			elif namechar(c)
-				stop = x.bidx
+				stop = x.p.bidx
 			elif isspace(c)
 				match parseattrs(x, &attrs)
 				| `std.Ok _:
@@ -141,7 +147,7 @@ const parseelemname = {x
 
 const parseexclamation = {x
 	std.assert(std.try(bio.getc(x.file)) == '!', "! not found")
-	x.off++
+	x.p.off++
 
 	match bio.peekc(x.file)
 	| `std.Ok '[':	-> parsecdata(x)
@@ -166,23 +172,23 @@ const parseend = {x
 	match bnext(x)
 	| c:
 		if namestartchar(c)
-			start = x.bcur
-			stop = x.bidx
+			start = x.p.bcur
+			stop = x.p.bidx
 		else
 			-> `std.Err error(x, `Inval c)
 		;;
 	;;
 
-	while x.bidx < x.buf.len
+	while x.p.bidx < x.p.buf.len
 		match bnext(x)
 		| '>':
-			-> `std.Ok `End x.buf[start:stop]
+			-> `std.Ok `End x.p.buf[start:stop]
 		| c:
 			if isspace(c)
 				spaced = true
 				eatspace(x)
 			elif !spaced && namechar(c)
-				stop = x.bidx
+				stop = x.p.bidx
 			else
 				-> `std.Err error(x, `Inval c)
 			;;
@@ -197,7 +203,7 @@ const parseattrs = {x, attrs
 
 	eatspace(x)
 
-	while x.bidx < x.buf.len
+	while x.p.bidx < x.p.buf.len
 		match bpeek(x)
 		| '>':	-> `std.Ok void
 		| '/':	-> `std.Ok void
@@ -231,21 +237,21 @@ const parseattrname = {x
 	match bnext(x)
 	| c:
 		if namestartchar(c)
-			start =  x.bcur
-			stop = x.bidx
+			start =  x.p.bcur
+			stop = x.p.bidx
 		else
 			-> `std.Err error(x, `Inval c)
 		;;
 	;;
 
-	while x.bidx < x.buf.len
+	while x.p.bidx < x.p.buf.len
 		match bnext(x)
-		| '=':	-> `std.Ok x.buf[start:stop]
+		| '=':	-> `std.Ok x.p.buf[start:stop]
 		| c:
 			if spaced
 				-> `std.Err error(x, `Unexpected (c, '='))
 			elif namechar(c)
-				stop = x.bidx
+				stop = x.p.bidx
 			elif isspace(c)
 				spaced = true
 				eatspace(x)
@@ -270,13 +276,13 @@ const parseattrval = {x
 	| c:	-> `std.Err error(x, `Unexpected (c, '"'))
 	;;
 
-	start = stop = x.bidx
+	start = stop = x.p.bidx
 
-	while x.bidx < x.buf.len
+	while x.p.bidx < x.p.buf.len
 		if bnext(x) == q
-			-> `std.Ok x.buf[start:stop]
+			-> `std.Ok x.p.buf[start:stop]
 		else
-			stop = x.bidx
+			stop = x.p.bidx
 		;;
 	;;
 
@@ -300,8 +306,8 @@ const prefixtoterm = {x, pref, suf
 
 	taste(x)
 
-	if std.hassuffix(x.buf, suf) && x.bidx < x.buf.len
-		-> `std.Ok x.buf[x.bidx:x.buf.len-suf.len]
+	if std.hassuffix(x.p.buf, suf) && x.p.bidx < x.p.buf.len
+		-> `std.Ok x.p.buf[x.p.bidx:x.p.buf.len-suf.len]
 	else
 		-> `std.Err error(x, `Trunc `bio.Eof)
 	;;
@@ -336,11 +342,11 @@ const parseinstruction = {x
 	| `std.Err e:	-> `std.Err error(x, `Trunc `bio.Eof)
 	;;
 
-	if x.bidx < x.buf.len
+	if x.p.bidx < x.p.buf.len
 		match bnext(x)
 		| c:	if namestartchar(c)
-				start = x.bcur
-				stop = x.bidx
+				start = x.p.bcur
+				stop = x.p.bidx
 			else
 				-> `std.Err error(x, `Inval c)
 			;;
@@ -349,10 +355,10 @@ const parseinstruction = {x
 		-> `std.Err error(x, `Trunc `bio.Eof)
 	;;
 
-	while x.bidx < x.buf.len
+	while x.p.bidx < x.p.buf.len
 		match bnext(x)
 		| c:	if namechar(c)
-				stop = x.bidx
+				stop = x.p.bidx
 			elif isspace(c)
 				eatspace(x)
 				break
@@ -362,40 +368,40 @@ const parseinstruction = {x
 		;;
 	;;
 
-	-> `std.Ok `Instruction (x.buf[start:stop], x.buf[x.bidx:])
+	-> `std.Ok `Instruction (x.p.buf[start:stop], x.p.buf[x.p.bidx:])
 }
 
 const bpeek = {x
-	if x.bidx < x.buf.len
-		-> std.decode(x.buf[x.bidx:])
+	if x.p.bidx < x.p.buf.len
+		-> std.decode(x.p.buf[x.p.bidx:])
 	else
 		-> std.Badchar
 	;;
 }
 
 const bnext = {x
-	if x.bidx >= x.buf.len
+	if x.p.bidx >= x.p.buf.len
 		-> std.Badchar
 	;;
 
-	var c = std.decode(x.buf[x.bidx:])
-	x.bcur = x.bidx
-	x.bidx += std.charlen(c)
+	var c = std.decode(x.p.buf[x.p.bidx:])
+	x.p.bcur = x.p.bidx
+	x.p.bidx += std.charlen(c)
 
 	if c == '\n'
-		x.line++
-		x.off = 0
+		x.p.line++
+		x.p.off = 0
 	else
-		x.off++
+		x.p.off++
 	;;
 
 	-> c
 }
 
 const newbuf = {x, buf
-	std.slfree(x.buf)
-	x.bidx = x.bcur = 0
-	x.buf = buf
+	std.slfree(x.p.buf)
+	x.p.bidx = x.p.bcur = 0
+	x.p.buf = buf
 }
 
 const eatspace = {x
@@ -413,12 +419,12 @@ const eatspace = {x
 }
 
 const taste = {x
-	for c : std.bychar(x.buf[x.bidx:])
+	for c : std.bychar(x.p.buf[x.p.bidx:])
 		if c == '\n'
-			x.line++
-			x.off = 0
+			x.p.line++
+			x.p.off = 0
 		else
-			x.off++
+			x.p.off++
 		;;
 	;;
 }
@@ -429,8 +435,8 @@ const skipspace = {x
 		match bio.peekc(x.file)
 		| `std.Ok ' ':
 		| `std.Ok '\n':
-			x.line++
-			x.off = 0
+			x.p.line++
+			x.p.off = 0
 			goto nl
 		| `std.Ok '\t':
 		| `std.Ok '\r':
@@ -440,33 +446,36 @@ const skipspace = {x
 			break
 		;;
 
-		x.off++
+		x.p.off++
 :nl
 		bio.getc(x.file)
 	;;
 }
 
 const error = {x, e
-	x.more = false
-	-> [.line = x.line, .off = x.off, .err = e]
+	x.p.more = false
+	-> [.line = x.p.line, .off = x.p.off, .err = e]
 }
 
 const free = {x
 	bio.close(x.file)
-	std.slfree(x.buf)
+	std.slfree(x.p.buf)
+	std.free(x.p)
 	std.free(x)
 }
 
 const mkbuf = {s
 	var x = std.mk([
 		.file = bio.mkmem(s),
-		.buf = [][:],
-		.bidx = 0,
-		.bcur = 0,
-		.line = 1,
-		.off = 0,
-		.state = `Close,
-		.more = true,
+		.p = std.mk([
+			.buf = [][:],
+			.bidx = 0,
+			.bcur = 0,
+			.line = 1,
+			.off = 0,
+			.state = `Close,
+			.more = true
+		])
 	])
 
 	skipspace(x)
@@ -477,13 +486,15 @@ const mkbuf = {s
 const mkfile = {f
 	var x = std.mk([
 		.file = f,
-		.buf = [][:],
-		.bidx = 0,
-		.bcur = 0,
-		.line = 1,
-		.off = 0,
-		.state = `Close,
-		.more = true,
+		.p = std.mk([
+			.buf = [][:],
+			.bidx = 0,
+			.bcur = 0,
+			.line = 1,
+			.off = 0,
+			.state = `Close,
+			.more = true
+		])
 	])
 
 	skipspace(x)

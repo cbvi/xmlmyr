@@ -45,5 +45,7 @@ const main = {
 		;;
 	;;
 
+	std.put("{}\n", x.p#)
+
 	xml.free(x)
 }
