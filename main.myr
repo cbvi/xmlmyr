@@ -18,7 +18,7 @@ const main = {
 
 	//var f = std.try(bio.open("test/recset.xml", bio.Rd))
 	//var f = std.try(bio.open("test/feed.xml", bio.Rd))
-	var f = std.try(bio.open("test/example.xml", bio.Rd))
+	var f = std.try(bio.open("test/bad.xml", bio.Rd))
 
 	var x = xml.mkfile(f)
 
