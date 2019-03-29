@@ -16,13 +16,13 @@ const main = {
 			"</testing>\n")
 	*/
 
-	//var f = std.try(bio.open("test/recset.xml", bio.Rd))
-	var f = std.try(bio.open("test/feed.xml", bio.Rd))
+	var f = std.try(bio.open("test/recset.xml", bio.Rd))
+	//var f = std.try(bio.open("test/feed.xml", bio.Rd))
 
 	var x = xml.mkfile(f)
 
 	for event : xml.byevent(x)
-		match event
+		/*match event
 		| `std.Ok `xml.Start ("rss", attr):
 			for a : attr
 				match a
@@ -43,7 +43,7 @@ const main = {
 			std.put("<!DOCTYPE {}>\n", d)
 		| _:
 			std.put("{}\n", event)
-		;;
+		;;*/
 	;;
 
 	xml.free(x)
