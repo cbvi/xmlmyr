@@ -1,0 +1,92 @@
+use std
+
+use "types"
+
+pkg xml =
+	const unescape	:	(s : byte[:] -> std.option(byte[:]))
+;;
+
+const unescape = {s
+	var start, stop, idx
+	var sb = std.mksb()
+
+	idx = start = stop = 0
+
+	while idx < s.len
+		var c = std.decode(s[idx:])
+		idx += std.charlen(c)
+
+		match c
+		| '&':
+			std.sbputs(sb, s[start:stop])
+
+			match pentity(s[idx:])
+			| `std.Some (e, i):
+				idx += i
+				std.sbputb(sb, e)
+			| `std.None:
+				goto err
+			;;
+
+			start = stop = idx
+		| _:
+			stop = idx
+		;;
+	;;
+
+	std.sbputs(sb, s[start:])
+
+	-> `std.Some std.sbfin(sb)
+
+:err
+	std.sbfree(sb)
+	-> `std.None
+}
+
+const pentity = {s
+	const delim = ";"
+	var index
+	var c
+
+	match std.strfind(s, delim)
+	| `std.Some in:	index = in
+	| `std.None:	-> `std.None
+	;;
+
+	match s[:index]
+	| "quot":	c = '"'
+	| "amp":	c = '&'
+	| "apos":	c = '\''
+	| "lt":		c = '<'
+	| "gt":		c = '>'
+	| _:	match pcodepoint(s[:index])
+		| `std.Some e:	c = e
+		| `std.None:	-> `std.None
+		;;
+	;;
+
+	-> `std.Some ((c : byte), index + delim.len)
+}
+
+const pcodepoint = {s
+	var idx = 0
+	var base
+
+	match std.decode(s[idx:])
+	| '#':	idx += std.charlen('#')
+	| _:	-> `std.None
+	;;
+
+	match std.decode(s[idx:])
+	| 'x':
+		base = 16
+		idx += std.charlen('x')
+	| _:
+		base = 10
+	;;
+
+	match std.intparsebase(s[idx:], base)
+	| `std.Some i:	-> `std.Some i
+	| `std.None:	-> `std.None
+	;;
+}

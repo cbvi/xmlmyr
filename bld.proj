@@ -1,6 +1,7 @@
 lib xml =
 	xml.myr
 	chars.myr
+	entities.myr
 	iter.myr
 	types.myr
 ;;
