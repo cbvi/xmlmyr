@@ -10,8 +10,8 @@ const main = {
 		[.name="attrs", .fn={ctx
 			attrs_test(ctx)
 		}],
-		[.name="selfclose", .fn={ctx
-			selfclose_test(ctx)
+		[.name="empty", .fn={ctx
+			empty_test(ctx)
 		}],
 	][:])
 }
@@ -106,8 +106,8 @@ const attrs_test = {ctx
 	xml.free(x)
 }
 
-const selfclose_test = {ctx
-	var x = xml.mkpath("test/files/003_selfclose.xml")
+const empty_test = {ctx
+	var x = xml.mkpath("test/files/003_empty.xml")
 	var open = false
 
 	for ev : xml.byevent(x)

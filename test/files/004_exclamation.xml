@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<!DOCTYPE 	 test>
+<!-- This is a comment -->
+<doc>
+	<![CDATA[This is cdata]]>
+</doc>
