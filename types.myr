@@ -6,6 +6,7 @@ pkg xml =
 
 	type ctx = struct
 		file	:	bio.file#
+		owned	:	bool
 		p	:	parser#
 	;;
 

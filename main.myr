@@ -16,32 +16,20 @@ const main = {
 			"</testing>\n")
 	*/
 
-	//var f = std.try(bio.open("test/recset.xml", bio.Rd))
+	var f = std.try(bio.open("test/recset.xml", bio.Rd))
 	//var f = std.try(bio.open("test/feed.xml", bio.Rd))
-	var f = std.try(bio.open("test/bad.xml", bio.Rd))
+	//var f = std.try(bio.open("test/xmltest.xml", bio.Rd))
 
 	var x = xml.mkfile(f)
 
 	for event : xml.byevent(x)
 		match event
-		| `std.Ok `xml.Start ("rss", attr):
-			for a : attr
-				match a
-				| ("version", v):
-					std.put("{}\n", v)
-				| _:
-				;;
-			;;
-		| `std.Ok `xml.Characters c:
-			std.put("\t\"{}\"\n", xml.unescape(c))
-		| `std.Ok `xml.Instruction (t, d):
-			std.put("<?{} {}?>\n", t, d)
-		| `std.Ok `xml.Doctype d:
-			std.put("<!DOCTYPE {}>\n", d)
 		| _:
 			std.put("{}\n", event)
 		;;
 	;;
 
 	xml.free(x)
+
+	bio.close(f)
 }

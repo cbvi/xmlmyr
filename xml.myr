@@ -6,6 +6,7 @@ use "types"
 
 pkg xml =
 	const mkbuf	:	(s : byte[:] -> ctx#)
+	const mkpath	:	(p : byte[:] -> ctx#)
 	const mkfile	:	(f : bio.file# -> ctx#)
 	const free 	:	(x : ctx# -> void)
 
@@ -524,7 +525,9 @@ const error = {x, e
 }
 
 const free = {x
-	bio.close(x.file)
+	if x.owned
+		bio.close(x.file)
+	;;
 	std.slfree(x.p.buf)
 	std.free(x.p)
 	std.free(x)
@@ -533,6 +536,27 @@ const free = {x
 const mkbuf = {s
 	var x = std.mk([
 		.file = bio.mkmem(s),
+		.owned = true,
+		.p = std.mk([
+			.buf = [][:],
+			.bidx = 0,
+			.bcur = 0,
+			.line = 1,
+			.off = 0,
+			.state = `Close,
+			.more = true
+		])
+	])
+
+	skipspace(x)
+
+	-> x
+}
+
+const mkpath = {p
+	var x = std.mk([
+		.file = std.try(bio.open(p, bio.Rd)),
+		.owned = true,
 		.p = std.mk([
 			.buf = [][:],
 			.bidx = 0,
@@ -552,6 +576,7 @@ const mkbuf = {s
 const mkfile = {f
 	var x = std.mk([
 		.file = f,
+		.owned = false,
 		.p = std.mk([
 			.buf = [][:],
 			.bidx = 0,
