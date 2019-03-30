@@ -1,0 +1,70 @@
+use std
+use xml
+use testr
+
+const main = {
+	testr.run([
+		[.name="simple", .fn={ctx
+			simple_test(ctx)
+		}],
+	][:])
+}
+
+const simple_test = {ctx
+	var x = xml.mkpath("test/files/001_simple.xml")
+	var o = 0
+	var children = [][:]
+	var in = false
+	var id = false
+
+	for ev : xml.byevent(x)
+		o++
+		match ev
+		| `std.Ok `xml.Start ("doc", _):
+			testr.check(ctx, o == 1, "<doc> out of order")
+		| `std.Ok `xml.Start ("children", _):
+			testr.check(ctx, o == 2, "<children> out of order")
+		| `std.Ok `xml.Start ("child", _):
+			in = true
+		| `std.Ok `xml.Start ("id", _):
+			if in
+				testr.ok(ctx)
+				id = true
+			else
+				testr.fail(ctx, "<id> unexpected")
+			;;
+		| `std.Ok `xml.Characters c:
+			if in && id
+				testr.ok(ctx)
+				std.slpush(&children, std.sldup(c))
+			else
+				testr.fail(ctx, "characters unexpected")
+			;;
+		| `std.Ok `xml.End "id":
+			id = false
+		| `std.Ok `xml.End "child":
+			in = false
+		| `std.Ok `xml.End "children":
+			testr.check(ctx, o == 18, "</children> out of order")
+		| `std.Ok `xml.End "doc":
+			testr.check(ctx, o == 19, "</doc> out of order")
+		| `std.Ok `xml.Eof:
+			testr.check(ctx, o == 20, "Eof unexpected")
+		| `std.Ok e:
+			testr.fail(ctx, "unexpected element {}", e)
+		| `std.Err e:
+			testr.fail(ctx, "error {}", e)
+		;;
+	;;
+
+	testr.check(ctx, std.sleq(children[0], "1"), "expected child id 1")
+	testr.check(ctx, std.sleq(children[1], "2"), "expected child id 2")
+	testr.check(ctx, std.sleq(children[2], "3"), "expected child id 3")
+
+	for c : children
+		std.slfree(c)
+	;;
+
+	std.slfree(children)
+	xml.free(x)
+}
