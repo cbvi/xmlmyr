@@ -317,7 +317,7 @@ const parsecdata = {x
 
 const parsecomment = {x
 	match prefixtoterm(x, "--", "-->")
-	| `std.Ok b:	-> `std.Ok `Comment b
+	| `std.Ok b:	-> `std.Ok `Comment std.strstrip(b)
 	| `std.Err e:	-> `std.Err e
 	;;
 }

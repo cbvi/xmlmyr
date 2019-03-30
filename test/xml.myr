@@ -13,6 +13,9 @@ const main = {
 		[.name="empty", .fn={ctx
 			empty_test(ctx)
 		}],
+		[.name="twigil", .fn={ctx
+			twigil_test(ctx)
+		}],
 	][:])
 }
 
@@ -126,6 +129,38 @@ const empty_test = {ctx
 			testr.fail(ctx, "error {}", e)
 		;;
 	;;
+
+	xml.free(x)
+}
+
+const twigil_test = {ctx
+	var x = xml.mkpath("test/files/004_twigil.xml")
+	var o = 0
+
+	for ev : xml.byevent(x)
+		match ev
+		| `std.Ok `xml.Instruction ("xml", "version=\"1.0\""):
+			o++
+		| `std.Ok `xml.Doctype "test":
+			o++
+		| `std.Ok `xml.Comment "This is a comment":
+			o++
+		| `std.Ok `xml.Start ("doc", _):
+			o++
+		| `std.Ok `xml.Cdata "This is cdata":
+			o++
+		| `std.Ok `xml.End "doc":
+			o++
+		| `std.Ok `xml.Eof:
+			o++
+		| `std.Ok e:
+			testr.fail(ctx, "unexpected event {}", e)
+		| `std.Err e:
+			testr.fail(ctx, "error {}", e)
+		;;
+	;;
+
+	testr.check(ctx, o == 7, "unexpected event count")
 
 	xml.free(x)
 }
