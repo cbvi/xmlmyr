@@ -4,18 +4,18 @@ use "xml"
 use "types"
 
 pkg xml =
-	impl iterable xmleventiter -> std.result(event, err)
+	impl iterable eventiter -> std.result(event, err)
 
-	const byevent	:	(x : xmlctx# -> xmleventiter)
+	const byevent	:	(x : ctx# -> eventiter)
 ;;
 
-impl iterable xmleventiter -> std.result(event, err) =
+impl iterable eventiter -> std.result(event, err) =
 	__iternext__ = {iterp, valp
 		if !iterp.p.more
 			-> false
 		;;
 
-		valp# = dispatch((iterp : xmlctx#))
+		valp# = dispatch((iterp : ctx#))
 		-> true
 	}
 
@@ -31,5 +31,5 @@ impl iterable xmleventiter -> std.result(event, err) =
 ;;
 
 const byevent = {x
-	-> (x# : xmleventiter)
+	-> (x# : eventiter)
 }

@@ -5,11 +5,11 @@ use "chars"
 use "types"
 
 pkg xml =
-	const mkbuf	:	(s : byte[:] -> xmlctx#)
-	const mkfile	:	(f : bio.file# -> xmlctx#)
-	const free 	:	(x : xmlctx# -> void)
+	const mkbuf	:	(s : byte[:] -> ctx#)
+	const mkfile	:	(f : bio.file# -> ctx#)
+	const free 	:	(x : ctx# -> void)
 
-	pkglocal const dispatch	: (x : xmlctx# -> std.result(event, err))
+	pkglocal const dispatch	: (x : ctx# -> std.result(event, err))
 ;;
 
 const dispatch = {x
