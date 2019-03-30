@@ -10,6 +10,9 @@ const main = {
 		[.name="attrs", .fn={ctx
 			attrs_test(ctx)
 		}],
+		[.name="selfclose", .fn={ctx
+			selfclose_test(ctx)
+		}],
 	][:])
 }
 
@@ -99,6 +102,30 @@ const attrs_test = {ctx
 	;;
 
 	testr.check(ctx, start == 0, "mismatched start and end tags")
+
+	xml.free(x)
+}
+
+const selfclose_test = {ctx
+	var x = xml.mkpath("test/files/003_selfclose.xml")
+	var open = false
+
+	for ev : xml.byevent(x)
+		match ev
+		| `std.Ok `xml.Start ("doc", _):
+			testr.check(ctx, !open, "<doc> already open")
+			open = true
+		| `std.Ok `xml.End "doc":
+			testr.check(ctx, open, "<doc> not open")
+			open = false
+		| `std.Ok `xml.Eof:
+			testr.check(ctx, !open, "<doc> not closed")
+		| `std.Ok e:
+			testr.fail(ctx, "unexpected event {}", e)
+		| `std.Err e:
+			testr.fail(ctx, "error {}", e)
+		;;
+	;;
 
 	xml.free(x)
 }
