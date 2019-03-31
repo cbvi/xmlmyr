@@ -325,6 +325,7 @@ const parsedoctype = {x
 	const suf = ">"
 	var dt = std.mksb()
 	var s, start, open, err
+	var q = '"', armed = true
 
 	match bio.readterm(x.file, suf)
 	| `std.Ok b:
@@ -363,8 +364,28 @@ const parsedoctype = {x
 	while true
 		while x.p.bidx < x.p.buf.len
 			match bnext(x)
-			| '<':	open++
-			| '>':	open--
+			| '<':
+				if armed
+					open++
+				;;
+			| '>':
+				if armed
+					open--
+				;;
+			| '"':
+				if armed
+					armed = false
+					q = '"'
+				elif q == '"'
+					armed = true
+				;;
+			| '\'':
+				if armed
+					armed = false
+					q = '\''
+				elif q == '\''
+					armed = true
+				;;
 			| _:
 			;;
 		;;
@@ -390,7 +411,7 @@ const parsedoctype = {x
 	;;
 
 	s = std.sbpeek(dt)
-	s = std.sldup(s[start:s.len-suf.len])
+	s = std.sldup(prune(s[start:s.len-suf.len]))
 	std.sbfree(dt)
 	-> `std.Ok `Doctype s
 

@@ -19,6 +19,9 @@ const main = {
 		[.name="crlf", .fn={ctx
 			crlf_test(ctx)
 		}],
+		[.name="doctype", .fn={ctx
+			doctype_test(ctx)
+		}],
 		[.name="bad", .fn={ctx
 			bad_test(ctx)
 		}],
@@ -147,7 +150,7 @@ const twigil_test = {ctx
 		match ev
 		| `std.Ok `xml.Instruction ("xml", "version=\"1.0\""):
 			o++
-		| `std.Ok `xml.Doctype "test [\n\t<!ENTITY x \"example\">\n] ":
+		| `std.Ok `xml.Doctype "test [\n\t<!ENTITY x \"example\">\n]":
 			o++
 		| `std.Ok `xml.Comment "This is a comment":
 			o++
@@ -182,6 +185,55 @@ const crlf_test = {ctx
 		| `std.Ok `xml.End "doc":
 			o++
 		| `std.Ok `xml.Comment "document contains crlf line endings":
+			o++
+		| `std.Ok `xml.Eof:
+			o++
+		| e:
+			testr.fail(ctx, "unexpected {}", e)
+		;;
+	;;
+
+	testr.check(ctx, o == 4, "unexpected event count {}", o)
+
+	xml.free(x)
+}
+
+const doctype_test = {ctx
+	var x
+	var o
+
+	x = xml.mkpath("test/files/006a_doctype.xml")
+	o = 0
+
+	for ev : xml.byevent(x)
+		match ev
+		| `std.Ok `xml.Doctype "doc [\n\t<!ENTITY t \"<t&gt;\">\n]":
+			o++
+		| `std.Ok `xml.Start ("doc", _):
+			o++
+		| `std.Ok `xml.End "doc":
+			o++
+		| `std.Ok `xml.Eof:
+			o++
+		| e:
+			testr.fail(ctx, "unexpected {}", e)
+		;;
+	;;
+
+	testr.check(ctx, o == 4, "unexpected event count {}", o)
+
+	xml.free(x)
+
+	x = xml.mkpath("test/files/006b_doctype.xml")
+	o = 0
+
+	for ev : xml.byevent(x)
+		match ev
+		| `std.Ok `xml.Doctype "doc [\n\t<!ENTITY t '<t&gt;'>\n]":
+			o++
+		| `std.Ok `xml.Start ("doc", _):
+			o++
+		| `std.Ok `xml.End "doc":
 			o++
 		| `std.Ok `xml.Eof:
 			o++
