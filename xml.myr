@@ -405,7 +405,7 @@ const parseinstruction = {x
 
 	match prefixtoterm(x, "?", "?>")
 	| `std.Ok b:	newbuf(x, std.sldup(b))
-	| `std.Err e:	-> `std.Err error(x, `Trunc `bio.Eof)
+	| `std.Err e:	-> `std.Err e
 	;;
 
 	if x.p.bidx < x.p.buf.len
