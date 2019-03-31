@@ -42,7 +42,6 @@ const close = {x
 		match bnext(x)
 		| '<':
 			if std.strstrip(x.p.buf[start:stop]).len > 0
-				/* TODO entities */
 				-> `std.Ok `Characters x.p.buf[start:stop]
 			else
 				-> dispatch(x)
