@@ -295,7 +295,7 @@ const prefixtoterm = {x, full, pref, suf
 
 	for cc : std.bychar(pref)
 		match bnext(x)
-		| c:	if c != cc && (cc == ' ' && !isspace(c))
+		| c:	if c != cc
 				-> `std.Err error(x, `Unexpected (c, cc))
 			;;
 		;;
