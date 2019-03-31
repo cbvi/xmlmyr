@@ -317,4 +317,22 @@ const bad_test = {ctx
 	testr.check(ctx, o == 2, "unexpected event count {}", o)
 
 	xml.free(x)
+
+	x = xml.mkbuf("<doc><![CDATA[</doc>")
+	o = 0
+
+	for ev : xml.byevent(x)
+		match ev
+		| `std.Ok `xml.Start ("doc", _):
+			o++
+		| `std.Err [.line=1, .off=7, .err=`xml.Unclosed ("<![CDATA[", "]]>")]:
+			o++
+		| e:
+			testr.fail(ctx, "unexpected {}", e)
+		;;
+	;;
+
+	testr.check(ctx, o == 2, "unexpected event count {}", o)
+
+	xml.free(x)
 }
