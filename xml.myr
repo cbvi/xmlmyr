@@ -418,7 +418,7 @@ const parseinstruction = {x
 			;;
 		;;
 	else
-		-> `std.Err error(x, `Trunc `bio.Eof)
+		-> `std.Err error(x, `Empty)
 	;;
 
 	while x.p.bidx < x.p.buf.len

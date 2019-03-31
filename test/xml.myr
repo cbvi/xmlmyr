@@ -16,6 +16,9 @@ const main = {
 		[.name="twigil", .fn={ctx
 			twigil_test(ctx)
 		}],
+		[.name="bad", .fn={ctx
+			bad_test(ctx)
+		}],
 	][:])
 }
 
@@ -160,7 +163,158 @@ const twigil_test = {ctx
 		;;
 	;;
 
-	testr.check(ctx, o == 7, "unexpected event count")
+	testr.check(ctx, o == 7, "unexpected event count {}", o)
+
+	xml.free(x)
+}
+
+const bad_test = {ctx
+	var x, o
+
+	x = xml.mkbuf("<doc><.child></.child></doc>")
+	o = 0
+
+	for ev : xml.byevent(x)
+		match ev
+		| `std.Ok `xml.Start ("doc", _):			o++
+		| `std.Err [.line=1, .off=7, .err=`xml.Inval '.']:	o++
+		|  e:	testr.fail(ctx, "unexpected {}", e)
+		;;
+	;;
+
+	testr.check(ctx, o == 2, "unexpected event count {}", o)
+
+	xml.free(x)
+
+	x = xml.mkbuf("<??><doc></doc>")
+	o = 0
+
+	for ev : xml.byevent(x)
+		match ev
+		| `std.Err [.line=1, .off=4, .err=`xml.Empty]:	o++
+		| e:	testr.fail(ctx, "unexpected {}", e)
+		;;
+	;;
+
+	testr.check(ctx, o == 1, "unexpected event count {}", o)
+
+	xml.free(x)
+
+	x = xml.mkbuf("<doc></doc>doc")
+	o = 0
+
+	for ev : xml.byevent(x)
+		match ev
+		| `std.Ok `xml.Start ("doc", _):
+			o++
+		| `std.Ok `xml.End "doc":
+			o++
+		| `std.Err [.line=1, .off=14, .err=`xml.Trunc `bio.Eof]:
+			o++
+		| e:
+			testr.fail(ctx, "unexpected {}", e)
+		;;
+	;;
+
+	testr.check(ctx, o == 3, "unexpected event count {}", o)
+
+	xml.free(x)
+
+	x = xml.mkbuf("<doc>\n<?target example instruction>\n</doc>")
+	o = 0
+
+	for ev : xml.byevent(x)
+		match ev
+		| `std.Ok `xml.Start ("doc", _):
+			o++
+		| `std.Err [.line=3, .off=6, .err=`xml.Trunc `bio.Eof]:
+			o++
+		| e:
+			testr.fail(ctx, "unexpected {}", e)
+		;;
+	;;
+
+	testr.check(ctx, o == 2, "unexpected event count {}", o)
+
+	xml.free(x)
+
+	x = xml.mkbuf("<doc an></doc>")
+	o = 0
+
+	for ev : xml.byevent(x)
+		match ev
+		| `std.Err [.line=1, .off=8, .err=`xml.Inval '>']:	o++
+		| e:	testr.fail(ctx, "unexpected {}", e)
+		;;
+	;;
+
+	testr.check(ctx, o == 1, "unexpected event count {}", o)
+
+	xml.free(x)
+
+	x = xml.mkbuf("<doc an=val></doc>")
+	o = 0
+
+	for ev : xml.byevent(x)
+		match ev
+		| `std.Err [.line=1, .off=9, .err=`xml.Unexpected ('v', '"')]:
+			o++
+		| e:
+			testr.fail(ctx, "unexpected {}", e)
+		;;
+	;;
+
+	testr.check(ctx, o == 1, "unexpected event count {}", o)
+
+	xml.free(x)
+
+	x = xml.mkbuf("<doc an=></doc>")
+	o = 0
+
+	for ev : xml.byevent(x)
+		match ev
+		| `std.Err [.line=1, .off=9, .err=`xml.Unexpected ('>', '"')]:
+			o++
+		| e:
+			testr.fail(ctx, "unexpected {}", e)
+		;;
+	;;
+
+	testr.check(ctx, o == 1, "unexpected event count {}", o)
+
+	xml.free(x)
+
+	x = xml.mkbuf("<doc an=\"val\" \"val\"></doc>")
+	o = 0
+
+	for ev : xml.byevent(x)
+		match ev
+		| `std.Err [.line=1, .off=15, .err=`xml.Inval '"']:
+			o++
+		| e:
+			testr.fail(ctx, "unexpected {}", e)
+		;;
+	;;
+
+	testr.check(ctx, o == 1, "unexpected event count {}", o)
+
+	xml.free(x)
+
+	x = xml.mkbuf("<doc></>")
+	o = 0
+
+	for ev : xml.byevent(x)
+		match ev
+		| `std.Ok `xml.Start ("doc", _):
+			o++
+		| `std.Err [.line=1, .off=8, .err=`xml.Inval '>']:
+			o++
+		| e:
+			testr.fail(ctx, "unexpected {}", e)
+		;;
+	;;
+
+	testr.check(ctx, o == 2, "unexpected event count {}", o)
 
 	xml.free(x)
 }
