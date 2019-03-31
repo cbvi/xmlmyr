@@ -227,7 +227,7 @@ const bad_test = {ctx
 		match ev
 		| `std.Ok `xml.Start ("doc", _):
 			o++
-		| `std.Err [.line=3, .off=6, .err=`xml.Trunc `bio.Eof]:
+		| `std.Err [.line=2, .off=1, .err=`xml.Unclosed ("<?", "?>")]:
 			o++
 		| e:
 			testr.fail(ctx, "unexpected {}", e)

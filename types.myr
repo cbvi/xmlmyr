@@ -42,6 +42,7 @@ pkg xml =
 		`Inval		char
 		`Junk		char
 		`Trunc		bio.err
+		`Unclosed	(byte[:], byte[:])
 		`Unexpected	(char, char)
 	;;
 

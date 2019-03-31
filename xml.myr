@@ -136,7 +136,7 @@ const parseelemname = {x
 		;;
 	;;
 
-	-> `std.Err error(x, `Trunc `bio.Eof)
+	-> `std.Err error(x, `Unclosed ("<", ">"))
 }
 
 const parseexclamation = {x
@@ -189,7 +189,7 @@ const parseend = {x
 		;;
 	;;
 
-	-> `std.Err error(x, `Trunc `bio.Eof)
+	-> `std.Err error(x, `Unclosed ("</", ">"))
 }
 
 const parseattrs = {x, attrs
@@ -283,12 +283,15 @@ const parseattrval = {x
 	-> `std.Err error(x, `Trunc `bio.Eof)
 }
 
-const prefixtoterm = {x, pref, suf
+const prefixtoterm = {x, full, pref, suf
 	match bio.readterm(x.file, suf)
 	| `std.Ok s:	newbuf(x, s)
 	| `std.Err e:	-> `std.Err error(x, `Trunc e)
 	;;
 
+	if !std.hassuffix(x.p.buf, suf)
+		-> `std.Err error(x, `Unclosed (full, suf))
+	;;
 
 	for cc : std.bychar(pref)
 		match bnext(x)
@@ -300,22 +303,18 @@ const prefixtoterm = {x, pref, suf
 
 	taste(x)
 
-	if std.hassuffix(x.p.buf, suf) && x.p.bidx < x.p.buf.len
-		-> `std.Ok x.p.buf[x.p.bidx:x.p.buf.len-suf.len]
-	else
-		-> `std.Err error(x, `Trunc `bio.Eof)
-	;;
+	-> `std.Ok x.p.buf[x.p.bidx:x.p.buf.len-suf.len]
 }
 
 const parsecdata = {x
-	match prefixtoterm(x, "[CDATA[", "]]>")
+	match prefixtoterm(x, "<![CDATA[", "[CDATA[", "]]>")
 	| `std.Ok b:	-> `std.Ok `Cdata b
 	| `std.Err e:	-> `std.Err e
 	;;
 }
 
 const parsecomment = {x
-	match prefixtoterm(x, "--", "-->")
+	match prefixtoterm(x, "<!--", "--", "-->")
 	| `std.Ok b:	-> `std.Ok `Comment std.strstrip(b)
 	| `std.Err e:	-> `std.Err e
 	;;
@@ -336,7 +335,7 @@ const parsedoctype = {x
 	;;
 
 	if !std.hassuffix(x.p.buf, suf)
-		err = error(x, `Trunc `bio.Eof)
+		err = error(x, `Unclosed ("<!DOCTYPE", ">"))
 		goto err
 	;;
 
@@ -382,7 +381,7 @@ const parsedoctype = {x
 			;;
 
 			if !std.hassuffix(x.p.buf, suf)
-				err = error(x, `Trunc `bio.Eof)
+				err = error(x, `Unclosed ("<!DOCTYPE", ">"))
 				goto err
 			;;
 		else
@@ -403,7 +402,7 @@ const parsedoctype = {x
 const parseinstruction = {x
 	var start, stop
 
-	match prefixtoterm(x, "?", "?>")
+	match prefixtoterm(x, "<?", "?", "?>")
 	| `std.Ok b:	newbuf(x, std.sldup(b))
 	| `std.Err e:	-> `std.Err e
 	;;
