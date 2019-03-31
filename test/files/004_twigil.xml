@@ -1,5 +1,7 @@
 <?xml version="1.0"?>
-<!DOCTYPE 	 test>
+<!DOCTYPE 	 test [
+	<!ENTITY x "example">
+] >
 <!-- This is a comment -->
 <doc>
 	<![CDATA[This is cdata]]>

@@ -141,7 +141,7 @@ const twigil_test = {ctx
 		match ev
 		| `std.Ok `xml.Instruction ("xml", "version=\"1.0\""):
 			o++
-		| `std.Ok `xml.Doctype "test":
+		| `std.Ok `xml.Doctype "test [\n\t<!ENTITY x \"example\">\n] ":
 			o++
 		| `std.Ok `xml.Comment "This is a comment":
 			o++
