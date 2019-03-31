@@ -41,7 +41,7 @@ const close = {x
 	while x.p.bidx < x.p.buf.len
 		match bnext(x)
 		| '<':
-			if std.strstrip(x.p.buf[start:stop]).len > 0
+			if prune(x.p.buf[start:stop]).len > 0
 				-> `std.Ok `Characters x.p.buf[start:stop]
 			else
 				-> dispatch(x)
@@ -51,7 +51,7 @@ const close = {x
 		;;
 	;;
 
-	if std.strstrip(x.p.buf).len > 0
+	if prune(x.p.buf).len > 0
 		-> `std.Err error(x, `Trunc `bio.Eof)
 	else
 		x.p.more = false
@@ -315,7 +315,7 @@ const parsecdata = {x
 
 const parsecomment = {x
 	match prefixtoterm(x, "<!--", "--", "-->")
-	| `std.Ok b:	-> `std.Ok `Comment std.strstrip(b)
+	| `std.Ok b:	-> `std.Ok `Comment prune(b)
 	| `std.Err e:	-> `std.Err e
 	;;
 }

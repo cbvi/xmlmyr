@@ -16,6 +16,9 @@ const main = {
 		[.name="twigil", .fn={ctx
 			twigil_test(ctx)
 		}],
+		[.name="crlf", .fn={ctx
+			crlf_test(ctx)
+		}],
 		[.name="bad", .fn={ctx
 			bad_test(ctx)
 		}],
@@ -164,6 +167,30 @@ const twigil_test = {ctx
 	;;
 
 	testr.check(ctx, o == 7, "unexpected event count {}", o)
+
+	xml.free(x)
+}
+
+const crlf_test = {ctx
+	var x = xml.mkpath("test/files/005_crlf.xml")
+	var o = 0
+
+	for ev : xml.byevent(x)
+		match ev
+		| `std.Ok `xml.Start ("doc", _):
+			o++
+		| `std.Ok `xml.End "doc":
+			o++
+		| `std.Ok `xml.Comment "document contains crlf line endings":
+			o++
+		| `std.Ok `xml.Eof:
+			o++
+		| e:
+			testr.fail(ctx, "unexpected {}", e)
+		;;
+	;;
+
+	testr.check(ctx, o == 4, "unexpected event count {}", o)
 
 	xml.free(x)
 }

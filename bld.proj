@@ -10,3 +10,8 @@ bin 2myrl =
 	main.myr
 	lib xml
 ;;
+
+bin validate =
+	validate.myr
+	lib xml
+;;
