@@ -20,7 +20,7 @@ const main = {
 	//var f = std.try(bio.open("test/feed.xml", bio.Rd))
 	//var f = std.try(bio.open("test/xmltest.xml", bio.Rd))
 
-	var x = xml.mkfile(f)
+	var x = std.try(xml.mkfile(f))
 
 	for event : xml.byevent(x)
 		match event

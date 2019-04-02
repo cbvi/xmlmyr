@@ -31,6 +31,11 @@ pkg xml =
 		`Comment	byte[:]
 	;;
 
+	type mkerr = union
+		`Efile		byte[:]
+		`Eenc		byte[:]
+	;;
+
 	type err = struct
 		line	:	std.size
 		off	:	std.size

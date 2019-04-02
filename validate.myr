@@ -1,0 +1,37 @@
+use std
+use xml
+
+const valid = {path
+	var x
+
+	std.put("processing {}\n", path)
+	x = std.try(xml.mkpath(path))
+
+	for ev : xml.byevent(x)
+		match ev
+		| `std.Ok e:
+			//std.put("{}\n", e)
+		| `std.Err e:
+			std.put("{}\n", e)
+		;;
+	;;
+
+	xml.free(x)
+}
+
+const main = {
+	const dir = "/tmp/xmlconf/xmltest/valid/sa"
+	var d = std.try(std.diropen(dir))
+	var path
+
+	for f : std.byentry(d)
+		if std.sleq(f, "out")
+			continue
+		;;
+		path = std.pathcat(dir, f)
+		valid(path)
+		std.slfree(path)
+	;;
+
+	std.dirclose(d)
+}

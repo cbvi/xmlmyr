@@ -6,9 +6,9 @@ use "mk"
 use "types"
 
 pkg xml =
-	const mkbuf	:	(s : byte[:] -> ctx#)
-	const mkpath	:	(p : byte[:] -> ctx#)
-	const mkfile	:	(f : bio.file# -> ctx#)
+	const mkbuf	:	(s : byte[:] -> std.result(ctx#, mkerr))
+	const mkpath	:	(p : byte[:] -> std.result(ctx#, mkerr))
+	const mkfile	:	(f : bio.file# -> std.result(ctx#, mkerr))
 	const free 	:	(x : ctx# -> void)
 
 	pkglocal const dispatch	: (x : ctx# -> std.result(event, err))
@@ -558,7 +558,7 @@ const mkbuf = {s
 
 	skipspace(x)
 
-	-> x
+	-> `std.Ok x
 }
 
 const mkpath = {p
@@ -566,14 +566,14 @@ const mkpath = {p
 
 	match bio.open(p, bio.Rd)
 	| `std.Ok o:	f = o
-	| `std.Err e:	std.fatal("open failed: {}\n", e)
+	| `std.Err e:	-> `std.Err `Efile e
 	;;
 
 	x = mk(f, true)
 
 	skipspace(x)
 
-	-> x
+	-> `std.Ok x
 }
 
 const mkfile = {f
@@ -581,5 +581,5 @@ const mkfile = {f
 
 	skipspace(x)
 
-	-> x
+	-> `std.Ok x
 }
