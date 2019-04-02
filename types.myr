@@ -21,19 +21,19 @@ pkg xml =
 	;;
 
 	type event = union
-		`Instruction	(byte[:], byte[:])
-		`Doctype	byte[:]
-		`Eof
-		`Start		(byte[:], (byte[:], byte[:])[:])
-		`End		byte[:]
-		`Characters	byte[:]
-		`Cdata		byte[:]
-		`Comment	byte[:]
+		`Instruction	(byte[:], byte[:])	/* <?xml ... ?> */
+		`Doctype	byte[:]			/* <!DOCTYPE ...> */
+		`Eof					/* file end */
+		`Start		(byte[:], (byte[:], byte[:])[:]) /* <foo> */
+		`End		byte[:]			/* </foo> */
+		`Characters	byte[:]			/* blah */
+		`Cdata		byte[:]			/* <![CDATA[]]> */
+		`Comment	byte[:]			/* <!-- --> */
 	;;
 
 	type mkerr = union
-		`Efile		byte[:]
-		`Eenc		byte[:]
+		`Efile		byte[:]	/* file open failed */
+		`Eenc		byte[:]	/* file has unsupported encoding */
 	;;
 
 	type err = struct
@@ -43,11 +43,11 @@ pkg xml =
 	;;
 
 	type errtype = union
-		`Empty
-		`Inval		char
-		`Trunc		bio.err
-		`Unclosed	(byte[:], byte[:])
-		`Unexpected	(char, char)
+		`Empty			/* got nothing, needed something */
+		`Inval		char	/* this char is invalid here */
+		`Trunc		bio.err	/* parsing ended due to io err */
+		`Unclosed	(byte[:], byte[:]) /* start with no end */
+		`Unexpected	(char, char) /* read this, expected that */
 	;;
 
 	type state = union
