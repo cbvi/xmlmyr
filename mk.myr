@@ -4,11 +4,11 @@ use bio
 use "types"
 
 pkg xml =
-	pkglocal const mk : (f : bio.file#, owned : bool -> ctx#)
+	pkglocal const mk : (f : bio.file#, owned : bool -> std.result(ctx#, mkerr))
 ;;
 
 const mk = {f, owned
-	-> std.mk([
+	var x = std.mk([
 		.file = f,
 		.owned = owned,
 		.p = std.mk([
@@ -21,4 +21,45 @@ const mk = {f, owned
 			.more = true
 		])
 	])
+
+	match bom(x)
+	| `std.Some s:	-> `std.Err `Eenc s
+	| `std.None:	-> `std.Ok x
+	;;
+}
+
+const bom = {x
+	match bio.getb(x.file)
+	| `std.Ok 0xEF:	goto utf8
+	| `std.Ok 0xFE:	goto utf16
+	| `std.Ok 0xFF:	goto utf16le
+	| _:		goto none
+	;;
+
+:utf8
+	match bio.getb(x.file)
+	| `std.Ok 0xBB:
+	| _:		goto none
+	;;
+
+	match bio.getb(x.file)
+	| `std.Ok 0xBF:	-> `std.None
+	| _:		goto none
+	;;
+
+:utf16
+	match bio.getb(x.file)
+	| `std.Ok 0xFF:	-> `std.Some "UTF-16"
+	| _:		goto none
+	;;
+
+:utf16le
+	match bio.getb(x.file)
+	| `std.Ok 0xFE:	-> `std.Some "UTF-16"
+	| _:		goto none
+	;;
+
+:none
+	bio.seek(x.file, 0)
+	-> `std.None
 }

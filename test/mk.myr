@@ -1,0 +1,64 @@
+use std
+use testr
+use xml
+
+const main = {
+	testr.run([
+		[.name="utf8bom", .fn={ctx
+			utf8bom_test(ctx)
+		}],
+		[.name="utf16bom", .fn={ctx
+			utf16bom_test(ctx)
+		}],
+		[.name="utf16lebom", .fn={ctx
+			utf16lebom_test(ctx)
+		}],
+	][:])
+}
+
+const utf8bom_test = {ctx
+	var x, o
+
+	match xml.mkpath("test/files/007_utf8bom.xml")
+	| `std.Ok ok:
+		testr.ok(ctx)
+		x = ok
+	| `std.Err e:
+		testr.fail(ctx, "error opening utf8 bom file {}", e)
+		-> void
+	;;
+
+	o = 0
+
+	for ev : xml.byevent(x)
+		match ev
+		| `std.Ok `xml.Start ("doc", _):	o++
+		| `std.Ok `xml.End "doc":		o++
+		| `std.Ok `xml.Eof:			o++
+		| `std.Ok `xml.Characters _:
+			testr.fail(ctx, "bom interpreted as character data?")
+		| e:
+			testr.fail(ctx, "unexpected {}", e)
+		;;
+	;;
+
+	testr.check(ctx, o == 3, "unexpected event count {}", o)
+
+	xml.free(x)
+}
+
+const utf16bom_test = {ctx
+	match xml.mkpath("test/files/008a_utf16bom.xml")
+	| `std.Err `xml.Eenc "UTF-16":	testr.ok(ctx)
+	| `std.Err e:	testr.fail(ctx, "unexpected error {}", e)
+	| `std.Ok _:	testr.fail(ctx, "opening UTF-16 file should fail")
+	;;
+}
+
+const utf16lebom_test = {ctx
+	match xml.mkpath("test/files/008b_utf16lebom.xml")
+	| `std.Err `xml.Eenc "UTF-16":	testr.ok(ctx)
+	| `std.Err e:	testr.fail(ctx, "unexpected error {}", e)
+	| `std.Ok _:	testr.fail(ctx, "opening UTF-16LE file should fail")
+	;;
+}

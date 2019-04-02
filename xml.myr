@@ -565,7 +565,12 @@ const eventfree = {ev
 }
 
 const mkbuf = {s
-	var x = mk(bio.mkmem(s), true)
+	var x
+
+	match mk(bio.mkmem(s), false)
+	| `std.Ok o:	x = o
+	| `std.Err e:	-> `std.Err e
+	;;
 
 	skipspace(x)
 
@@ -580,7 +585,10 @@ const mkpath = {p
 	| `std.Err e:	-> `std.Err `Efile e
 	;;
 
-	x = mk(f, true)
+	match mk(f, false)
+	| `std.Ok o:	x = o
+	| `std.Err e:	-> `std.Err e
+	;;
 
 	skipspace(x)
 
@@ -588,7 +596,12 @@ const mkpath = {p
 }
 
 const mkfile = {f
-	var x = mk(f, false)
+	var x
+
+	match mk(f, false)
+	| `std.Ok o:	x = o
+	| `std.Err e:	-> `std.Err e
+	;;
 
 	skipspace(x)
 
