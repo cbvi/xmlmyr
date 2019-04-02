@@ -148,7 +148,7 @@ const parseexclamation = {x
 	| `std.Ok '[':	-> parsecdata(x)
 	| `std.Ok '-':	-> parsecomment(x)
 	| `std.Ok 'D':	-> parsedoctype(x)
-	| `std.Ok c:	-> `std.Err error(x, `Junk c)
+	| `std.Ok c:	-> `std.Err error(x, `Inval c)
 	| `std.Err e:	-> `std.Err error(x, `Trunc e)
 	;;
 }
