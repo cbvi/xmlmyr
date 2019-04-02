@@ -2,6 +2,7 @@ use std
 use bio
 
 use "chars"
+use "mk"
 use "types"
 
 pkg xml =
@@ -553,19 +554,7 @@ const free = {x
 }
 
 const mkbuf = {s
-	var x = std.mk([
-		.file = bio.mkmem(s),
-		.owned = true,
-		.p = std.mk([
-			.buf = [][:],
-			.bidx = 0,
-			.bcur = 0,
-			.line = 1,
-			.off = 0,
-			.state = `Close,
-			.more = true
-		])
-	])
+	var x = mk(bio.mkmem(s), true)
 
 	skipspace(x)
 
@@ -573,19 +562,14 @@ const mkbuf = {s
 }
 
 const mkpath = {p
-	var x = std.mk([
-		.file = std.try(bio.open(p, bio.Rd)),
-		.owned = true,
-		.p = std.mk([
-			.buf = [][:],
-			.bidx = 0,
-			.bcur = 0,
-			.line = 1,
-			.off = 0,
-			.state = `Close,
-			.more = true
-		])
-	])
+	var x, f
+
+	match bio.open(p, bio.Rd)
+	| `std.Ok o:	f = o
+	| `std.Err e:	std.fatal("open failed: {}\n", e)
+	;;
+
+	x = mk(f, true)
 
 	skipspace(x)
 
@@ -593,19 +577,7 @@ const mkpath = {p
 }
 
 const mkfile = {f
-	var x = std.mk([
-		.file = f,
-		.owned = false,
-		.p = std.mk([
-			.buf = [][:],
-			.bidx = 0,
-			.bcur = 0,
-			.line = 1,
-			.off = 0,
-			.state = `Close,
-			.more = true
-		])
-	])
+	var x = mk(f, false)
 
 	skipspace(x)
 
