@@ -21,11 +21,8 @@ impl iterable eventiter -> std.result(event, err) =
 
 	__iterfin__ = {iterp, valp
 		match valp#
-		| `std.Ok `Doctype d:
-			std.slfree(d)
-		| `std.Ok `Start (_, a):
-			std.slfree(a)
-		| _:
+		| `std.Ok e:	eventfree(e)
+		| `std.Err e:
 		;;
 	}
 ;;

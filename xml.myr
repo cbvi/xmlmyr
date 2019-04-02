@@ -9,6 +9,7 @@ pkg xml =
 	const mkbuf	:	(s : byte[:] -> std.result(ctx#, mkerr))
 	const mkpath	:	(p : byte[:] -> std.result(ctx#, mkerr))
 	const mkfile	:	(f : bio.file# -> std.result(ctx#, mkerr))
+	const eventfree	:	(ev : event -> void)
 	const free 	:	(x : ctx# -> void)
 
 	pkglocal const dispatch	: (x : ctx# -> std.result(event, err))
@@ -551,6 +552,16 @@ const free = {x
 	std.slfree(x.p.buf)
 	std.free(x.p)
 	std.free(x)
+}
+
+const eventfree = {ev
+	match ev
+	| `Doctype d:
+		std.slfree(d)
+	| `Start (_, a):
+		std.slfree(a)
+	| _:
+	;;
 }
 
 const mkbuf = {s
