@@ -21,14 +21,84 @@ pkg xml =
 	;;
 
 	type event = union
-		`Instruction	(byte[:], byte[:])	/* <?xml ... ?> */
-		`Doctype	byte[:]			/* <!DOCTYPE ...> */
-		`Eof					/* file end */
-		`Start		(byte[:], (byte[:], byte[:])[:]) /* <foo> */
-		`End		byte[:]			/* </foo> */
-		`Characters	byte[:]			/* blah */
-		`Cdata		byte[:]			/* <![CDATA[]]> */
-		`Comment	byte[:]			/* <!-- --> */
+		/*
+		 * processing instruction <?foo ..?> and prolog <?xml ..?>
+		 *
+		 * <?target some instruction?>
+		 *   -> `xml.Instruction ("target", "some instruction")
+		 *
+		 * <?xml version='1.0'?>
+		 *   -> `xml.Instruction ("xml", "version='1.0'")
+		 */
+		`Instruction	(byte[:], byte[:])
+
+		/*
+		 * doctype <!DOCTYPE ..>
+		 *
+		 * <!DOCTYPE foo [ <!ENTITY x 'x'> ] >
+		 *   -> `xml.Doctype "foo [ <!ENTITY x 'x'> ] >"
+		 */
+		`Doctype	byte[:]
+
+		/*
+		 * end of the file stream was appropriately reached
+		 */
+		`Eof
+
+		/*
+		 * start tag <foo> <foo ..> and empty tag <foo /> <foo ../>
+		 *
+		 * for an empty tag, the next successful event following
+		 * this will be a corresponding end event, ie.
+		 * <foo /> will cause the same sequence of events as
+		 * <foo></foo>
+		 *
+		 * contains the name of the tag and a slice of tuples
+		 * representing key-value pairs of attributes, or an empty
+		 * slice if there are none
+		 *
+		 * <foo> or <foo />
+		 *   -> `xml.Start ("foo", [])
+		 *
+		 * <foo bar="1" baz="2"> or <foo bar="1" baz="2" />
+		 *   -> `xml.Start ("foo", [("bar", "1"), ("baz", "2")])
+		 */
+		`Start		(byte[:], (byte[:], byte[:])[:])
+
+		/*
+		 * end tag </foo> and follow up to empty tag <foo />
+		 *
+		 * </foo>
+		 *   -> `xml.End "foo"
+		 *
+		 * <foo /> (after start event has been received)
+		 *   -> `xml.End "foo"
+		 */
+		`End		byte[:]
+
+		/*
+		 * character data ..> .. <..
+		 *
+		 * ..>foo<..
+		 *   -> `xml.Characters "foo"
+		 */
+		`Characters	byte[:]
+
+		/*
+		 * cdata <![CDATA[..]]>
+		 *
+		 * <!CDATA[foo]]>
+		 *  -> `xml.Cdata "foo"
+		 */
+		`Cdata		byte[:]
+
+		/*
+		 * comment <!-- .. -->
+		 *
+		 * <!-- foo -->
+		 *  -> `xml.Comment "foo"
+		 */
+		`Comment	byte[:]
 	;;
 
 	type mkerr = union
