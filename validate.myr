@@ -5,7 +5,15 @@ const valid = {path
 	var x
 
 	std.put("processing {}\n", path)
-	x = std.try(xml.mkpath(path))
+	match xml.mkpath(path)
+	| `std.Ok o: x = o
+	| `std.Err `xml.Eenc "UTF-16":
+		std.put("UTF-16 is not supported\n")
+		-> void
+	| `std.Err e:
+		std.put("{}\n", e)
+		-> void
+	;;
 
 	for ev : xml.byevent(x)
 		match ev
