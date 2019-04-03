@@ -121,24 +121,36 @@ const attrs_test = {ctx
 
 const empty_test = {ctx
 	var x = std.try(xml.mkpath("test/files/003_empty.xml"))
-	var open = false
+	var doc = false
+	var empty = false
+	var o = 0
 
 	for ev : xml.byevent(x)
 		match ev
 		| `std.Ok `xml.Start ("doc", _):
-			testr.check(ctx, !open, "<doc> already open")
-			open = true
+			testr.check(ctx, !doc, "<doc> already open")
+			doc = true
 		| `std.Ok `xml.End "doc":
-			testr.check(ctx, open, "<doc> not open")
-			open = false
+			testr.check(ctx, doc, "<doc> not open")
+			doc = false
+		| `std.Ok `xml.Start ("empty", _):
+			testr.check(ctx, !empty, "<empty> already open")
+			empty = true
+		| `std.Ok `xml.End "empty":
+			testr.check(ctx, empty, "<empty> not open")
+			empty = false
 		| `std.Ok `xml.Eof:
-			testr.check(ctx, !open, "<doc> not closed")
+			testr.check(ctx, !empty, "<empty> not closed")
+			testr.check(ctx, !doc, "<doc> not closed")
 		| `std.Ok e:
 			testr.fail(ctx, "unexpected event {}", e)
 		| `std.Err e:
 			testr.fail(ctx, "error {}", e)
 		;;
+		o++
 	;;
+
+	testr.check(ctx, o == 7, "unexpected event count {}", o)
 
 	xml.free(x)
 }
@@ -246,6 +258,30 @@ const doctype_test = {ctx
 	testr.check(ctx, o == 4, "unexpected event count {}", o)
 
 	xml.free(x)
+
+/* XXX
+	x = std.try(xml.mkpath("test/files/006c_doctype.xml"))
+	o = 0
+
+	for ev : xml.byevent(x)
+		match ev
+		| `std.Ok `xml.Doctype "doc [\n\t<!-- shouldn't fail -->\n]":
+			o++
+		| `std.Ok `xml.Start ("doc", _):
+			o++
+		| `std.Ok `xml.End "doc":
+			o++
+		| `std.Ok `xml.Eof:
+			o++
+		| e:
+			testr.fail(ctx, "unexpected {}", e)
+		;;
+	;;
+
+	testr.check(ctx, o == 4, "unexpected event count {}", o)
+
+	xml.free(x)
+*/
 }
 
 const bad_test = {ctx

@@ -1,6 +1,7 @@
 use std
 use bio
 
+use "buf"
 use "chars"
 use "mk"
 use "types"
@@ -490,17 +491,6 @@ const bnext = {x
 	;;
 
 	-> c
-}
-
-const newbuf = {x, buf
-	std.slfree(x.p.buf)
-	x.p.bidx = x.p.bcur = 0
-	x.p.buf = buf
-}
-
-const expandbuf = {x, buf
-	x.p.buf = std.sljoin(&x.p.buf, buf)
-	std.slfree(buf)
 }
 
 const eatspace = {x

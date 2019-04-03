@@ -1,5 +1,6 @@
 lib xml =
 	xml.myr
+	buf.myr
 	chars.myr
 	entities.myr
 	iter.myr
