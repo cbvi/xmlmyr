@@ -274,15 +274,21 @@ const parseattrval = {x
 
 	start = stop = x.p.bidx
 
-	while x.p.bidx < x.p.buf.len
-		if bnext(x) == q
-			-> `std.Ok x.p.buf[start:stop]
-		else
-			stop = x.p.bidx
+	while true
+		while x.p.bidx < x.p.buf.len
+			if bnext(x) == q
+				-> `std.Ok x.p.buf[start:stop]
+			else
+				stop = x.p.bidx
+			;;
+		;;
+
+		match bio.readterm(x.file, ">")
+		| `std.Ok s:	expandbuf(x, s)
+		| `std.Err e:	-> `std.Err error(x, `Trunc e)
 		;;
 	;;
-
-	-> `std.Err error(x, `Trunc `bio.Eof)
+	std.die("unreached\n")
 }
 
 const prefixtoterm = {x, full, pref, suf
@@ -490,6 +496,11 @@ const newbuf = {x, buf
 	std.slfree(x.p.buf)
 	x.p.bidx = x.p.bcur = 0
 	x.p.buf = buf
+}
+
+const expandbuf = {x, buf
+	x.p.buf = std.sljoin(&x.p.buf, buf)
+	std.slfree(buf)
 }
 
 const eatspace = {x
