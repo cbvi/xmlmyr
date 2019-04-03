@@ -100,6 +100,7 @@ const attrs_test = {ctx
 				| ("one", "1"):		testr.ok(ctx)
 				| ("two", "two"):	testr.ok(ctx)
 				| ("three", "..."):	testr.ok(ctx)
+				| ("four", "fo>r"):	testr.ok(ctx)
 				| _:	testr.fail(ctx, "unexpected attribute")
 				;;
 			;;

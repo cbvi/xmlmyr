@@ -4,14 +4,15 @@ use xml
 const valid = {path
 	var x
 
-	std.put("processing {}\n", path)
+	//std.put("processing {}\n", path)
+	std.put(".")
 	match xml.mkpath(path)
 	| `std.Ok o: x = o
 	| `std.Err `xml.Eenc "UTF-16":
-		std.put("UTF-16 is not supported\n")
+		//std.put("UTF-16 is not supported\n")
 		-> void
 	| `std.Err e:
-		std.put("{}\n", e)
+		std.fatal("{}: {}\n", path, e)
 		-> void
 	;;
 
@@ -20,26 +21,51 @@ const valid = {path
 		| `std.Ok e:
 			//std.put("{}\n", e)
 		| `std.Err e:
-			std.put("{}\n", e)
+			std.fatal("{}: {}\n", path, e)
 		;;
 	;;
 
 	xml.free(x)
 }
 
-const main = {
-	const dir = "/tmp/xmlconf/xmltest/valid/sa"
-	var d = std.try(std.diropen(dir))
-	var path
+const isxml = {p
+	const ext = ".xml"
 
-	for f : std.byentry(d)
-		if std.sleq(f, "out")
-			continue
+	if p.len > ext.len
+		if std.sleq(p[p.len-ext.len:], ext)
+			-> true
 		;;
-		path = std.pathcat(dir, f)
-		valid(path)
-		std.slfree(path)
 	;;
 
-	std.dirclose(d)
+	-> false
+}
+
+const main = {
+	const dirs = [
+		"/tmp/xmlconf/xmltest",
+		"/tmp/xmlconf/xmltest/valid/sa",
+		"/tmp/xmlconf/sun",
+		"/tmp/xmlconf/sun/valid",
+		"/tmp/xmlconf/oasis",
+	]
+	var d
+	var path
+
+	for dir : dirs
+		std.put("{}: ", dir)
+		d = std.try(std.diropen(dir))
+
+		for f : std.byentry(d)
+			if !isxml(f) || std.strhas(f, "fail")
+				continue
+			;;
+			path = std.pathcat(dir, f)
+			valid(path)
+			std.slfree(path)
+		;;
+
+		std.dirclose(d)
+		std.put("\n")
+	;;
+
 }
