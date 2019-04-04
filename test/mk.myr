@@ -17,32 +17,40 @@ const main = {
 }
 
 const utf8bom_test = {ctx
-	var x, o
+	var x, g, e
+	const ex : std.result(xml.event, void)[:] = [
+		`std.Ok `xml.Start ("doc", [][:]),
+		`std.Ok `xml.End "doc",
+		`std.Ok `xml.Eof
+	][:]
+	var i = 0
 
 	match xml.mkpath("test/files/007_utf8bom.xml")
 	| `std.Ok ok:
 		testr.ok(ctx)
 		x = ok
-	| `std.Err e:
-		testr.fail(ctx, "error opening utf8 bom file {}", e)
+	| `std.Err er:
+		testr.fail(ctx, "error opening utf8 bom file {}", er)
 		-> void
 	;;
 
-	o = 0
-
 	for ev : xml.byevent(x)
-		match ev
-		| `std.Ok `xml.Start ("doc", _):	o++
-		| `std.Ok `xml.End "doc":		o++
-		| `std.Ok `xml.Eof:			o++
-		| `std.Ok `xml.Characters _:
-			testr.fail(ctx, "bom interpreted as character data?")
-		| e:
-			testr.fail(ctx, "unexpected {}", e)
+		if i >= ex.len
+			testr.fail(ctx,
+				"too many events {}>{}", i+1, ex.len)
+			-> void
 		;;
+		g = std.fmt("{}", ev)
+		e = std.fmt("{}", ex[i])
+		if !std.sleq(g, e)
+			testr.fail(ctx, "got \"{}\" expected \"{}\"", g, e)
+		;;
+		std.slfree(g)
+		std.slfree(e)
+		i++
 	;;
 
-	testr.check(ctx, o == 3, "unexpected event count {}", o)
+	testr.check(ctx, i == ex.len, "too few events {}<{}", i, ex.len)
 
 	xml.free(x)
 }

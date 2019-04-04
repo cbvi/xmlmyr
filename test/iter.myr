@@ -45,7 +45,6 @@ const checkevents = {ctx, x, expect : std.result(xml.event, xml.err)[:]
 		e = std.fmt("{}", expect[i])
 		if !std.sleq(g, e)
 			testr.fail(ctx, "got \"{}\" expected \"{}\"", g, e)
-			-> void
 		;;
 		std.slfree(g)
 		std.slfree(e)
