@@ -31,6 +31,31 @@ const main = {
 	][:])
 }
 
+const compare = {ctx, x, expect : std.result(xml.event, xml.err)[:]
+	var i = 0
+	var g, e
+
+	for ev : xml.byevent(x)
+		if i >= expect.len
+			testr.fail(ctx,
+				"too many events, {}>{}", i+1, expect.len+1)
+			-> void
+		;;
+		g = std.fmt("{}", ev)
+		e = std.fmt("{}", expect[i])
+		if !std.sleq(g, e)
+			testr.fail(ctx, "got \"{}\" expected \"{}\"", g, e)
+			-> void
+		;;
+		std.slfree(g)
+		std.slfree(e)
+		i++
+	;;
+
+	testr.check(ctx, i == expect.len,
+		"too few events {}<{}", i, expect.len)
+}
+
 const simple_test = {ctx
 	var x = std.try(xml.mkpath("test/files/001_simple.xml"))
 	var o = 0
@@ -194,22 +219,12 @@ const crlf_test = {ctx
 	var x = std.try(xml.mkpath("test/files/005_crlf.xml"))
 	var o = 0
 
-	for ev : xml.byevent(x)
-		match ev
-		| `std.Ok `xml.Start ("doc", _):
-			o++
-		| `std.Ok `xml.End "doc":
-			o++
-		| `std.Ok `xml.Comment "document contains crlf line endings":
-			o++
-		| `std.Ok `xml.Eof:
-			o++
-		| e:
-			testr.fail(ctx, "unexpected {}", e)
-		;;
-	;;
-
-	testr.check(ctx, o == 4, "unexpected event count {}", o)
+	compare(ctx, x, [
+		`std.Ok `xml.Start ("doc", [][:]),
+		`std.Ok `xml.Comment "document contains crlf line endings",
+		`std.Ok `xml.End "doc",
+		`std.Ok `xml.Eof
+	][:])
 
 	xml.free(x)
 }
