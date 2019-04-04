@@ -443,20 +443,6 @@ const parseinstruction = {x
 	-> `std.Ok `Instruction (x.p.buf[start:stop], x.p.buf[x.p.bidx:])
 }
 
-const eatspace = {x
-	while true
-		match bpeek(x)
-		| ' ':
-		| '\n':
-		| '\t':
-		| '\r':
-		| _:	break
-		;;
-
-		bnext(x)
-	;;
-}
-
 /* like bio.skipspace but includes \r and increments the offsets */
 const skipspace = {x
 	while true
