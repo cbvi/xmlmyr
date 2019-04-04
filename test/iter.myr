@@ -22,12 +22,12 @@ const main = {
 		[.name="doctype", .fn={ctx
 			doctype_test(ctx)
 		}],
-		[.name="bad", .fn={ctx
-			bad_test(ctx)
-		}],
 		[.name="space", .fn={ctx
 			space_test(ctx)
 		}],
+		[.name="bad", .fn={ctx
+			bad_test(ctx)
+		}]
 	][:])
 }
 
@@ -221,33 +221,13 @@ const doctype_test = {ctx
 }
 
 const space_test = {ctx
-	var x
-	var o = 0
-	var doc = false
-	var eof = false
+	var x = std.try(xml.mkpath("test/files/009_space.xml"))
 
-	x = std.try(xml.mkpath("test/files/009_space.xml"))
-
-	for ev : xml.byevent(x)
-		match ev
-		| `std.Ok `xml.Start ("doc", _):
-			testr.check(ctx, !doc, "<doc> already open")
-			doc = true
-		| `std.Ok `xml.End "doc":
-			testr.check(ctx, doc, "<doc> not open")
-			doc = false
-		| `std.Ok `xml.Eof:
-			testr.check(ctx, !eof, "already reached eof")
-			eof = true
-		| e:
-			testr.fail(ctx, "unexpected {}", e)
-		;;
-		o++
-	;;
-
-	testr.check(ctx, !doc, "<doc> still open")
-	testr.check(ctx, eof, "not at eof")
-	testr.check(ctx, o == 3, "unexpected event count {}", o)
+	compare(ctx, x, [
+		`std.Ok `xml.Start ("doc", [][:]),
+		`std.Ok `xml.End "doc",
+		`std.Ok `xml.Eof
+	][:])
 
 	xml.free(x)
 }
