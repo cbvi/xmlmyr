@@ -7,9 +7,6 @@ use "mk"
 use "types"
 
 pkg xml =
-	const mkbuf	:	(s : byte[:] -> std.result(ctx#, mkerr))
-	const mkpath	:	(p : byte[:] -> std.result(ctx#, mkerr))
-	const mkfile	:	(f : bio.file# -> std.result(ctx#, mkerr))
 	const eventfree	:	(ev : event -> void)
 	const free 	:	(x : ctx# -> void)
 
@@ -465,42 +462,4 @@ const eventfree = {ev
 		std.slfree(a)
 	| _:
 	;;
-}
-
-const mkbuf = {s
-	var x
-
-	match mk(bio.mkmem(s), true)
-	| `std.Ok o:	x = o
-	| `std.Err e:	-> `std.Err e
-	;;
-
-	-> `std.Ok x
-}
-
-const mkpath = {p
-	var x, f
-
-	match bio.open(p, bio.Rd)
-	| `std.Ok o:	f = o
-	| `std.Err e:	-> `std.Err `Efile e
-	;;
-
-	match mk(f, true)
-	| `std.Ok o:	x = o
-	| `std.Err e:	-> `std.Err e
-	;;
-
-	-> `std.Ok x
-}
-
-const mkfile = {f
-	var x
-
-	match mk(f, false)
-	| `std.Ok o:	x = o
-	| `std.Err e:	-> `std.Err e
-	;;
-
-	-> `std.Ok x
 }

@@ -5,6 +5,10 @@ use "types"
 
 pkg xml =
 	pkglocal const mk : (f : bio.file#, owned : bool -> std.result(ctx#, mkerr))
+
+	const mkbuf	:	(s : byte[:] -> std.result(ctx#, mkerr))
+	const mkpath	:	(p : byte[:] -> std.result(ctx#, mkerr))
+	const mkfile	:	(f : bio.file# -> std.result(ctx#, mkerr))
 ;;
 
 const mk = {f, owned
@@ -26,6 +30,25 @@ const mk = {f, owned
 	| `std.Some s:	-> `std.Err `Eenc s
 	| `std.None:	-> `std.Ok x
 	;;
+}
+
+const mkbuf = {s
+	-> mk(bio.mkmem(s), true)
+}
+
+const mkfile = {f
+	-> mk(f, false)
+}
+
+const mkpath = {p
+	var f
+
+	match bio.open(p, bio.Rd)
+	| `std.Ok o:	f = o
+	| `std.Err e:	-> `std.Err `Efile e
+	;;
+
+	-> mk(f, true)
 }
 
 const bom = {x
