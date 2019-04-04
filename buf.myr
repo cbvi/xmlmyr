@@ -9,6 +9,7 @@ pkg xml =
 	pkglocal const fillbuf :	(x : ctx#, full : byte[:], pref : byte[:], suf : byte[:] -> std.result(byte[:], errtype))
 
 	pkglocal const bnext :		(x : ctx# -> char)
+	pkglocal const bpeek :		(x : ctx# -> char)
 	pkglocal const btaste :		(x : ctx# -> void)
 ;;
 
@@ -70,6 +71,14 @@ const bnext = {x
 	;;
 
 	-> c
+}
+
+const bpeek = {x
+	if x.p.bidx < x.p.buf.len
+		-> std.decode(x.p.buf[x.p.bidx:])
+	else
+		-> std.Badchar
+	;;
 }
 
 const btaste = {x

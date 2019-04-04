@@ -443,14 +443,6 @@ const parseinstruction = {x
 	-> `std.Ok `Instruction (x.p.buf[start:stop], x.p.buf[x.p.bidx:])
 }
 
-const bpeek = {x
-	if x.p.bidx < x.p.buf.len
-		-> std.decode(x.p.buf[x.p.bidx:])
-	else
-		-> std.Badchar
-	;;
-}
-
 const eatspace = {x
 	while true
 		match bpeek(x)
