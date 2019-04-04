@@ -8,6 +8,8 @@ use "types"
 
 pkg xml =
 	pkglocal const dispatch	: (x : ctx# -> std.result(event, err))
+
+	const geterr	:	(x : ctx# -> std.option(err))
 ;;
 
 const dispatch = {x
@@ -435,6 +437,10 @@ const parseinstruction = {x
 	;;
 
 	-> `std.Ok `Instruction (x.p.buf[start:stop], x.p.buf[x.p.bidx:])
+}
+
+const geterr = {x
+	-> x.p.error
 }
 
 const error = {x, e

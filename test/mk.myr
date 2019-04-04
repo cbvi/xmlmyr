@@ -18,10 +18,10 @@ const main = {
 
 const utf8bom_test = {ctx
 	var x, g, e
-	const ex : std.result(xml.event, void)[:] = [
-		`std.Ok `xml.Start ("doc", [][:]),
-		`std.Ok `xml.End "doc",
-		`std.Ok `xml.Eof
+	const ex : xml.event[:] = [
+		`xml.Start ("doc", [][:]),
+		`xml.End "doc",
+		`xml.Eof
 	][:]
 	var i = 0
 

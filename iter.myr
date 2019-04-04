@@ -10,21 +10,24 @@ pkg xml =
 	const byevent	:	(x : ctx# -> eventiter)
 ;;
 
-impl iterable eventiter -> std.result(event, err) =
+impl iterable eventiter -> event =
 	__iternext__ = {iterp, valp
 		if !iterp.p.more
 			-> false
 		;;
 
-		valp# = dispatch((iterp : ctx#))
-		-> true
+		match dispatch((iterp : ctx#))
+		| `std.Ok e:
+			valp# = e
+			-> true
+		| `std.Err e:
+			iterp.p.error = `std.Some e
+			-> false
+		;;
 	}
 
 	__iterfin__ = {iterp, valp
-		match valp#
-		| `std.Ok e:	eventfree(e)
-		| `std.Err e:
-		;;
+		eventfree(valp#)
 	}
 ;;
 

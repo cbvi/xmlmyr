@@ -3,6 +3,7 @@ use xml
 
 const valid = {path
 	var x
+	var eof = false
 
 	//std.put("processing {}\n", path)
 	std.put(".")
@@ -18,11 +19,14 @@ const valid = {path
 
 	for ev : xml.byevent(x)
 		match ev
-		| `std.Ok e:
+		| `xml.Eof:	eof = true
+		| e:
 			//std.put("{}\n", e)
-		| `std.Err e:
-			std.fatal("{}: {}\n", path, e)
 		;;
+	;;
+
+	if !eof
+		std.fatal("didn't reach eof\n")
 	;;
 
 	xml.free(x)

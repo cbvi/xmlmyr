@@ -18,6 +18,7 @@ pkg xml =
 		off	:	std.size
 		state	:	state
 		more	:	bool
+		error	:	std.option(err)
 	;;
 
 	type event = union

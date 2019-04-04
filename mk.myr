@@ -25,7 +25,8 @@ const mk = {f, owned
 			.line = 1,
 			.off = 0,
 			.state = `Close,
-			.more = true
+			.more = true,
+			.error = `std.None
 		])
 	])
 
