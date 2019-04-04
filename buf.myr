@@ -24,6 +24,8 @@ const expandbuf = {x, buf
 }
 
 const fillbuf = {x, full, pref, suf
+	var start
+
 	match bio.readterm(x.file, suf)
 	| `std.Ok s:	newbuf(x, s)
 	| `std.Err e:	-> `std.Err `Trunc e
@@ -41,9 +43,11 @@ const fillbuf = {x, full, pref, suf
 		;;
 	;;
 
+	start = x.p.bidx
+
 	btaste(x)
 
-	-> `std.Ok x.p.buf[x.p.bidx:x.p.buf.len-suf.len]
+	-> `std.Ok x.p.buf[start:x.p.buf.len-suf.len]
 }
 
 const bnext = {x
@@ -78,4 +82,6 @@ const btaste = {x
 			x.p.off++
 		;;
 	;;
+
+	x.p.bcur = x.p.bidx = x.p.buf.len
 }
