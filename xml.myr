@@ -443,29 +443,6 @@ const parseinstruction = {x
 	-> `std.Ok `Instruction (x.p.buf[start:stop], x.p.buf[x.p.bidx:])
 }
 
-/* like bio.skipspace but includes \r and increments the offsets */
-const skipspace = {x
-	while true
-		match bio.peekc(x.file)
-		| `std.Ok ' ':
-		| `std.Ok '\n':
-			x.p.line++
-			x.p.off = 0
-			goto nl
-		| `std.Ok '\t':
-		| `std.Ok '\r':
-		| `std.Ok _:
-			break
-		| `std.Err _:
-			break
-		;;
-
-		x.p.off++
-:nl
-		bio.getc(x.file)
-	;;
-}
-
 const error = {x, e
 	x.p.more = false
 	-> [.line = x.p.line, .off = x.p.off, .err = e]
@@ -498,8 +475,6 @@ const mkbuf = {s
 	| `std.Err e:	-> `std.Err e
 	;;
 
-	skipspace(x)
-
 	-> `std.Ok x
 }
 
@@ -516,8 +491,6 @@ const mkpath = {p
 	| `std.Err e:	-> `std.Err e
 	;;
 
-	skipspace(x)
-
 	-> `std.Ok x
 }
 
@@ -528,8 +501,6 @@ const mkfile = {f
 	| `std.Ok o:	x = o
 	| `std.Err e:	-> `std.Err e
 	;;
-
-	skipspace(x)
 
 	-> `std.Ok x
 }
