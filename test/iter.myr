@@ -233,170 +233,95 @@ const space_test = {ctx
 }
 
 const bad_test = {ctx
-	var x, o
+	var x
 
 	x = std.try(xml.mkbuf("<doc><.child></.child></doc>"))
-	o = 0
 
-	for ev : xml.byevent(x)
-		match ev
-		| `std.Ok `xml.Start ("doc", _):			o++
-		| `std.Err [.line=1, .off=7, .err=`xml.Inval '.']:	o++
-		|  e:	testr.fail(ctx, "unexpected {}", e)
-		;;
-	;;
-
-	testr.check(ctx, o == 2, "unexpected event count {}", o)
+	compare(ctx, x, [
+		`std.Ok `xml.Start ("doc", [][:]),
+		`std.Err [.line=1, .off=7, .err=`xml.Inval '.']
+	][:])
 
 	xml.free(x)
 
 	x = std.try(xml.mkbuf("<??><doc></doc>"))
-	o = 0
 
-	for ev : xml.byevent(x)
-		match ev
-		| `std.Err [.line=1, .off=4, .err=`xml.Empty]:	o++
-		| e:	testr.fail(ctx, "unexpected {}", e)
-		;;
-	;;
-
-	testr.check(ctx, o == 1, "unexpected event count {}", o)
+	compare(ctx, x, [
+		`std.Err [.line=1, .off=4, .err=`xml.Empty]
+	][:])
 
 	xml.free(x)
 
 	x = std.try(xml.mkbuf("<doc></doc>doc"))
-	o = 0
 
-	for ev : xml.byevent(x)
-		match ev
-		| `std.Ok `xml.Start ("doc", _):
-			o++
-		| `std.Ok `xml.End "doc":
-			o++
-		| `std.Err [.line=1, .off=14, .err=`xml.Trunc `bio.Eof]:
-			o++
-		| e:
-			testr.fail(ctx, "unexpected {}", e)
-		;;
-	;;
-
-	testr.check(ctx, o == 3, "unexpected event count {}", o)
+	compare(ctx, x, [
+		`std.Ok `xml.Start ("doc", [][:]),
+		`std.Ok `xml.End "doc",
+		`std.Err [.line=1, .off=14, .err=`xml.Trunc `bio.Eof]
+	][:])
 
 	xml.free(x)
 
 	x = std.try(xml.mkbuf("<doc>\n<?target example instruction>\n</doc>"))
-	o = 0
 
-	for ev : xml.byevent(x)
-		match ev
-		| `std.Ok `xml.Start ("doc", _):
-			o++
-		| `std.Err [.line=2, .off=1, .err=`xml.Unclosed ("<?", "?>")]:
-			o++
-		| e:
-			testr.fail(ctx, "unexpected {}", e)
-		;;
-	;;
-
-	testr.check(ctx, o == 2, "unexpected event count {}", o)
+	compare(ctx, x, [
+		`std.Ok `xml.Start ("doc", [][:]),
+		`std.Err [.line=2, .off=1, .err=`xml.Unclosed ("<?", "?>")]
+	][:])
 
 	xml.free(x)
 
 	x = std.try(xml.mkbuf("<doc an></doc>"))
-	o = 0
 
-	for ev : xml.byevent(x)
-		match ev
-		| `std.Err [.line=1, .off=8, .err=`xml.Inval '>']:	o++
-		| e:	testr.fail(ctx, "unexpected {}", e)
-		;;
-	;;
-
-	testr.check(ctx, o == 1, "unexpected event count {}", o)
+	compare(ctx, x, [
+		`std.Err [.line=1, .off=8, .err=`xml.Inval '>']
+	][:])
 
 	xml.free(x)
 
 	x = std.try(xml.mkbuf("<doc an=val></doc>"))
-	o = 0
 
-	for ev : xml.byevent(x)
-		match ev
-		| `std.Err [.line=1, .off=9, .err=`xml.Unexpected ('v', '"')]:
-			o++
-		| e:
-			testr.fail(ctx, "unexpected {}", e)
-		;;
-	;;
-
-	testr.check(ctx, o == 1, "unexpected event count {}", o)
+	compare(ctx, x, [
+		`std.Err [.line=1, .off=9, .err=`xml.Unexpected ('v', '"')]
+	][:])
 
 	xml.free(x)
 
 	x = std.try(xml.mkbuf("<doc an=></doc>"))
-	o = 0
 
-	for ev : xml.byevent(x)
-		match ev
-		| `std.Err [.line=1, .off=9, .err=`xml.Unexpected ('>', '"')]:
-			o++
-		| e:
-			testr.fail(ctx, "unexpected {}", e)
-		;;
-	;;
-
-	testr.check(ctx, o == 1, "unexpected event count {}", o)
+	compare(ctx, x, [
+		`std.Err [.line=1, .off=9, .err=`xml.Unexpected ('>', '"')]
+	][:])
 
 	xml.free(x)
 
 	x = std.try(xml.mkbuf("<doc an=\"val\" \"val\"></doc>"))
-	o = 0
 
-	for ev : xml.byevent(x)
-		match ev
-		| `std.Err [.line=1, .off=15, .err=`xml.Inval '"']:
-			o++
-		| e:
-			testr.fail(ctx, "unexpected {}", e)
-		;;
-	;;
-
-	testr.check(ctx, o == 1, "unexpected event count {}", o)
+	compare(ctx, x, [
+		`std.Err [.line=1, .off=15, .err=`xml.Inval '"']
+	][:])
 
 	xml.free(x)
 
 	x = std.try(xml.mkbuf("<doc></>"))
-	o = 0
 
-	for ev : xml.byevent(x)
-		match ev
-		| `std.Ok `xml.Start ("doc", _):
-			o++
-		| `std.Err [.line=1, .off=8, .err=`xml.Inval '>']:
-			o++
-		| e:
-			testr.fail(ctx, "unexpected {}", e)
-		;;
-	;;
-
-	testr.check(ctx, o == 2, "unexpected event count {}", o)
+	compare(ctx, x, [
+		`std.Ok `xml.Start ("doc", [][:]),
+		`std.Err [.line=1, .off=8, .err=`xml.Inval '>']
+	][:])
 
 	xml.free(x)
 
 	x = std.try(xml.mkbuf("<doc><![CDATA[</doc>"))
-	o = 0
 
-	for ev : xml.byevent(x)
-		match ev
-		| `std.Ok `xml.Start ("doc", _):
-			o++
-		| `std.Err [.line=1, .off=7, .err=`xml.Unclosed ("<![CDATA[", "]]>")]:
-			o++
-		| e:
-			testr.fail(ctx, "unexpected {}", e)
-		;;
-	;;
-
-	testr.check(ctx, o == 2, "unexpected event count {}", o)
+	compare(ctx, x, [
+		`std.Ok `xml.Start ("doc", [][:]),
+		`std.Err [
+			.line=1,
+			.off=7,
+			.err=`xml.Unclosed ("<![CDATA[", "]]>")
+		]
+	][:])
 
 	xml.free(x)
 }
