@@ -1,6 +1,7 @@
 use std
 
 use "xml"
+use "mk"
 use "types"
 
 pkg xml =

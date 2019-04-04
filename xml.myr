@@ -7,9 +7,6 @@ use "mk"
 use "types"
 
 pkg xml =
-	const eventfree	:	(ev : event -> void)
-	const free 	:	(x : ctx# -> void)
-
 	pkglocal const dispatch	: (x : ctx# -> std.result(event, err))
 ;;
 
@@ -443,23 +440,4 @@ const parseinstruction = {x
 const error = {x, e
 	x.p.more = false
 	-> [.line = x.p.line, .off = x.p.off, .err = e]
-}
-
-const free = {x
-	if x.owned
-		bio.close(x.file)
-	;;
-	std.slfree(x.p.buf)
-	std.free(x.p)
-	std.free(x)
-}
-
-const eventfree = {ev
-	match ev
-	| `Doctype d:
-		std.slfree(d)
-	| `Start (_, a):
-		std.slfree(a)
-	| _:
-	;;
 }

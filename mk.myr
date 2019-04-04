@@ -9,6 +9,9 @@ pkg xml =
 	const mkbuf	:	(s : byte[:] -> std.result(ctx#, mkerr))
 	const mkpath	:	(p : byte[:] -> std.result(ctx#, mkerr))
 	const mkfile	:	(f : bio.file# -> std.result(ctx#, mkerr))
+
+	const free	:	(x : ctx# -> void)
+	const eventfree	:	(ev : event -> void)
 ;;
 
 const mk = {f, owned
@@ -49,6 +52,23 @@ const mkpath = {p
 	;;
 
 	-> mk(f, true)
+}
+
+const free = {x
+	if x.owned
+		bio.close(x.file)
+	;;
+	std.slfree(x.p.buf)
+	std.free(x.p)
+	std.free(x)
+}
+
+const eventfree = {ev
+	match ev
+	| `Doctype d:		std.slfree(d)
+	| `Start (_, a):	std.slfree(a)
+	| _:
+	;;
 }
 
 const bom = {x
