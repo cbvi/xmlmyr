@@ -470,7 +470,7 @@ const eventfree = {ev
 const mkbuf = {s
 	var x
 
-	match mk(bio.mkmem(s), false)
+	match mk(bio.mkmem(s), true)
 	| `std.Ok o:	x = o
 	| `std.Err e:	-> `std.Err e
 	;;
@@ -486,7 +486,7 @@ const mkpath = {p
 	| `std.Err e:	-> `std.Err `Efile e
 	;;
 
-	match mk(f, false)
+	match mk(f, true)
 	| `std.Ok o:	x = o
 	| `std.Err e:	-> `std.Err e
 	;;
