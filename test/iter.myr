@@ -117,32 +117,17 @@ const simple_test = {ctx
 
 const attrs_test = {ctx
 	var x = std.try(xml.mkpath("test/files/002_attrs.xml"))
-	var start = 0
 
-	for ev : xml.byevent(x)
-		match ev
-		| `std.Ok `xml.Start ("doc", at):
-			start++
-			for a : at
-				match a
-				| ("one", "1"):		testr.ok(ctx)
-				| ("two", "two"):	testr.ok(ctx)
-				| ("three", "..."):	testr.ok(ctx)
-				| ("four", "fo>r"):	testr.ok(ctx)
-				| _:	testr.fail(ctx, "unexpected attribute")
-				;;
-			;;
-		| `std.Ok `xml.End "doc":
-			start--
-		| `std.Ok `xml.Eof:
-		| `std.Ok e:
-			testr.fail(ctx, "unexpected event {}", e)
-		| `std.Err e:
-			testr.fail(ctx, "error {}", e)
-		;;
-	;;
-
-	testr.check(ctx, start == 0, "mismatched start and end tags")
+	compare(ctx, x, [
+		`std.Ok `xml.Start ("doc", [
+			("one", "1"),
+			("two", "two"),
+			("three", "..."),
+			("four", "fo>r")
+		][:]),
+		`std.Ok `xml.End "doc",
+		`std.Ok `xml.Eof
+	][:])
 
 	xml.free(x)
 }
