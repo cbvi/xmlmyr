@@ -1,0 +1,81 @@
+use std
+use bio
+
+use "types"
+
+pkg xml =
+	pkglocal const newbuf :		(x : ctx#, buf : byte[:] -> void)
+	pkglocal const expandbuf :	(x : ctx#, buf : byte[:] -> void)
+	pkglocal const fillbuf :	(x : ctx#, full : byte[:], pref : byte[:], suf : byte[:] -> std.result(byte[:], errtype))
+
+	pkglocal const bnext :		(x : ctx# -> char)
+	pkglocal const btaste :		(x : ctx# -> void)
+;;
+
+const newbuf = {x, buf
+	std.slfree(x.p.buf)
+	x.p.bidx = x.p.bcur = 0
+	x.p.buf = buf
+}
+
+const expandbuf = {x, buf
+	x.p.buf = std.sljoin(&x.p.buf, buf)
+	std.slfree(buf)
+}
+
+const fillbuf = {x, full, pref, suf
+	match bio.readterm(x.file, suf)
+	| `std.Ok s:	newbuf(x, s)
+	| `std.Err e:	-> `std.Err `Trunc e
+	;;
+
+	if !std.hassuffix(x.p.buf, suf)
+		-> `std.Err `Unclosed (full, suf)
+	;;
+
+	for p : std.bychar(pref)
+		match bnext(x)
+		| c:	if c != p
+				-> `std.Err `Unexpected (c, p)
+			;;
+		;;
+	;;
+
+	btaste(x)
+
+	-> `std.Ok x.p.buf[x.p.bidx:x.p.buf.len-suf.len]
+}
+
+const bnext = {x
+	var c
+
+	if x.p.bidx >= x.p.buf.len
+		-> std.Badchar
+	;;
+
+	c = std.decode(x.p.buf[x.p.bidx:])
+	x.p.bcur = x.p.bidx
+	x.p.bidx += std.charlen(c)
+
+	match c
+	| '\n':
+		x.p.line++
+		x.p.off = 0
+	| _:
+		x.p.off++
+	;;
+
+	-> c
+}
+
+const btaste = {x
+	for c : std.bychar(x.p.buf[x.p.bidx:])
+		match c
+		| '\n':
+			x.p.line++
+			x.p.off = 0
+		| _:
+			x.p.off++
+		;;
+	;;
+}

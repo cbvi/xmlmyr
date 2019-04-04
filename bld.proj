@@ -2,6 +2,7 @@ lib xml =
 	xml.myr
 	buf.myr
 	chars.myr
+	doctype.myr
 	entities.myr
 	iter.myr
 	mk.myr

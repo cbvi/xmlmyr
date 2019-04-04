@@ -292,40 +292,17 @@ const parseattrval = {x
 	std.die("unreached\n")
 }
 
-const prefixtoterm = {x, full, pref, suf
-	match bio.readterm(x.file, suf)
-	| `std.Ok s:	newbuf(x, s)
-	| `std.Err e:	-> `std.Err error(x, `Trunc e)
-	;;
-
-	if !std.hassuffix(x.p.buf, suf)
-		-> `std.Err error(x, `Unclosed (full, suf))
-	;;
-
-	for cc : std.bychar(pref)
-		match bnext(x)
-		| c:	if c != cc
-				-> `std.Err error(x, `Unexpected (c, cc))
-			;;
-		;;
-	;;
-
-	taste(x)
-
-	-> `std.Ok x.p.buf[x.p.bidx:x.p.buf.len-suf.len]
-}
-
 const parsecdata = {x
-	match prefixtoterm(x, "<![CDATA[", "[CDATA[", "]]>")
+	match fillbuf(x, "<![CDATA[", "[CDATA[", "]]>")
 	| `std.Ok b:	-> `std.Ok `Cdata b
-	| `std.Err e:	-> `std.Err e
+	| `std.Err e:	-> `std.Err error(x, e)
 	;;
 }
 
 const parsecomment = {x
-	match prefixtoterm(x, "<!--", "--", "-->")
+	match fillbuf(x, "<!--", "--", "-->")
 	| `std.Ok b:	-> `std.Ok `Comment prune(b)
-	| `std.Err e:	-> `std.Err e
+	| `std.Err e:	-> `std.Err error(x, e)
 	;;
 }
 
@@ -432,9 +409,9 @@ const parsedoctype = {x
 const parseinstruction = {x
 	var start, stop
 
-	match prefixtoterm(x, "<?", "?", "?>")
+	match fillbuf(x, "<?", "?", "?>")
 	| `std.Ok b:	newbuf(x, std.sldup(b))
-	| `std.Err e:	-> `std.Err e
+	| `std.Err e:	-> `std.Err error(x, e)
 	;;
 
 	if x.p.bidx < x.p.buf.len
@@ -474,25 +451,6 @@ const bpeek = {x
 	;;
 }
 
-const bnext = {x
-	if x.p.bidx >= x.p.buf.len
-		-> std.Badchar
-	;;
-
-	var c = std.decode(x.p.buf[x.p.bidx:])
-	x.p.bcur = x.p.bidx
-	x.p.bidx += std.charlen(c)
-
-	if c == '\n'
-		x.p.line++
-		x.p.off = 0
-	else
-		x.p.off++
-	;;
-
-	-> c
-}
-
 const eatspace = {x
 	while true
 		match bpeek(x)
@@ -504,17 +462,6 @@ const eatspace = {x
 		;;
 
 		bnext(x)
-	;;
-}
-
-const taste = {x
-	for c : std.bychar(x.p.buf[x.p.bidx:])
-		if c == '\n'
-			x.p.line++
-			x.p.off = 0
-		else
-			x.p.off++
-		;;
 	;;
 }
 
