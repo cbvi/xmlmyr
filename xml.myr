@@ -183,7 +183,7 @@ const parseend = {x
 		| c:
 			if isspace(c)
 				spaced = true
-				eatspace(x)
+				beatspace(x)
 			elif !spaced && namechar(c)
 				stop = x.p.bidx
 			else
@@ -198,7 +198,7 @@ const parseend = {x
 const parseattrs = {x, attrs
 	var name, val
 
-	eatspace(x)
+	beatspace(x)
 
 	while x.p.bidx < x.p.buf.len
 		match bpeek(x)
@@ -219,7 +219,7 @@ const parseattrs = {x, attrs
 
 		std.slpush(attrs, (name, val))
 
-		eatspace(x)
+		beatspace(x)
 	;;
 
 	-> `std.Err error(x, `Trunc `bio.Eof)
@@ -229,7 +229,7 @@ const parseattrname = {x
 	var start, stop
 	var spaced = false
 
-	eatspace(x)
+	beatspace(x)
 
 	match bnext(x)
 	| c:
@@ -251,7 +251,7 @@ const parseattrname = {x
 				stop = x.p.bidx
 			elif isspace(c)
 				spaced = true
-				eatspace(x)
+				beatspace(x)
 			else
 				-> `std.Err error(x, `Inval c)
 			;;
@@ -265,7 +265,7 @@ const parseattrval = {x
 	var start, stop
 	var q
 
-	eatspace(x)
+	beatspace(x)
 
 	match bnext(x)
 	| '"':	q = '"'
@@ -342,7 +342,7 @@ const parsedoctype = {x
 		;;
 	;;
 
-	eatspace(x)
+	beatspace(x)
 
 	open = 1
 	start = x.p.bidx
@@ -432,7 +432,7 @@ const parseinstruction = {x
 		| c:	if namechar(c)
 				stop = x.p.bidx
 			elif isspace(c)
-				eatspace(x)
+				beatspace(x)
 				break
 			else
 				-> `std.Err error(x, `Inval c)
