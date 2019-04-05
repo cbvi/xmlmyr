@@ -15,8 +15,8 @@ const main = {
 		[.name="utf16lebom", .fn={ctx
 			utf16lebom_test(ctx)
 		}],
-		[.name="owned", .fn={ctx
-			owned_test(ctx)
+		[.name="unowned", .fn={ctx
+			unowned_test(ctx)
 		}],
 	][:])
 }
@@ -76,7 +76,7 @@ const utf16lebom_test = {ctx
 	;;
 }
 
-const owned_test = {ctx
+const unowned_test = {ctx
 	var f = std.try(bio.open("test/files/007_utf8bom.xml", bio.Rd))
 	var x = std.try(xml.mkfile(f))
 
