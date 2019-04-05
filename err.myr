@@ -1,0 +1,17 @@
+use std
+
+use "types"
+
+pkg xml =
+	const geterr		:	(x : ctx# -> std.option(err))
+	pkglocal const error	:	(x : ctx#, e : errtype -> err)
+;;
+
+const geterr = {x
+	-> x.p.error
+}
+
+const error = {x, e
+	x.p.more = false
+	-> [.line = x.p.line, .off = x.p.off, .err = e]
+}

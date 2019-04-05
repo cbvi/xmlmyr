@@ -4,6 +4,7 @@ lib xml =
 	chars.myr
 	doctype.myr
 	entities.myr
+	err.myr
 	iter.myr
 	mk.myr
 	types.myr

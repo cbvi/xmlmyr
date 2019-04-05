@@ -1,13 +1,14 @@
 use std
 use bio
 
+use "err"
 use "chars"
 use "types"
 
 pkg xml =
 	pkglocal const newbuf :		(x : ctx#, buf : byte[:] -> void)
 	pkglocal const expandbuf :	(x : ctx#, buf : byte[:] -> void)
-	pkglocal const fillbuf :	(x : ctx#, full : byte[:], pref : byte[:], suf : byte[:] -> std.result(byte[:], errtype))
+	pkglocal const fillbuf :	(x : ctx#, full : byte[:], pref : byte[:], suf : byte[:] -> std.result(byte[:], err))
 
 	pkglocal const bnext :		(x : ctx# -> char)
 	pkglocal const bpeek :		(x : ctx# -> char)
@@ -31,17 +32,17 @@ const fillbuf = {x, full, pref, suf
 
 	match bio.readterm(x.file, suf)
 	| `std.Ok s:	newbuf(x, s)
-	| `std.Err e:	-> `std.Err `Trunc e
+	| `std.Err e:	-> `std.Err error(x, `Trunc e)
 	;;
 
 	if !std.hassuffix(x.p.buf, suf)
-		-> `std.Err `Unclosed (full, suf)
+		-> `std.Err error(x, `Unclosed (full, suf))
 	;;
 
 	for p : std.bychar(pref)
 		match bnext(x)
 		| c:	if c != p
-				-> `std.Err `Unexpected (c, p)
+				-> `std.Err error(x, `Unexpected (c, p))
 			;;
 		;;
 	;;

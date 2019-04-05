@@ -3,13 +3,12 @@ use bio
 
 use "buf"
 use "chars"
+use "err"
 use "mk"
 use "types"
 
 pkg xml =
 	pkglocal const dispatch	: (x : ctx# -> std.result(event, err))
-
-	const geterr	:	(x : ctx# -> std.option(err))
 ;;
 
 const dispatch = {x
@@ -291,14 +290,14 @@ const parseattrval = {x
 const parsecdata = {x
 	match fillbuf(x, "<![CDATA[", "[CDATA[", "]]>")
 	| `std.Ok b:	-> `std.Ok `Cdata b
-	| `std.Err e:	-> `std.Err error(x, e)
+	| `std.Err e:	-> `std.Err e
 	;;
 }
 
 const parsecomment = {x
 	match fillbuf(x, "<!--", "--", "-->")
 	| `std.Ok b:	-> `std.Ok `Comment prune(b)
-	| `std.Err e:	-> `std.Err error(x, e)
+	| `std.Err e:	-> `std.Err e
 	;;
 }
 
@@ -407,7 +406,7 @@ const parseinstruction = {x
 
 	match fillbuf(x, "<?", "?", "?>")
 	| `std.Ok b:	newbuf(x, std.sldup(b))
-	| `std.Err e:	-> `std.Err error(x, e)
+	| `std.Err e:	-> `std.Err e
 	;;
 
 	if x.p.bidx < x.p.buf.len
@@ -437,13 +436,4 @@ const parseinstruction = {x
 	;;
 
 	-> `std.Ok `Instruction (x.p.buf[start:stop], x.p.buf[x.p.bidx:])
-}
-
-const geterr = {x
-	-> x.p.error
-}
-
-const error = {x, e
-	x.p.more = false
-	-> [.line = x.p.line, .off = x.p.off, .err = e]
 }
