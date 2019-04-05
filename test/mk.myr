@@ -1,5 +1,7 @@
 use std
+use bio
 use testr
+
 use xml
 
 const main = {
@@ -12,6 +14,9 @@ const main = {
 		}],
 		[.name="utf16lebom", .fn={ctx
 			utf16lebom_test(ctx)
+		}],
+		[.name="owned", .fn={ctx
+			owned_test(ctx)
 		}],
 	][:])
 }
@@ -69,4 +74,31 @@ const utf16lebom_test = {ctx
 	| `std.Err e:	testr.fail(ctx, "unexpected error {}", e)
 	| `std.Ok _:	testr.fail(ctx, "opening UTF-16LE file should fail")
 	;;
+}
+
+const owned_test = {ctx
+	var f = std.try(bio.open("test/files/007_utf8bom.xml", bio.Rd))
+	var x = std.try(xml.mkfile(f))
+
+	for ev : xml.byevent(x)
+		match ev
+		| `xml.Start ("doc", _):
+			break
+		| _:
+			testr.fail(ctx, "unexpected event {}", ev)
+		;;
+	;;
+
+	xml.free(x)
+
+	match bio.readterm(f, ">")
+	| `std.Ok s:
+		if !std.sleq(s, "</doc>")
+			testr.fail(ctx, "didn't match: {}", s)
+		;;
+	| `std.Err e:
+		testr.fail(ctx, "reading failed {}", e)
+	;;
+
+	bio.close(f)
 }
