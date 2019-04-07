@@ -1,0 +1,4 @@
+<!DOCTYPE doc [
+	<!-- <<< shouldn't fail -->
+] >
+<doc/>

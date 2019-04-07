@@ -16,6 +16,7 @@ const main = {
 			"</testing>\n")
 	*/
 
+	/*
 	var f = std.try(bio.open("test/recset.xml", bio.Rd))
 	//var f = std.try(bio.open("test/feed.xml", bio.Rd))
 	//var f = std.try(bio.open("test/xmltest.xml", bio.Rd))
@@ -32,4 +33,15 @@ const main = {
 	xml.free(x)
 
 	bio.close(f)
+	*/
+
+	var x = std.try(xml.mkbuf("<!DOCTYPE foo [ <!ENTITY> ]>"))
+	for ev : xml.byevent(x)
+		std.put("{}\n", ev)
+	;;
+	match xml.geterr(x)
+	| `std.Some e:	std.put("{}\n", e)
+	| `std.None:
+	;;
+	xml.free(x)
 }

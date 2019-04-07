@@ -59,8 +59,15 @@ const checkevents = {ctx, x, expect
 		i++
 	;;
 
-	testr.check(ctx, i == expect.len,
-		"too few events {}<{}", i, expect.len)
+	if i != expect.len
+		match xml.geterr(x)
+		| `std.Some e:	testr.fail(ctx, "error {}", e)
+		| `std.None:	testr.fail(ctx, "too few events {}<{}",
+					i, expect.len)
+		;;
+	else
+		testr.ok(ctx)
+	;;
 }
 
 const compare = {ctx, path, expect
@@ -159,76 +166,26 @@ const crlf_test = {ctx
 }
 
 const doctype_test = {ctx
-	var x
-	var o
+	compare(ctx, "test/files/006a_doctype.xml", [
+		`xml.Doctype "doc [\n\t<!ENTITY t \"<t&gt;\">\n]",
+		`xml.Start ("doc", [][:]),
+		`xml.End "doc",
+		`xml.Eof
+	][:])
 
-	x = std.try(xml.mkpath("test/files/006a_doctype.xml"))
-	o = 0
+	compare(ctx, "test/files/006b_doctype.xml", [
+		`xml.Doctype "doc [\n\t<!ENTITY t '<t&gt;'>\n]",
+		`xml.Start ("doc", [][:]),
+		`xml.End "doc",
+		`xml.Eof
+	][:])
 
-	for ev : xml.byevent(x)
-		match ev
-		| `xml.Doctype "doc [\n\t<!ENTITY t \"<t&gt;\">\n]":
-			o++
-		| `xml.Start ("doc", _):
-			o++
-		| `xml.End "doc":
-			o++
-		| `xml.Eof:
-			o++
-		| e:
-			testr.fail(ctx, "unexpected {}", e)
-		;;
-	;;
-
-	testr.check(ctx, o == 4, "unexpected event count {}", o)
-
-	xml.free(x)
-
-	x = std.try(xml.mkpath("test/files/006b_doctype.xml"))
-	o = 0
-
-	for ev : xml.byevent(x)
-		match ev
-		| `xml.Doctype "doc [\n\t<!ENTITY t '<t&gt;'>\n]":
-			o++
-		| `xml.Start ("doc", _):
-			o++
-		| `xml.End "doc":
-			o++
-		| `xml.Eof:
-			o++
-		| e:
-			testr.fail(ctx, "unexpected {}", e)
-		;;
-	;;
-
-	testr.check(ctx, o == 4, "unexpected event count {}", o)
-
-	xml.free(x)
-
-/* XXX
-	x = std.try(xml.mkpath("test/files/006c_doctype.xml"))
-	o = 0
-
-	for ev : xml.byevent(x)
-		match ev
-		| `xml.Doctype "doc [\n\t<!-- shouldn't fail -->\n]":
-			o++
-		| `xml.Start ("doc", _):
-			o++
-		| `xml.End "doc":
-			o++
-		| `xml.Eof:
-			o++
-		| e:
-			testr.fail(ctx, "unexpected {}", e)
-		;;
-	;;
-
-	testr.check(ctx, o == 4, "unexpected event count {}", o)
-
-	xml.free(x)
-*/
+	compare(ctx, "test/files/006c_doctype.xml", [
+		`xml.Doctype "doc [\n\t<!-- <<< shouldn't fail -->\n]",
+		`xml.Start ("doc", [][:]),
+		`xml.End "doc",
+		`xml.Eof
+	][:])
 }
 
 const space_test = {ctx
@@ -275,4 +232,13 @@ const bad_test = {ctx
 	compareerr(ctx, "<doc><![CDATA[</doc>", [
 		`xml.Start ("doc", [][:])
 	][:], [.line=1,.off=7,.err=`xml.Unclosed ("<![CDATA[", "]]>")])
+
+	compareerr(ctx, "<!DOCTYPE doc [ < ]><doc></doc>", [][:],
+		[.line=1, .off=31, .err=`xml.Trunc `bio.Eof])
+
+	compareerr(ctx, "<!DOCTYPE doc [ <!-- --]><doc></doc>", [][:],
+		[.line=1, .off=36, .err=`xml.Trunc `bio.Eof])
+
+	compareerr(ctx, "<!DOCTYPE doc [ <!-- --> <!-- -", [][:],
+		[.line=1, .off=31, .err=`xml.Trunc `bio.Eof])
 }

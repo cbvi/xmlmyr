@@ -1,0 +1,113 @@
+use std
+use bio
+
+use "buf"
+use "chars"
+use "err"
+use "types"
+
+pkg xml =
+	pkglocal const parsedoctype : (x : ctx# -> std.result(event, err))
+;;
+
+const parsedoctype = {x
+	const pref = "DOCTYPE"
+	const suf = ">"
+	var start, stop
+	var open
+	var c
+
+	match bio.readterm(x.file, suf)
+	| `std.Ok b:	newbuf(x, b)
+	| `std.Err e:	-> `std.Err error(x, `Trunc e)
+	;;
+
+	if !std.hassuffix(x.p.buf, suf)
+		-> `std.Err error(x, `Unclosed ("<!DOCTYPE", suf))
+	;;
+
+	for cc : std.bychar(pref)
+		c = bnext(x)
+		if c != cc
+			-> `std.Err error(x, `Unexpected (c, cc))
+		;;
+	;;
+
+	c = bnext(x)
+	if c == '>'
+		-> `std.Err error(x, `Empty)
+	elif !isspace(c)
+		-> `std.Err error(x, `Unexpected (c, ' '))
+	;;
+
+	beatspace(x)
+
+	start = stop = x.p.bidx
+	open = 1
+
+	while x.p.bidx < x.p.buf.len
+		match bnext(x)
+		| '<':
+			if std.hasprefix(x.p.buf[x.p.bcur:], "<!--")
+				docomment(x)
+			else
+				open++
+			;;
+		| '"':	doquote(x, '"')
+		| '\'':	doquote(x, '\'')
+		| '>':
+			open--
+			if open == 0
+				-> `std.Ok `Doctype prune(x.p.buf[start:x.p.bcur])
+			else
+				refill(x)
+			;;
+		| _:
+		;;
+	;;
+
+	-> `std.Err error(x, `Trunc `bio.Eof)
+}
+
+const refill = {x
+	match bio.readterm(x.file, ">")
+	| `std.Ok b:	expandbuf(x, b)
+	| `std.Err e:
+	;;
+}
+
+const doquote = {x, q
+	while x.p.bidx < x.p.buf.len
+		match bnext(x)
+		| '"':	if q == '"'
+				break
+			;;
+		| '\'':	if q == '\''
+				break
+			;;
+		| '>':	refill(x)
+		| _:
+		;;
+	;;
+}
+
+const docomment = {x
+	while x.p.bidx < x.p.buf.len
+		match bnext(x)
+		| '>':	refill(x)
+		| '-':	if docommend(x)
+				break
+			;;
+		| _:
+		;;
+	;;
+}
+
+const docommend = {x
+	if bnext(x) == '-' && bnext(x) == '>'
+		refill(x)
+		-> true
+	else
+		-> false
+	;;
+}

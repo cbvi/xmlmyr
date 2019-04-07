@@ -3,6 +3,7 @@ use bio
 
 use "buf"
 use "chars"
+use "doctype"
 use "err"
 use "mk"
 use "types"
@@ -299,106 +300,6 @@ const parsecomment = {x
 	| `std.Ok b:	-> `std.Ok `Comment prune(b)
 	| `std.Err e:	-> `std.Err e
 	;;
-}
-
-const parsedoctype = {x
-	const pref = "DOCTYPE"
-	const suf = ">"
-	var dt = std.mksb()
-	var s, start, open, err
-	var q = '"', armed = true
-
-	match bio.readterm(x.file, suf)
-	| `std.Ok b:
-		newbuf(x, b)
-	| `std.Err e:
-		err = error(x, `Trunc e)
-		goto err
-	;;
-
-	if !std.hassuffix(x.p.buf, suf)
-		err = error(x, `Unclosed ("<!DOCTYPE", ">"))
-		goto err
-	;;
-
-	for cc : std.bychar(pref)
-		match bnext(x)
-		| c:	if c != cc
-				err = error(x, `Unexpected (c, cc))
-				goto err
-			;;
-		;;
-	;;
-
-	match bnext(x)
-	| c:	if !isspace(c)
-			err = error(x, `Unexpected (c, ' '))
-			goto err
-		;;
-	;;
-
-	beatspace(x)
-
-	open = 1
-	start = x.p.bidx
-
-	while true
-		while x.p.bidx < x.p.buf.len
-			match bnext(x)
-			| '<':
-				if armed
-					open++
-				;;
-			| '>':
-				if armed
-					open--
-				;;
-			| '"':
-				if armed
-					armed = false
-					q = '"'
-				elif q == '"'
-					armed = true
-				;;
-			| '\'':
-				if armed
-					armed = false
-					q = '\''
-				elif q == '\''
-					armed = true
-				;;
-			| _:
-			;;
-		;;
-
-		std.sbputs(dt, x.p.buf)
-
-		if open > 0
-			match bio.readterm(x.file, suf)
-			| `std.Ok b:
-				newbuf(x, b)
-			| `std.Err e:
-				err = error(x, `Trunc e)
-				goto err
-			;;
-
-			if !std.hassuffix(x.p.buf, suf)
-				err = error(x, `Unclosed ("<!DOCTYPE", ">"))
-				goto err
-			;;
-		else
-			break
-		;;
-	;;
-
-	s = std.sbpeek(dt)
-	s = std.sldup(prune(s[start:s.len-suf.len]))
-	std.sbfree(dt)
-	-> `std.Ok `Doctype s
-
-:err
-	std.sbfree(dt)
-	-> `std.Err err
 }
 
 const parseinstruction = {x
