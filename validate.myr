@@ -25,8 +25,13 @@ const valid = {path
 		;;
 	;;
 
+	match xml.geterr(x)
+	| `std.Some e:	std.put("{}: {}\n", path, e)
+	| `std.None:
+	;;
+
 	if !eof
-		std.fatal("didn't reach eof\n")
+		std.fatal("{}: didn't reach eof\n", path)
 	;;
 
 	xml.free(x)
@@ -50,7 +55,7 @@ const main = {
 		"/tmp/xmlconf/xmltest/valid/sa",
 		"/tmp/xmlconf/sun",
 		"/tmp/xmlconf/sun/valid",
-		"/tmp/xmlconf/oasis",
+		"/tmp/xmlconf/oasis"
 	]
 	var d
 	var path
@@ -71,5 +76,4 @@ const main = {
 		std.dirclose(d)
 		std.put("\n")
 	;;
-
 }

@@ -35,7 +35,7 @@ const main = {
 	bio.close(f)
 	*/
 
-	var x = std.try(xml.mkbuf("<!DOCTYPE foo [ <!ENTITY> ]>"))
+	var x = std.try(xml.mkbuf("<!DOCTYPE doc [ <!----> ]>"))
 	for ev : xml.byevent(x)
 		std.put("{}\n", ev)
 	;;

@@ -186,6 +186,16 @@ const doctype_test = {ctx
 		`xml.End "doc",
 		`xml.Eof
 	][:])
+
+	comparebuf(ctx, "<!DOCTYPE doc [ <!----> ] >", [
+		`xml.Doctype "doc [ <!----> ]",
+		`xml.Eof
+	][:])
+
+	comparebuf(ctx, "<!DOCTYPE doc [ <!-- -> --> ] >", [
+		`xml.Doctype "doc [ <!-- -> --> ]",
+		`xml.Eof
+	][:])
 }
 
 const space_test = {ctx
@@ -239,6 +249,6 @@ const bad_test = {ctx
 	compareerr(ctx, "<!DOCTYPE doc [ <!-- --]><doc></doc>", [][:],
 		[.line=1, .off=36, .err=`xml.Trunc `bio.Eof])
 
-	compareerr(ctx, "<!DOCTYPE doc [ <!-- --> <!-- -", [][:],
-		[.line=1, .off=31, .err=`xml.Trunc `bio.Eof])
+	compareerr(ctx, "<!DOCTYPE doc [ <!-- --> <!-- ->", [][:],
+		[.line=1, .off=32, .err=`xml.Trunc `bio.Eof])
 }

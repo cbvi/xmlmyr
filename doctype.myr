@@ -92,6 +92,9 @@ const doquote = {x, q
 }
 
 const docomment = {x
+	for _ : std.bychar("!--")
+		bnext(x)
+	;;
 	while x.p.bidx < x.p.buf.len
 		match bnext(x)
 		| '>':	refill(x)
@@ -104,10 +107,18 @@ const docomment = {x
 }
 
 const docommend = {x
-	if bnext(x) == '-' && bnext(x) == '>'
+	match bnext(x)
+	| '-':
+	| '>':
+		refill(x)
+		-> false
+	| _:	-> false
+	;;
+
+	match bnext(x)
+	| '>':
 		refill(x)
 		-> true
-	else
-		-> false
+	| _:	-> false
 	;;
 }
