@@ -92,33 +92,22 @@ const doquote = {x, q
 }
 
 const docomment = {x
-	for _ : std.bychar("!--")
-		bnext(x)
-	;;
+	var end = 0
+
+	bskip(x, "!--".len)
+
 	while x.p.bidx < x.p.buf.len
 		match bnext(x)
-		| '>':	refill(x)
-		| '-':	if docommend(x)
+		| '>':
+			refill(x)
+			if end > 1
 				break
+			else
+				end = 0
 			;;
+		| '-':	end++
 		| _:
+			end = 0
 		;;
-	;;
-}
-
-const docommend = {x
-	match bnext(x)
-	| '-':
-	| '>':
-		refill(x)
-		-> false
-	| _:	-> false
-	;;
-
-	match bnext(x)
-	| '>':
-		refill(x)
-		-> true
-	| _:	-> false
 	;;
 }
