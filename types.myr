@@ -114,7 +114,6 @@ pkg xml =
 	;;
 
 	type errtype = union
-		`Empty			/* got nothing, needed something */
 		`Inval		char	/* this char is invalid here */
 		`Trunc		bio.err	/* parsing ended due to io err */
 		`Unclosed	(byte[:], byte[:]) /* start with no end */

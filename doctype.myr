@@ -34,9 +34,7 @@ const parsedoctype = {x
 	;;
 
 	c = bnext(x)
-	if c == '>'
-		-> `std.Err error(x, `Empty)
-	elif !isspace(c)
+	if !isspace(c)
 		-> `std.Err error(x, `Unexpected (c, ' '))
 	;;
 

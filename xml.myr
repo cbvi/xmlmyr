@@ -65,7 +65,6 @@ const open = {x
 	| `std.Ok '!':	-> parseexclamation(x)
 	| `std.Ok '/':	-> parseend(x)
 	| `std.Ok '?':	-> parseinstruction(x)
-	| `std.Ok '>':	-> `std.Err error(x, `Empty)
 	| `std.Ok _:	-> parseelemname(x)
 	| `std.Err `bio.Eof:
 		x.p.more = false
@@ -162,7 +161,6 @@ const parseend = {x
 	;;
 
 	match bnext(x)
-	| '>':	-> `std.Err error(x, `Empty)
 	| c:
 		if namestartchar(c)
 			start = x.p.bcur
@@ -317,11 +315,21 @@ const parsecomment = {x
 }
 
 const parseinstruction = {x
+	const suf = "?>"
 	var start, stop
 
-	match fillbuf(x, "<?", "?", "?>")
-	| `std.Ok b:	newbuf(x, std.sldup(b))
-	| `std.Err e:	-> `std.Err e
+	match bio.readterm(x.file, suf)
+	| `std.Ok b:
+		if !std.hassuffix(b, suf)
+			-> `std.Err error(x, `Unclosed ("<?", suf))
+		;;
+		newbuf(x, b[:b.len-suf.len])
+	| `std.Err e:	-> `std.Err error(x, `Trunc e)
+	;;
+
+	match bnext(x)
+	| '?':
+	| c:	-> `std.Err error(x, `Unexpected (c, '?'))
 	;;
 
 	if x.p.bidx < x.p.buf.len
@@ -334,7 +342,9 @@ const parseinstruction = {x
 			;;
 		;;
 	else
-		-> `std.Err error(x, `Empty)
+		/* handling <??> */
+		x.p.off++
+		-> `std.Err error(x, `Inval '?')
 	;;
 
 	while x.p.bidx < x.p.buf.len
