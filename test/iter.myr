@@ -179,6 +179,18 @@ const empty_test = {ctx
 		`xml.End "doc",
 		`xml.Eof
 	][:])
+
+	comparebuf(ctx, "<d/>", [
+		`xml.Start ("d", [][:]),
+		`xml.End "d",
+		`xml.Eof
+	][:])
+
+	comparebuf(ctx, "<d />", [
+		`xml.Start ("d", [][:]),
+		`xml.End "d",
+		`xml.Eof
+	][:])
 }
 
 const twigil_test = {ctx
