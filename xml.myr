@@ -110,12 +110,8 @@ const parseelemname = {x
 		| '>':
 			-> `std.Ok `Start (x.p.buf[start:stop], attrs)
 		| '/':
-			if x.p.buf[start:stop].len > 0
-				x.p.state = `Closing x.p.buf[start:stop]
-				-> `std.Ok `Start (x.p.buf[start:stop], attrs)
-			else
-				-> `std.Err error(x, `Empty)
-			;;
+			x.p.state = `Closing x.p.buf[start:stop]
+			-> `std.Ok `Start (x.p.buf[start:stop], attrs)
 		| c:
 			if ex
 				-> `std.Err error(x, `Unexpected (c, '>'))
