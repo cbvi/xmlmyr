@@ -94,8 +94,6 @@ const parseelemname = {x
 	;;
 
 	match bnext(x)
-	| '>':	-> `std.Err error(x, `Empty)
-	| '/':	-> `std.Err error(x, `Empty)
 	| c:
 		if namestartchar(c)
 			start =  x.p.bcur
