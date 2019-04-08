@@ -161,6 +161,12 @@ const attrs_test = {ctx
 
 	compareerr(ctx, "<doc an=\"val\" \"val\"></doc>", [][:],
 		[.line=1, .off=15, .err=`xml.Inval '"'])
+
+	compareerr(ctx, "<doc an=\"val\"", [][:],
+		[.line=1, .off=13, .err=`xml.Trunc `bio.Eof])
+
+	compareerr(ctx, "<doc an=\"fo>", [][:],
+		[.line=1, .off=12, .err=`xml.Trunc `bio.Eof])
 }
 
 const empty_test = {ctx
