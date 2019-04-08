@@ -128,6 +128,14 @@ const simple_test = {ctx
 	compareerr(ctx, "<doc></>", [
 		`xml.Start ("doc", [][:])
 	][:], [.line=1, .off=8, .err=`xml.Empty])
+
+	compareerr(ctx, "<doc></", [
+		`xml.Start ("doc", [][:])
+	][:], [.line=1, .off=7, .err=`xml.Unclosed ("</", ">")])
+
+	compareerr(ctx, "<doc></doc", [
+		`xml.Start ("doc", [][:])
+	][:], [.line=1, .off=10, .err=`xml.Unclosed ("</", ">")])
 }
 
 const attrs_test = {ctx

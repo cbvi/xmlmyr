@@ -168,6 +168,10 @@ const parseend = {x
 	| c:	-> `std.Err error(x, `Unexpected (c, '/'))
 	;;
 
+	if x.p.bidx >= x.p.buf.len
+		-> `std.Err error(x, `Unclosed ("</", ">"))
+	;;
+
 	match bnext(x)
 	| '>':	-> `std.Err error(x, `Empty)
 	| c:
