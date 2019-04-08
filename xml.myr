@@ -76,11 +76,7 @@ const open = {x
 
 const closing = {x, name
 	x.p.state = `Close
-
-	match bnext(x)
-	| '>':	-> `std.Ok `End name
-	| c:	-> `std.Err error(x, `Unexpected (c, '>'))
-	;;
+	-> `std.Ok `End name
 }
 
 const parseelemname = {x
@@ -108,8 +104,7 @@ const parseelemname = {x
 		| '>':
 			-> `std.Ok `Start (x.p.buf[start:stop], attrs)
 		| '/':
-			x.p.state = `Closing x.p.buf[start:stop]
-			-> `std.Ok `Start (x.p.buf[start:stop], attrs)
+			-> parseselfclose(x, x.p.buf[start:stop], attrs)
 		| c:
 			if ex
 				-> `std.Err error(x, `Unexpected (c, '>'))
@@ -194,6 +189,20 @@ const parseend = {x
 	;;
 
 	-> `std.Err error(x, `Unclosed ("</", ">"))
+}
+
+const parseselfclose = {x, name, attrs
+	if x.p.bidx < x.p.buf.len
+		match bnext(x)
+		| '>':
+			x.p.state = `Closing name
+			-> `std.Ok `Start (name, attrs)
+		| c:
+			-> `std.Err error(x, `Unexpected (c, '>'))
+		;;
+	else
+		-> `std.Err error(x, `Trunc `bio.Eof)
+	;;
 }
 
 const parseattrs = {x, attrs

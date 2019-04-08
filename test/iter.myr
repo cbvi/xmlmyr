@@ -191,6 +191,12 @@ const empty_test = {ctx
 		`xml.End "d",
 		`xml.Eof
 	][:])
+
+	compareerr(ctx, "<doc /<doc></doc>", [][:],
+		[.line=1, .off=7, .err=`xml.Unexpected ('<', '>')])
+
+	compareerr(ctx, "<doc /", [][:],
+		[.line=1, .off=6, .err=`xml.Trunc `bio.Eof])
 }
 
 const twigil_test = {ctx
