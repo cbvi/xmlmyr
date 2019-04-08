@@ -139,8 +139,11 @@ const parseelemname = {x
 }
 
 const parseexclamation = {x
-	std.assert(std.try(bio.getc(x.file)) == '!', "! not found")
-	x.p.off++
+	match bio.getc(x.file)
+	| `std.Ok '!':	x.p.off++
+	| `std.Ok c:	-> `std.Err error(x, `Unexpected (c, '!'))
+	| `std.Err e:	-> `std.Err error(x, `Trunc e)
+	;;
 
 	match bio.peekc(x.file)
 	| `std.Ok '[':	-> parsecdata(x)
@@ -160,7 +163,10 @@ const parseend = {x
 	| `std.Err e:	-> `std.Err error(x, `Trunc e)
 	;;
 
-	std.assert(bnext(x) == '/', "/ not found")
+	match bnext(x)
+	| '/':
+	| c:	-> `std.Err error(x, `Unexpected (c, '/'))
+	;;
 
 	match bnext(x)
 	| '>':	-> `std.Err error(x, `Empty)
