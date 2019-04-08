@@ -192,6 +192,14 @@ const empty_test = {ctx
 		`xml.Eof
 	][:])
 
+	comparebuf(ctx, "<doc an=\"val\"/>", [
+		`xml.Start ("doc", [
+			("an", "val")
+		][:]),
+		`xml.End "doc",
+		`xml.Eof
+	][:])
+
 	compareerr(ctx, "<doc /<doc></doc>", [][:],
 		[.line=1, .off=7, .err=`xml.Unexpected ('<', '>')])
 
