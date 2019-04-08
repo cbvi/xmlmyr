@@ -24,9 +24,6 @@ const main = {
 		}],
 		[.name="space", .fn={ctx
 			space_test(ctx)
-		}],
-		[.name="bad", .fn={ctx
-			bad_test(ctx)
 		}]
 	][:])
 }
@@ -117,6 +114,20 @@ const simple_test = {ctx
 		`xml.End "doc",
 		`xml.Eof
 	][:])
+
+	compareerr(ctx, "<doc><.child></.child></doc>", [
+		`xml.Start ("doc", [][:])
+
+	][:], [.line=1,.off=7,.err=`xml.Inval '.'])
+
+	compareerr(ctx, "<doc></doc>doc", [
+		`xml.Start ("doc", [][:]),
+		`xml.End "doc"
+	][:], [.line=1,.off=14,.err=`xml.Trunc `bio.Eof])
+
+	compareerr(ctx, "<doc></>", [
+		`xml.Start ("doc", [][:])
+	][:], [.line=1, .off=8, .err=`xml.Empty])
 }
 
 const attrs_test = {ctx
@@ -130,6 +141,18 @@ const attrs_test = {ctx
 		`xml.End "doc",
 		`xml.Eof
 	][:])
+
+	compareerr(ctx, "<doc an></doc>", [][:],
+		[.line=1,.off=8,.err=`xml.Inval '>'])
+
+	compareerr(ctx, "<doc an=val></doc>", [][:],
+		[.line=1,.off=9,.err=`xml.Unexpected ('v', '"')])
+
+	compareerr(ctx, "<doc an=></doc>", [][:],
+		[.line=1,.off=9,.err=`xml.Unexpected ('>', '"')])
+
+	compareerr(ctx, "<doc an=\"val\" \"val\"></doc>", [][:],
+		[.line=1, .off=15, .err=`xml.Inval '"'])
 }
 
 const empty_test = {ctx
@@ -154,6 +177,17 @@ const twigil_test = {ctx
 		`xml.End "doc",
 		`xml.Eof
 	][:])
+
+	compareerr(ctx, "<doc><![CDATA[</doc>", [
+		`xml.Start ("doc", [][:])
+	][:], [.line=1,.off=7,.err=`xml.Unclosed ("<![CDATA[", "]]>")])
+
+	compareerr(ctx, "<??><doc></doc>", [][:],
+		[.line=1,.off=4,.err=`xml.Empty])
+
+	compareerr(ctx, "<doc>\n<?target example instruction>\n</doc>", [
+		`xml.Start ("doc", [][:])
+	][:], [.line=2,.off=1,.err=`xml.Unclosed ("<?", "?>")])
 }
 
 const crlf_test = {ctx
@@ -196,52 +230,6 @@ const doctype_test = {ctx
 		`xml.Doctype "doc [ <!-- -> --> ]",
 		`xml.Eof
 	][:])
-}
-
-const space_test = {ctx
-	compare(ctx, "test/files/009_space.xml", [
-		`xml.Start ("doc", [][:]),
-		`xml.End "doc",
-		`xml.Eof
-	][:])
-}
-
-const bad_test = {ctx
-	compareerr(ctx, "<doc><.child></.child></doc>", [
-		`xml.Start ("doc", [][:])
-	][:], [.line=1,.off=7,.err=`xml.Inval '.'])
-
-	compareerr(ctx, "<??><doc></doc>", [][:],
-		[.line=1,.off=4,.err=`xml.Empty])
-
-	compareerr(ctx, "<doc></doc>doc", [
-		`xml.Start ("doc", [][:]),
-		`xml.End "doc"
-	][:], [.line=1,.off=14,.err=`xml.Trunc `bio.Eof])
-
-	compareerr(ctx, "<doc>\n<?target example instruction>\n</doc>", [
-		`xml.Start ("doc", [][:])
-	][:], [.line=2,.off=1,.err=`xml.Unclosed ("<?", "?>")])
-
-	compareerr(ctx, "<doc an></doc>", [][:],
-		[.line=1,.off=8,.err=`xml.Inval '>'])
-
-	compareerr(ctx, "<doc an=val></doc>", [][:],
-		[.line=1,.off=9,.err=`xml.Unexpected ('v', '"')])
-
-	compareerr(ctx, "<doc an=></doc>", [][:],
-		[.line=1,.off=9,.err=`xml.Unexpected ('>', '"')])
-
-	compareerr(ctx, "<doc an=\"val\" \"val\"></doc>", [][:],
-		[.line=1, .off=15, .err=`xml.Inval '"'])
-
-	compareerr(ctx, "<doc></>", [
-		`xml.Start ("doc", [][:])
-	][:], [.line=1, .off=8, .err=`xml.Inval '>'])
-
-	compareerr(ctx, "<doc><![CDATA[</doc>", [
-		`xml.Start ("doc", [][:])
-	][:], [.line=1,.off=7,.err=`xml.Unclosed ("<![CDATA[", "]]>")])
 
 	compareerr(ctx, "<!DOCTYPE doc [ < ]><doc></doc>", [][:],
 		[.line=1, .off=31, .err=`xml.Trunc `bio.Eof])
@@ -251,4 +239,15 @@ const bad_test = {ctx
 
 	compareerr(ctx, "<!DOCTYPE doc [ <!-- --> <!-- ->", [][:],
 		[.line=1, .off=32, .err=`xml.Trunc `bio.Eof])
+
+	compareerr(ctx, "<!DOCTYPE doc [ <!-->", [][:],
+		[.line=1, .off=21, .err=`xml.Trunc `bio.Eof])
+}
+
+const space_test = {ctx
+	compare(ctx, "test/files/009_space.xml", [
+		`xml.Start ("doc", [][:]),
+		`xml.End "doc",
+		`xml.Eof
+	][:])
 }

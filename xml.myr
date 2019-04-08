@@ -163,6 +163,7 @@ const parseend = {x
 	std.assert(bnext(x) == '/', "/ not found")
 
 	match bnext(x)
+	| '>':	-> `std.Err error(x, `Empty)
 	| c:
 		if namestartchar(c)
 			start = x.p.bcur
