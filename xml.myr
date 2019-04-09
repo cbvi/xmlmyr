@@ -66,9 +66,6 @@ const open = {x
 	| `std.Ok '/':	-> parseend(x)
 	| `std.Ok '?':	-> parseinstruction(x)
 	| `std.Ok _:	-> parseelemname(x)
-	| `std.Err `bio.Eof:
-		x.p.more = false
-		-> `std.Ok `Eof
 	| `std.Err e:	-> `std.Err error(x, `Trunc e)
 	;;
 }

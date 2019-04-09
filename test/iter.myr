@@ -125,6 +125,10 @@ const simple_test = {ctx
 		`xml.End "doc"
 	][:], [.line=1,.off=14,.err=`xml.Trunc `bio.Eof])
 
+	compareerr(ctx, "<doc><", [
+		`xml.Start ("doc", [][:])
+	][:], [.line=1, .off=6, .err=`xml.Trunc `bio.Eof])
+
 	compareerr(ctx, "<doc></>", [
 		`xml.Start ("doc", [][:])
 	][:], [.line=1, .off=8, .err=`xml.Inval '>'])
