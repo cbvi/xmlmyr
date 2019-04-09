@@ -241,9 +241,9 @@ const twigil_test = {ctx
 		`xml.Eof
 	][:])
 
-	comparebuf(ctx, "<?test <??><doc></doc>", [
-		`xml.Instruction ("test", "<?"),
+	comparebuf(ctx, "<doc><?test <??></doc>", [
 		`xml.Start ("doc", [][:]),
+		`xml.Instruction ("test", "<?"),
 		`xml.End "doc",
 		`xml.Eof
 	][:])
