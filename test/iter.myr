@@ -248,6 +248,13 @@ const twigil_test = {ctx
 		`xml.Eof
 	][:])
 
+	comparebuf(ctx, "<doc><![CDATA[]]></doc>", [
+		`xml.Start ("doc", [][:]),
+		`xml.Cdata "",
+		`xml.End "doc",
+		`xml.Eof
+	][:])
+
 	compareerr(ctx, "<doc><![CDATA[</doc>", [
 		`xml.Start ("doc", [][:])
 	][:], [.line=1,.off=7,.err=`xml.Unclosed ("<![CDATA[", "]]>")])
