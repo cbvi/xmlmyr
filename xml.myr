@@ -85,14 +85,9 @@ const parseelemname = {x
 	| `std.Err e:	-> `std.Err error(x, `Trunc e)
 	;;
 
-	match bnext(x)
-	| c:
-		if namestartchar(c)
-			start =  x.p.bcur
-			stop = x.p.bidx
-		else
-			-> `std.Err error(x, `Inval c)
-		;;
+	match startname(x)
+	| `std.Ok o:	(start, stop) = o
+	| `std.Err e:	-> `std.Err e
 	;;
 
 	while x.p.bidx < x.p.buf.len
@@ -157,14 +152,9 @@ const parseend = {x
 		-> `std.Err error(x, `Unclosed ("</", ">"))
 	;;
 
-	match bnext(x)
-	| c:
-		if namestartchar(c)
-			start = x.p.bcur
-			stop = x.p.bidx
-		else
-			-> `std.Err error(x, `Inval c)
-		;;
+	match startname(x)
+	| `std.Ok o:	(start, stop) = o
+	| `std.Err e:	-> `std.Err e
 	;;
 
 	while x.p.bidx < x.p.buf.len
@@ -236,14 +226,9 @@ const parseattrname = {x
 
 	beatspace(x)
 
-	match bnext(x)
-	| c:
-		if namestartchar(c)
-			start =  x.p.bcur
-			stop = x.p.bidx
-		else
-			-> `std.Err error(x, `Inval c)
-		;;
+	match startname(x)
+	| `std.Ok o:	(start, stop) = o
+	| `std.Err e:	-> `std.Err e
 	;;
 
 	while x.p.bidx < x.p.buf.len
@@ -329,19 +314,15 @@ const parseinstruction = {x
 	| c:	-> `std.Err error(x, `Unexpected (c, '?'))
 	;;
 
-	if x.p.bidx < x.p.buf.len
-		match bnext(x)
-		| c:	if namestartchar(c)
-				start = x.p.bcur
-				stop = x.p.bidx
-			else
-				-> `std.Err error(x, `Inval c)
-			;;
-		;;
-	else
-		/* handling <??> */
+	/* special case for <??> */
+	if x.p.bidx >= x.p.buf.len
 		x.p.off++
 		-> `std.Err error(x, `Inval '?')
+	;;
+
+	match startname(x)
+	| `std.Ok o:	(start, stop) = o
+	| `std.Err e:	-> `std.Err e
 	;;
 
 	while x.p.bidx < x.p.buf.len

@@ -15,6 +15,8 @@ pkg xml =
 	pkglocal const beatspace :	(x : ctx# -> void)
 	pkglocal const btaste :		(x : ctx# -> void)
 	pkglocal const bskip :		(x : ctx#, n : int -> void)
+
+	pkglocal const startname:	(x : ctx# -> std.result((std.size, std.size), err))
 ;;
 
 const newbuf = {x, buf
@@ -112,5 +114,20 @@ const btaste = {x
 const bskip = {x, n
 	for var i = 0; i < n; i++
 		bnext(x)
+	;;
+}
+
+const startname = {x
+	var c
+
+	if x.p.bidx >= x.p.buf.len
+		-> `std.Err error(x, `Trunc `bio.Eof)
+	;;
+
+	c = bnext(x)
+	if namestartchar(c)
+		-> `std.Ok (x.p.bcur, x.p.bidx)
+	else
+		-> `std.Err error(x, `Inval c)
 	;;
 }
