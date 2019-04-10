@@ -314,14 +314,11 @@ const parseinstruction = {x
 	| c:	-> `std.Err error(x, `Unexpected (c, '?'))
 	;;
 
-	/* special case for <??> */
-	if x.p.bidx >= x.p.buf.len
-		x.p.off++
-		-> `std.Err error(x, `Inval '?')
-	;;
-
 	match startname(x)
 	| `std.Ok o:	(start, stop) = o
+	| `std.Err [.line=l, .off=o, .err=`Trunc `bio.Eof]:
+		/* special case for <??> */
+		-> `std.Err [.line=l, .off=o+1, .err=`Inval '?']
 	| `std.Err e:	-> `std.Err e
 	;;
 
