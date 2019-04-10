@@ -23,8 +23,6 @@ const dispatch = {x
 const close = {x
 	var start, stop
 
-	x.p.state = `Open
-
 	match bio.readterm(x.file, "<")
 	| `std.Ok s:
 		newbuf(x, s)
@@ -40,6 +38,7 @@ const close = {x
 	while x.p.bidx < x.p.buf.len
 		match bnext(x)
 		| '<':
+			x.p.state = `Open
 			if prune(x.p.buf[start:stop]).len > 0
 				-> `std.Ok `Characters x.p.buf[start:stop]
 			else
@@ -51,7 +50,7 @@ const close = {x
 	;;
 
 	if prune(x.p.buf).len > 0
-		-> `std.Err error(x, `Trunc `bio.Eof)
+		-> `std.Ok `Characters x.p.buf[start:stop]
 	else
 		x.p.more = false
 		-> `std.Ok `Eof

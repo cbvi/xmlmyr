@@ -24,6 +24,9 @@ const main = {
 		}],
 		[.name="space", .fn={ctx
 			space_test(ctx)
+		}],
+		[.name="frag", .fn={ctx
+			frag_test(ctx)
 		}]
 	][:])
 }
@@ -119,11 +122,6 @@ const simple_test = {ctx
 		`xml.Start ("doc", [][:])
 
 	][:], [.line=1,.off=7,.err=`xml.Inval '.'])
-
-	compareerr(ctx, "<doc></doc>doc", [
-		`xml.Start ("doc", [][:]),
-		`xml.End "doc"
-	][:], [.line=1,.off=14,.err=`xml.Trunc `bio.Eof])
 
 	compareerr(ctx, "<doc><", [
 		`xml.Start ("doc", [][:])
@@ -341,6 +339,44 @@ const doctype_test = {ctx
 const space_test = {ctx
 	compare(ctx, "test/files/009_space.xml", [
 		`xml.Start ("doc", [][:]),
+		`xml.End "doc",
+		`xml.Eof
+	][:])
+}
+
+const frag_test = {ctx
+	comparebuf(ctx, "testing", [
+		`xml.Characters "testing",
+		`xml.Eof
+	][:])
+
+	comparebuf(ctx, "doc<doc></doc>", [
+		`xml.Characters "doc",
+		`xml.Start ("doc", [][:]),
+		`xml.End "doc",
+		`xml.Eof
+	][:])
+
+	comparebuf(ctx, "<doc></doc>doc", [
+		`xml.Start ("doc", [][:]),
+		`xml.End "doc",
+		`xml.Characters "doc",
+		`xml.Eof
+	][:])
+
+	comparebuf(ctx, "<doc>", [
+		`xml.Start ("doc", [][:]),
+		`xml.Eof
+	][:])
+
+	comparebuf(ctx, "</doc>", [
+		`xml.End "doc",
+		`xml.Eof
+	][:])
+
+	comparebuf(ctx, "</doc></doc></doc>", [
+		`xml.End "doc",
+		`xml.End "doc",
 		`xml.End "doc",
 		`xml.Eof
 	][:])
