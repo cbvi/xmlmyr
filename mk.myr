@@ -12,6 +12,21 @@ pkg xml =
 
 	const free	:	(x : ctx# -> void)
 	const eventfree	:	(ev : event -> void)
+
+	impl disposable ctx#
+	impl disposable event
+;;
+
+impl disposable ctx# =
+	__dispose__ = {x
+		free(x)
+	}
+;;
+
+impl disposable event =
+	__dispose__ = {e
+		eventfree(e)
+	}
 ;;
 
 const mk = {f, owned

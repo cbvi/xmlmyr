@@ -18,6 +18,9 @@ const main = {
 		[.name="unowned", .fn={ctx
 			unowned_test(ctx)
 		}],
+		[.name="auto", .fn={ctx
+			auto_test(ctx)
+		}]
 	][:])
 }
 
@@ -101,4 +104,28 @@ const unowned_test = {ctx
 	;;
 
 	bio.close(f)
+}
+
+const auto_test = {ctx
+	/* just test that it can be declared auto and leaves the scope okay */
+	var c = {
+		var x = auto std.try(xml.mkbuf("<doc></doc>"))
+		var eof = false
+
+		for ev : xml.byevent(x)
+			match ev
+			| `xml.Eof:	eof = true
+			| _:
+			;;
+		;;
+
+		if !eof
+			testr.fail(ctx, "auto test didn't reach eof")
+		;;
+	}
+
+	c()
+
+	/* presumably it was disposed now and nothing bad happened */
+	testr.ok(ctx)
 }
