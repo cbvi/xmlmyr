@@ -1,0 +1,12 @@
+use std
+
+use "xml"
+use "types"
+
+pkg xml =
+	const next : (x : ctx# -> std.result(event, err))
+;;
+
+const next = {ctx
+	-> dispatch(ctx)
+}

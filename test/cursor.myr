@@ -1,0 +1,67 @@
+use std
+use testr
+
+use xml
+
+const main = {
+	testr.run([
+		[.name="simple", .fn={ctx
+			simple_test(ctx)
+		}],
+		[.name="eof", .fn={ctx
+			eof_test(ctx)
+		}]
+	][:])
+}
+
+const simple_test = {ctx
+	var x = std.try(xml.mkbuf("<doc></doc>"))
+
+	match xml.next(x)
+	| `std.Ok `xml.Start ("doc", _):
+		testr.ok(ctx)
+	| `std.Ok e:
+		testr.fail(ctx, "<doc>: event {}", e)
+	| `std.Err e:
+		testr.fail(ctx, "<doc>: error {}", e)
+	;;
+
+	match xml.next(x)
+	| `std.Ok `xml.End "doc":
+		testr.ok(ctx)
+	| `std.Ok e:
+		testr.fail(ctx, "</doc>: event {}", e)
+	| `std.Err e:
+		testr.fail(ctx, "</doc>: error {}", e)
+	;;
+
+	match xml.next(x)
+	| `std.Ok `xml.Eof:
+		testr.ok(ctx)
+	| `std.Ok e:
+		testr.fail(ctx, "eof: event {}", e)
+	| `std.Err e:
+		testr.fail(ctx, "eof: error {}", e)
+	;;
+
+	xml.free(x)
+}
+
+const eof_test = {ctx
+	var x = std.try(xml.mkbuf("<doc></doc"))
+
+	xml.next(x)
+	xml.next(x)
+
+	match xml.next(x)
+	| `std.Ok `xml.Eof:	testr.ok(ctx)
+	| a:			testr.fail(ctx, "eof: {}", a)
+	;;
+
+	match xml.next(x)
+	| `std.Ok `xml.Eof:	testr.ok(ctx)
+	| a:			testr.fail(ctx, "eof again: {}", a)
+	;;
+
+	xml.free(x)
+}
