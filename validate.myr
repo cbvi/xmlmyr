@@ -79,22 +79,24 @@ const xmltest = {dir, suite, v
 		match ev
 		| `xml.Start ("TEST", attrs):
 			var vers = true
-			var id = "", uri = ""
+			var id, uri
+
+			id = uri = `std.None
 
 			for a : attrs
 				match a
 				| ("URI", u):
-					uri = u
+					uri = `std.Some u
 					/* many of the OASIS tests have valid
 					   xml declared as invalid in the
 					   test schema but they helpfully
 					   put "pass" in the filename, *shrug*
 					*/
-					if std.strhas(uri, "pass")
+					if std.strhas(u, "pass")
 						valid = true
 					;;
 				| ("ID", i):
-					id = i
+					id = `std.Some i
 				| ("TYPE", "valid"):
 					valid = true
 				| ("VERSION", "1.1"):
@@ -108,8 +110,8 @@ const xmltest = {dir, suite, v
 			;;
 
 			if valid
-				std.htput(test, "id", std.sldup(id))
-				std.htput(test, "uri", std.sldup(uri))
+				std.htput(test, "uri", std.sldup(std.get(uri)))
+				std.htput(test, "id", std.sldup(std.get(id)))
 			;;
 		| `xml.Characters c:
 			if valid
