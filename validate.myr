@@ -1,83 +1,6 @@
 use std
 use xml
 
-const valid = {path
-	var x
-	var eof = false
-
-	//std.put("processing {}\n", path)
-	std.put(".")
-	match xml.mkpath(path)
-	| `std.Ok o: x = o
-	| `std.Err `xml.Eenc "UTF-16":
-		//std.put("UTF-16 is not supported\n")
-		-> void
-	| `std.Err e:
-		std.fatal("{}: {}\n", path, e)
-		-> void
-	;;
-
-	for ev : xml.byevent(x)
-		match ev
-		| `xml.Eof:	eof = true
-		| e:
-		;;
-	;;
-
-	match xml.geterr(x)
-	| `std.Some e:	std.put("\n{}: {}\n", path, e)
-	| `std.None:
-	;;
-
-	if !eof
-		std.put("{}: didn't reach eof\n", path)
-	;;
-
-	xml.free(x)
-}
-
-const isxml = {p
-	const ext = ".xml"
-
-	if p.len > ext.len
-		if std.sleq(p[p.len-ext.len:], ext)
-			-> true
-		;;
-	;;
-
-	-> false
-}
-
-const oldmain = {
-	const dirs = [
-		"/tmp/xmlconf/xmltest",
-		"/tmp/xmlconf/xmltest/valid/sa",
-		"/tmp/xmlconf/sun",
-		"/tmp/xmlconf/sun/valid",
-		"/tmp/xmlconf/oasis",
-		"/tmp/xmlconf/eduni/errata-4e"
-	]
-	var d
-	var path
-
-	for dir : dirs
-		std.put("{}: ", dir)
-		d = std.try(std.diropen(dir))
-
-		for f : std.byentry(d)
-			if !isxml(f) || std.strhas(f, "fail")
-				continue
-			;;
-			path = std.pathcat(dir, f)
-			valid(path)
-			std.slfree(path)
-		;;
-
-		std.dirclose(d)
-		std.put("\n")
-	;;
-}
-
 const dotest = {test, dir, v
 	var id, uri, description
 	var path
@@ -143,21 +66,25 @@ const dotest = {test, dir, v
 const xmltest = {dir, suite, v
 	var x = std.try(xml.mkpath(suite))
 	var valid = false
-	var test = std.mkht()
-
-	std.htfree(test)
+	var test
 
 	std.put("{}: ", suite)
 	if v
 		std.put("\n")
 	;;
 
+	test = std.mkht()
+
 	for ev : xml.byevent(x)
 		match ev
 		| `xml.Start ("TEST", attrs):
+			var vers = true
+			var id = "", uri = ""
+
 			for a : attrs
 				match a
-				| ("URI", uri):
+				| ("URI", u):
+					uri = u
 					/* many of the OASIS tests have valid
 					   xml declared as invalid in the
 					   test schema but they helpfully
@@ -166,32 +93,23 @@ const xmltest = {dir, suite, v
 					if std.strhas(uri, "pass")
 						valid = true
 					;;
+				| ("ID", i):
+					id = i
 				| ("TYPE", "valid"):
 					valid = true
+				| ("VERSION", "1.1"):
+					vers = false
 				| _:
 				;;
 			;;
 
-			if valid
-				for a : attrs
-					match a
-					| ("VERSION", "1.1"):	valid = false
-					| _:
-					;;
-				;;
+			if !vers
+				valid = false
 			;;
 
 			if valid
-				test = std.mkht()
-				for a : attrs
-					match a
-					| ("ID", id):
-						std.htput(test, "id", std.sldup(id))
-					| ("URI", uri):
-						std.htput(test, "uri", std.sldup(uri))
-					| _:
-					;;
-				;;
+				std.htput(test, "id", std.sldup(id))
+				std.htput(test, "uri", std.sldup(uri))
 			;;
 		| `xml.Characters c:
 			if valid
@@ -202,11 +120,14 @@ const xmltest = {dir, suite, v
 				dotest(test, dir, v)
 				std.htfree(test)
 				valid = false
+				test = std.mkht()
 			;;
 		| _:
 		;;
 	;;
 
+	std.htfree(test)
+	xml.free(x)
 	std.put("\n")
 }
 
