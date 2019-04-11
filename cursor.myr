@@ -1,12 +1,58 @@
 use std
 
 use "xml"
+use "err"
+use "iter"
 use "types"
 
 pkg xml =
 	const next : (x : ctx# -> std.result(event, err))
+	const seek : (x : ctx#, name : byte[:] -> std.result(event, err))
+	const seekend : (x : ctx#, name : byte[:] -> std.result(event, err))
 ;;
 
-const next = {ctx
-	-> dispatch(ctx)
+const next = {x
+	-> dispatch(x)
+}
+
+const seek = {x, name
+	for ev : byevent(x)
+		match ev
+		| `xml.Start (n, _):
+			if std.sleq(n, name)
+				-> `std.Ok ev
+			;;
+		| `xml.Eof:
+			-> `std.Ok ev
+		| _:
+		;;
+	;;
+
+	match geterr(x)
+	| `std.Some e:
+		-> `std.Err e
+	| `std.None:
+		std.die("BUG: eof not reached but no error recorded\n")
+	;;
+}
+
+const seekend = {x, name
+	for ev : byevent(x)
+		match ev
+		| `xml.End n:
+			if std.sleq(n, name)
+				-> `std.Ok ev
+			;;
+		| `xml.Eof:
+			-> `std.Ok ev
+		| _:
+		;;
+	;;
+
+	match geterr(x)
+	| `std.Some e:
+		-> `std.Err e
+	| `std.None:
+		std.die("BUG: eof not reached but no error recorded\n")
+	;;
 }

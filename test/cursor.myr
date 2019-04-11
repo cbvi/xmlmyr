@@ -10,6 +10,9 @@ const main = {
 		}],
 		[.name="eof", .fn={ctx
 			eof_test(ctx)
+		}],
+		[.name="seek", .fn={ctx
+			seek_test(ctx)
 		}]
 	][:])
 }
@@ -61,6 +64,37 @@ const eof_test = {ctx
 	match xml.next(x)
 	| `std.Ok `xml.Eof:	testr.ok(ctx)
 	| a:			testr.fail(ctx, "eof again: {}", a)
+	;;
+
+	xml.free(x)
+}
+
+const seek_test = {ctx
+	var x = std.try(xml.mkbuf("<one><two><three>four</three></two></one>"))
+
+	match xml.seek(x, "three")
+	| `std.Ok `xml.Start ("three", _):	testr.ok(ctx)
+	| e:	testr.fail(ctx, "<three>: got {}", e)
+	;;
+
+	match xml.next(x)
+	| `std.Ok `xml.Characters "four":	testr.ok(ctx)
+	| e:	testr.fail(ctx, "four: got {}", e)
+	;;
+
+	match xml.seekend(x, "two")
+	| `std.Ok `xml.End "two":	testr.ok(ctx)
+	| e:	testr.fail(ctx, "</two>: {}", e)
+	;;
+
+	match xml.next(x)
+	| `std.Ok `xml.End "one":	testr.ok(ctx)
+	| e:	testr.fail(ctx, "</one>: got {}", e)
+	;;
+
+	match xml.next(x)
+	| `std.Ok `xml.Eof:	testr.ok(ctx)
+	| e:	testr.fail(ctx, "eof: got {}", e)
 	;;
 
 	xml.free(x)
