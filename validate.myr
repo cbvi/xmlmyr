@@ -21,17 +21,16 @@ const valid = {path
 		match ev
 		| `xml.Eof:	eof = true
 		| e:
-			//std.put("{}\n", e)
 		;;
 	;;
 
 	match xml.geterr(x)
-	| `std.Some e:	std.put("{}: {}\n", path, e)
+	| `std.Some e:	std.put("\n{}: {}\n", path, e)
 	| `std.None:
 	;;
 
 	if !eof
-		std.fatal("{}: didn't reach eof\n", path)
+		std.put("{}: didn't reach eof\n", path)
 	;;
 
 	xml.free(x)
@@ -49,13 +48,14 @@ const isxml = {p
 	-> false
 }
 
-const main = {
+const oldmain = {
 	const dirs = [
 		"/tmp/xmlconf/xmltest",
 		"/tmp/xmlconf/xmltest/valid/sa",
 		"/tmp/xmlconf/sun",
 		"/tmp/xmlconf/sun/valid",
-		"/tmp/xmlconf/oasis"
+		"/tmp/xmlconf/oasis",
+		"/tmp/xmlconf/eduni/errata-4e"
 	]
 	var d
 	var path
@@ -76,4 +76,148 @@ const main = {
 		std.dirclose(d)
 		std.put("\n")
 	;;
+}
+
+const dotest = {test, dir, v
+	var id, uri, description
+	var path
+	var x
+	var eof = false
+
+	match std.htget(test, "id")
+	| `std.Some s:	id = s
+	| `std.None:	std.fatal("id missing\n")
+	;;
+
+	match std.htget(test, "uri")
+	| `std.Some s:	uri = s
+	| `std.None:	std.fatal("uri missing\n")
+	;;
+
+	match std.htget(test, "description")
+	| `std.Some s:	description = s
+	| `std.None:	std.fatal("description missing\n")
+	;;
+
+	path = std.pathcat(dir, uri)
+
+	match xml.mkpath(path)
+	| `std.Ok o:
+		x = o
+	| `std.Err `xml.Eenc "UTF-16":
+		-> void
+	| `std.Err e:
+		std.fatal("{}: {} {}\n", id, path, e)
+	;;
+
+	for ev : xml.byevent(x)
+		match ev
+		| `xml.Eof:	eof = true
+		| _:
+		;;
+	;;
+
+	match xml.geterr(x)
+	| `std.Some e:
+		std.put("\n")
+		std.put("FAIL: ({}) {}: {}\n", id, description, e)
+	| `std.None:
+		if v
+			std.put("PASS: {}\n", id)
+		else
+			std.put(".")
+		;;
+	;;
+
+	if !eof
+		std.put("{}: didn't reach eof\n", id)
+	;;
+
+	std.slfree(id)
+	std.slfree(uri)
+	std.slfree(description)
+	std.slfree(path)
+	xml.free(x)
+}
+
+const xmltest = {dir, suite, v
+	var x = std.try(xml.mkpath(suite))
+	var valid = false
+	var test = std.mkht()
+
+	std.htfree(test)
+
+	std.put("{}: ", suite)
+	if v
+		std.put("\n")
+	;;
+
+	for ev : xml.byevent(x)
+		match ev
+		| `xml.Start ("TEST", attrs):
+			for a : attrs
+				match a
+				| ("URI", uri):
+					/* many of the OASIS tests have valid
+					   xml declared as invalid in the
+					   test schema but they helpfully
+					   put "pass" in the filename, *shrug*
+					*/
+					if std.strhas(uri, "pass")
+						valid = true
+					;;
+				| ("TYPE", "valid"):
+					valid = true
+				| _:
+				;;
+			;;
+
+			if valid
+				for a : attrs
+					match a
+					| ("VERSION", "1.1"):	valid = false
+					| _:
+					;;
+				;;
+			;;
+
+			if valid
+				test = std.mkht()
+				for a : attrs
+					match a
+					| ("ID", id):
+						std.htput(test, "id", std.sldup(id))
+					| ("URI", uri):
+						std.htput(test, "uri", std.sldup(uri))
+					| _:
+					;;
+				;;
+			;;
+		| `xml.Characters c:
+			if valid
+				std.htput(test, "description", std.sldup(c))
+			;;
+		| `xml.End "TEST":
+			if valid
+				dotest(test, dir, v)
+				std.htfree(test)
+				valid = false
+			;;
+		| _:
+		;;
+	;;
+
+	std.put("\n")
+}
+
+const main = {
+	xmltest("xmlconf/xmltest", "xmlconf/xmltest/xmltest.xml", false)
+	xmltest("xmlconf/sun", "xmlconf/sun/sun-valid.xml", false)
+	xmltest("xmlconf/oasis", "xmlconf/oasis/oasis.xml", false)
+	xmltest("xmlconf/ibm", "xmlconf/ibm/ibm_oasis_valid.xml", false)
+	xmltest("xmlconf/eduni/errata-4e", "xmlconf/eduni/errata-4e/errata4e.xml", false)
+	xmltest("xmlconf/eduni/errata-3e", "xmlconf/eduni/errata-3e/errata3e.xml", false)
+	xmltest("xmlconf/eduni/errata-2e", "xmlconf/eduni/errata-2e/errata2e.xml", false)
+	xmltest("xmlconf/eduni/namespaces/1.0", "xmlconf/eduni/namespaces/1.0/rmt-ns10.xml", false)
+	xmltest("xmlconf/japanese", "xmlconf/japanese/japanese.xml", false)
 }
