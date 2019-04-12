@@ -57,22 +57,13 @@ const simple_test = {ctx
 }
 
 const eof_test = {ctx
-	var x = std.try(xml.mkbuf("<doc></doc"))
-
-	xml.next(x)
-	xml.next(x)
-
-	match xml.next(x)
-	| `std.Ok `xml.Eof:	testr.ok(ctx)
-	| a:			testr.fail(ctx, "eof: {}", a)
-	;;
-
-	match xml.next(x)
-	| `std.Ok `xml.Eof:	testr.ok(ctx)
-	| a:			testr.fail(ctx, "eof again: {}", a)
-	;;
-
-	xml.free(x)
+	comparebuf(ctx, "<doc></doc>", [
+		({x; -> xml.next(x);}, `std.Ok `xml.Start ("doc", [][:])),
+		({x; -> xml.next(x);}, `std.Ok `xml.End "doc"),
+		({x; -> xml.next(x);}, `std.Ok `xml.Eof),
+		({x; -> xml.next(x);}, `std.Ok `xml.Eof),
+		({x; -> xml.next(x);}, `std.Ok `xml.Eof)
+	][:])
 }
 
 const seek_test = {ctx
