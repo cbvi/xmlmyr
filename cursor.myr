@@ -12,7 +12,14 @@ pkg xml =
 ;;
 
 const next = {x
-	-> dispatch(x)
+	var r = dispatch(x)
+
+	match r
+	| `std.Ok _:	-> r
+	| `std.Err e:
+		x.p.error = `std.Some e
+		-> r
+	;;
 }
 
 const seek = {x, name
