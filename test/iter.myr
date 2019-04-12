@@ -476,6 +476,12 @@ const unicode_test = {ctx
 		`xml.Eof
 	][:])
 
+	comparebuf(ctx, "<ȺȾ></ȺȾ>", [
+		`xml.Start ("ȺȾ", [][:]),
+		`xml.End "ȺȾ",
+		`xml.Eof
+	][:])
+
 	compare(ctx, "test/files/010_emoji.xml", [
 		`xml.Start ("😇🔥😊", [][:]),
 		`xml.Characters "👍🏿",
