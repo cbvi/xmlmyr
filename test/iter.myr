@@ -30,6 +30,9 @@ const main = {
 		}],
 		[.name="break", .fn={ctx
 			break_test(ctx)
+		}],
+		[.name="unicode", .fn={ctx
+			unicode_test(ctx)
 		}]
 	][:])
 }
@@ -457,4 +460,19 @@ const break_test = {ctx
 	;;
 
 	xml.free(x)
+}
+
+const unicode_test = {ctx
+	comparebuf(ctx, "<文献></文献>", [
+		`xml.Start ("文献", [][:]),
+		`xml.End "文献",
+		`xml.Eof
+	][:])
+
+	comparebuf(ctx, "<𩸽7я>表ポあA鷗ŒéＢ逍Üßªąñ丂㐀𠀀</𩸽7я>", [
+		`xml.Start ("𩸽7я", [][:]),
+		`xml.Characters "表ポあA鷗ŒéＢ逍Üßªąñ丂㐀𠀀",
+		`xml.End "𩸽7я",
+		`xml.Eof
+	][:])
 }
