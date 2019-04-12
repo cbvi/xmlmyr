@@ -3,12 +3,13 @@ use std
 use "types"
 
 pkg xml =
-	const unescape	:	(s : byte[:] -> std.option(byte[:]))
+	const unescape	:	(s : byte[:] -> std.result(byte[:], byte[:]))
 ;;
 
 const unescape = {s
 	var start, stop, idx
 	var sb = std.mksb()
+	var err
 
 	idx = start = stop = 0
 
@@ -21,10 +22,11 @@ const unescape = {s
 			std.sbputs(sb, s[start:stop])
 
 			match pentity(s[idx:])
-			| `std.Some (e, i):
+			| `std.Ok (e, i):
 				idx += i
 				std.sbputb(sb, e)
-			| `std.None:
+			| `std.Err e:
+				err = e
 				goto err
 			;;
 
@@ -36,11 +38,11 @@ const unescape = {s
 
 	std.sbputs(sb, s[start:])
 
-	-> `std.Some std.sbfin(sb)
+	-> `std.Ok std.sbfin(sb)
 
 :err
 	std.sbfree(sb)
-	-> `std.None
+	-> `std.Err err
 }
 
 const pentity = {s
@@ -50,7 +52,17 @@ const pentity = {s
 
 	match std.strfind(s, delim)
 	| `std.Some in:	index = in
-	| `std.None:	-> `std.None
+	| `std.None:
+		var i = 0
+		var z
+		while i < s.len
+			z = std.decode(s[i:])
+			if z == '\r' || std.isspace(z)
+				break
+			;;
+			i += std.charlen(z)
+		;;
+		-> `std.Err s[:i]
 	;;
 
 	match s[:index]
@@ -60,12 +72,12 @@ const pentity = {s
 	| "lt":		c = '<'
 	| "gt":		c = '>'
 	| _:	match pcodepoint(s[:index])
-		| `std.Some e:	c = e
-		| `std.None:	-> `std.None
+		| `std.Ok e:	c = e
+		| `std.Err e:	-> `std.Err e
 		;;
 	;;
 
-	-> `std.Some ((c : byte), index + delim.len)
+	-> `std.Ok ((c : byte), index + delim.len)
 }
 
 const pcodepoint = {s
@@ -74,7 +86,7 @@ const pcodepoint = {s
 
 	match std.decode(s[idx:])
 	| '#':	idx += std.charlen('#')
-	| _:	-> `std.None
+	| _:	-> `std.Err s
 	;;
 
 	match std.decode(s[idx:])
@@ -86,7 +98,7 @@ const pcodepoint = {s
 	;;
 
 	match std.intparsebase(s[idx:], base)
-	| `std.Some i:	-> `std.Some i
-	| `std.None:	-> `std.None
+	| `std.Some i:	-> `std.Ok i
+	| `std.None:	-> `std.Err s
 	;;
 }

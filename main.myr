@@ -3,38 +3,7 @@ use bio
 use xml
 
 const main = {
-	/*var x = xml.mkbuf("<?xml version=\"1.0\"?>\n" \
-			"<?test stuff and things and more stuff ?>\n" \
-			"<?test?>\n" \
-			"<!DOCTYPE\ttesting 123   >\n" \
-			"<testing thing=\"ztuff\" foo=\"bar\" works=\"yes\">\n" \
-			"<this>hello world</this>\n" \
-			"<empty \t />\n" \
-			"<stillempty blah=\"foo\" things=\"stuff\"   \t  />\n" \
-			"<blah><![CDATA[this is cdata]]></blah>\n" \
-			"<!-- Testing 123 -->" \
-			"</testing>\n")
-	*/
-
 	/*
-	var f = std.try(bio.open("test/recset.xml", bio.Rd))
-	//var f = std.try(bio.open("test/feed.xml", bio.Rd))
-	//var f = std.try(bio.open("test/xmltest.xml", bio.Rd))
-
-	var x = std.try(xml.mkfile(f))
-
-	for event : xml.byevent(x)
-		match event
-		| _:
-			std.put("{}\n", event)
-		;;
-	;;
-
-	xml.free(x)
-
-	bio.close(f)
-	*/
-
 	var x = std.try(xml.mkbuf("<!DOCTYPE doc [ <!-----> ]>"))
 	for ev : xml.byevent(x)
 		std.put("{}\n", ev)
@@ -44,4 +13,13 @@ const main = {
 	| `std.None:
 	;;
 	xml.free(x)
+	*/
+
+	var s = xml.unescape("& stuff abnd things\n")
+
+	match s
+	| `std.Ok c:
+	| `std.Err c:
+		std.put("'{}'\n", c)
+	;;
 }
