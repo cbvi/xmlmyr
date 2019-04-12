@@ -27,6 +27,9 @@ const main = {
 		}],
 		[.name="frag", .fn={ctx
 			frag_test(ctx)
+		}],
+		[.name="break", .fn={ctx
+			break_test(ctx)
 		}]
 	][:])
 }
@@ -380,4 +383,54 @@ const frag_test = {ctx
 		`xml.End "doc",
 		`xml.Eof
 	][:])
+}
+
+const break_test = {ctx
+	var x = auto std.try(xml.mkbuf("<one><two></two></one>"))
+	var i = 0
+
+	for ev : xml.byevent(x)
+		match ev
+		| `xml.Start ("one", _):
+			break
+		| e:	testr.fail(ctx, "<one> got {}", e)
+		;;
+	;;
+
+	for ev : xml.byevent(x)
+		match ev
+		| `xml.Start ("two", _):
+			if i != 0
+				testr.fail(ctx, "<two> wrong order")
+			;;
+		| `xml.Start ("one", _):
+			testr.fail(ctx, "restarted after break")
+		| `xml.End "two":
+			if i != 1
+				testr.fail(ctx, "</two> wrong order")
+			;;
+			break
+		| e:
+			testr.fail(ctx, "<two> got {}", e)
+		;;
+		i++
+	;;
+
+	for ev : xml.byevent(x)
+		match ev
+		| `xml.End "one":	break
+		| e:	testr.fail(ctx, "</one> got {}", e)
+		;;
+	;;
+
+	for ev : xml.byevent(x)
+		match ev
+		| `xml.Eof:	break
+		| e:	testr.fail(ctx, "eof got {}", e)
+		;;
+	;;
+
+	for ev : xml.byevent(x)
+		testr.fail(ctx, "got {} after eof", ev)
+	;;
 }
