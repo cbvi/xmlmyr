@@ -7,6 +7,16 @@ pkg xml =
 ;;
 
 const unescape = {s
+	-> dounescape(s, [
+		("quot", '"'),
+		("amp", '&'),
+		("apos", '\''),
+		("lt", '<'),
+		("gt", '>')
+	][:])
+}
+
+const dounescape = {s, ens
 	var start, stop, idx
 	var sb = std.mksb()
 	var err
@@ -21,7 +31,7 @@ const unescape = {s
 		| '&':
 			std.sbputs(sb, s[start:stop])
 
-			match pentity(s[idx:])
+			match pentity(s[idx:], ens)
 			| `std.Ok (e, i):
 				idx += i
 				std.sbputb(sb, e)
@@ -45,7 +55,7 @@ const unescape = {s
 	-> `std.Err err
 }
 
-const pentity = {s
+const pentity = {s, ens
 	const delim = ";"
 	var index
 	var c
@@ -65,18 +75,26 @@ const pentity = {s
 		-> `std.Err s[:i]
 	;;
 
-	match s[:index]
-	| "quot":	c = '"'
-	| "amp":	c = '&'
-	| "apos":	c = '\''
-	| "lt":		c = '<'
-	| "gt":		c = '>'
-	| _:	match pcodepoint(s[:index])
-		| `std.Ok e:	c = e
-		| `std.Err e:	-> `std.Err e
+	if std.decode(s) == '#'
+		match pcodepoint(s[:index])
+		| `std.Ok ch:
+			c = ch
+			goto end
+		| `std.Err e:
+			-> `std.Err e
+		;;
+	else
+		for (name, char) : ens
+			if std.sleq(name, s[:index])
+				c = char
+				goto end
+			;;
 		;;
 	;;
 
+	-> `std.Err s[:index]
+
+:end
 	-> `std.Ok ((c : byte), index + delim.len)
 }
 
