@@ -386,7 +386,7 @@ const frag_test = {ctx
 }
 
 const break_test = {ctx
-	var x = auto std.try(xml.mkbuf("<one><two></two></one>"))
+	var x = std.try(xml.mkbuf("<one><two></two></one>"))
 	var i = 0
 
 	for ev : xml.byevent(x)
@@ -433,4 +433,28 @@ const break_test = {ctx
 	for ev : xml.byevent(x)
 		testr.fail(ctx, "got {} after eof", ev)
 	;;
+
+	xml.free(x)
+
+	x = std.try(xml.mkbuf("<one>\n<two>\n<three>\n<"))
+
+	for ev : xml.byevent(x)
+		checkevent(ctx, ev, `xml.Start ("one", [][:]))
+		break
+	;;
+
+	checkevents(ctx, x, [
+		`xml.Start ("two", [][:]),
+		`xml.Start ("three", [][:])
+	][:])
+
+	match xml.geterr(x)
+	| `std.Some e:
+		checkevent(ctx, e,
+			[.line=4, .off=1, .err=`xml.Trunc `bio.Eof])
+	| `std.None:
+		testr.fail(ctx, "expected error")
+	;;
+
+	xml.free(x)
 }
