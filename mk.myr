@@ -15,6 +15,7 @@ pkg xml =
 
 	impl disposable ctx#
 	impl disposable event
+	impl disposable std.result(event, err)
 ;;
 
 impl disposable ctx# =
@@ -26,6 +27,15 @@ impl disposable ctx# =
 impl disposable event =
 	__dispose__ = {e
 		eventfree(e)
+	}
+;;
+
+impl disposable std.result(event, err) =
+	__dispose__ = {e
+		match e
+		| `std.Ok v:	eventfree(v)
+		| `std.Err _:
+		;;
 	}
 ;;
 

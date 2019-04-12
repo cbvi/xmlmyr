@@ -22,7 +22,7 @@ const compare = {ctx, x, tests
 	var res, expect
 
 	for (fun, ex) : tests
-		res = fun(x)
+		res = auto fun(x)
 		expect = ex
 
 		g = std.fmt("{}", res)
@@ -34,11 +34,6 @@ const compare = {ctx, x, tests
 
 		std.slfree(g)
 		std.slfree(e)
-
-		match res
-		| `std.Ok ev:	xml.eventfree(ev)
-		| `std.Err _:
-		;;
 	;;
 }
 
