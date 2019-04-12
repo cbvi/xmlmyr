@@ -34,6 +34,11 @@ const compare = {ctx, x, tests
 
 		std.slfree(g)
 		std.slfree(e)
+
+		match res
+		| `std.Ok ev:	xml.eventfree(ev)
+		| `std.Err _:
+		;;
 	;;
 }
 
