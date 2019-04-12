@@ -11,31 +11,15 @@ pkg xml =
 	const mkfile	:	(f : bio.file# -> std.result(ctx#, mkerr))
 
 	const free	:	(x : ctx# -> void)
-	const eventfree	:	(ev : event -> void)
+
+	pkglocal const eventfree	:	(ev : event -> void)
 
 	impl disposable ctx#
-	impl disposable event
-	impl disposable std.result(event, err)
 ;;
 
 impl disposable ctx# =
 	__dispose__ = {x
 		free(x)
-	}
-;;
-
-impl disposable event =
-	__dispose__ = {e
-		eventfree(e)
-	}
-;;
-
-impl disposable std.result(event, err) =
-	__dispose__ = {e
-		match e
-		| `std.Ok v:	eventfree(v)
-		| `std.Err _:
-		;;
 	}
 ;;
 
