@@ -1,0 +1,179 @@
+Summary
+-------
+
+A low-level, non-validating, streaming XML parser. Provides an interface
+to load XML from a file or memory and iterate through its content.
+
+	pkg xml =
+		type ctx
+
+		impl disposable ctx#
+
+		type eventiter
+
+		impl iterable eventiter -> std.result(event, err)
+
+		type event = union
+			`Instruction	(byte[:], byte[:])
+			`Doctype	byte[:]
+			`Eof
+			`Start		(byte[:], (byte[:], byte[:])[:])
+			`End		byte[:]
+			`Characters	byte[:]
+			`Cdata		byte[:]
+			`Comment	byte[:]
+		;;
+
+		type mkerr = union
+			`Efile	byte[:] /* file open failed */
+			`Eenc	byte[:] /* file has unsupported encoding */
+		;;
+
+		type err = struct
+			line	:	std.size
+			off	:	std.size
+			err	:	errtype
+		;;
+
+		type errtype = union
+			`Inval char	/* this char is invalid here */
+			`Trunc bio.err	/* parsing ended due to io err */
+			`Unclosed (byte[:], byte[:]) /* start with no end */
+			`Unexpected (char, char) /* this wasn't that */
+		;;
+	;;
+
+Creation
+-------
+
+	pkg xml =
+		const mkbuf	: (s : byte[:] -> std.result(ctx#, mkerr))
+		const mkpath	: (p : byte[:] -> std.result(ctx#, mkerr))
+		const mkfile	: (f : bio.file# -> std.result(ctx#, mkerr))
+		const free	: (x : ctx# -> void)
+	;;
+
+XML can be loaded in various ways to create the context that is used to
+read the content.
+
+	const mkbuf	: (s : byte[:] -> std.result(ctx#, mkerr))
+
+Creates a context from memory, the string `s` should contain the XML you
+want to process.
+
+	const mkpath	: (p : byte[:] -> std.result(ctx#, mkerr))
+
+Creates a context from a file, the string `p` should be the path to a file
+that contains XML.
+
+	const mkfile	: (f : bio.file# -> std.result(ctx#, mkerr))
+
+Creates a context from the already opened `bio.file` stream `f`. The file
+will not be closed when the context is freed.
+
+	const free	: (x : ctx# -> void)
+
+Frees any storage associated with the context `x` and closes any files
+opened by the context.
+
+Iteration
+-------
+
+	pkg xml =
+		const byevent	: (x : ctx# -> eventiter)
+	;;
+
+Makes an iterator from the context `x` which can be used to read events
+that represent the various XML components of the data.
+
+	for event : xml.byevent(x)
+		match event
+		| `xml.Instruction (target, data):
+			std.put("<?{} {}?>\n", target, data)
+		| `xml.Doctype d:	std.put("<!DOCTYPE {}>\n", d)
+		| `xml.Start (name, _):	std.put("<{}>\n", name)
+		| `xml.End name:	std.put("</{}>\n", name)
+		| `xml.Characters c:	std.put("\t{}", c)
+		| `xml.Cdata c:		std.put("<![CDATA[{}]]>\n", c)
+		| `xml.Comment c:	std.put("<!--{}-->\n", c)
+		| `xml.Eof:
+		;;
+	;;
+
+Events
+-------
+
+The components of the document are represented as events which are returned
+by the iterator.
+
+	pkg xml =
+		type event = union
+			`Instruction	(byte[:], byte[:])
+			`Doctype	byte[:]
+			`Eof
+			`Start		(byte[:], (byte[:], byte[:])[:])
+			`End		byte[:]
+			`Characters	byte[:]
+			`Cdata		byte[:]
+			`Comment	byte[:]
+		;;
+	;;
+
+	`Instruction	(byte[:], byte[:])
+
+Represents processing instructions and the XML prolog.
+
+The strings in the returned tuple respectively represent the target name
+and all other data in the element.
+
+### Instruction
+
+	<?target some instruction?>
+		-> `xml.Instruction ("target", "some instruction")
+	<?xml version='1.0'?>
+		-> `xml.Instruction ("xml", "version='1.0'")
+
+	`Doctype	byte[:]
+
+### Doctype
+
+The entire contents of a DOCTYPE element represented as a single string. No
+parsing is done on the contents.
+
+	<!DOCTYPE foo [ <!ENTITY x 'x'> ] >
+		-> `xml.Doctype "foo [ <!ENTITY x 'x'> ] >"
+
+### EOF
+
+	`Eof
+
+Indicates that the stream terminated at a point where there was no
+partially parsed content, such as at the end of the file. Note that as no
+validation is performed, you must track open and end tags yourself if you
+really care about ensuring the file was not truncated.
+
+### Start
+
+	`Start		(byte[:], (byte[:], byte[:])[:])
+
+A starting tag such as `<foo>` or an empty tag such as `<foo />`. In the
+case of an empty tag, the next event following this will be a corresponding
+`End` event, ie. `<foo />` will cause the same sequence of events as
+`<foo></foo>`.
+
+Contains the name of the element, and a slice of tuples representing
+key-value pairs of the element's attributes, or an empty slice if there
+are none.
+
+	<foo>
+	<foo />
+		-> `xml.Start ("foo", [])
+	<foo bar="1" baz="2">
+	<foo bar="1" baz="2" />
+		-> `xml.Start ("foo", [("bar", "1"), ("baz", "2")])
+
+### End
+
+	`End		byte[:]
+
+An end tag such as `</foo>` or the follow up to an empty tag eg. `<foo />`.

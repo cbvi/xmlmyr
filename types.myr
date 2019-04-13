@@ -117,7 +117,7 @@ pkg xml =
 		`Inval		char	/* this char is invalid here */
 		`Trunc		bio.err	/* parsing ended due to io err */
 		`Unclosed	(byte[:], byte[:]) /* start with no end */
-		`Unexpected	(char, char) /* read this, expected that */
+		`Unexpected	(char, char) /* this wasn't that */
 	;;
 
 	type state = union
