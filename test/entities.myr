@@ -1,0 +1,56 @@
+use std
+use testr
+
+use xml
+
+const main = {
+	testr.run([
+		[.name="default", .fn={ctx
+			default_test(ctx)
+		}],
+		[.name="emoji", .fn={ctx
+			emoji_test(ctx)
+		}]
+	][:])
+}
+
+const check = {ctx, buf, ex
+	var u
+
+	match xml.unescape(buf)
+	| `std.Ok o:
+		u = o
+	| `std.Err e:
+		testr.fail(ctx, "unknown entity {}", e)
+		-> void
+	;;
+
+	testr.check(ctx, std.sleq(ex, u), "got {} expected {}", u, ex) 
+	std.slfree(u)
+}
+
+const checkbad = {ctx, buf, er
+	match xml.unescape(buf)
+	| `std.Ok o:	testr.fail(ctx, "unexpectedly parsed: {}", o)
+	| `std.Err e:
+		testr.check(ctx, std.sleq(e, er), "got {} expected {}", e, er)
+	;;
+}
+
+const default_test = {ctx
+	check(ctx, "&quot;", "\"")
+	check(ctx, "&amp;", "&")
+	check(ctx, "&apos;", "'")
+	check(ctx, "&lt;", "<")
+	check(ctx, "&gt;", ">")
+	check(ctx, "&quot;&amp;&apos;&lt;&gt;", "\"&'<>")
+	check(ctx, "x&quot;x&amp;x&apos;x&lt;x&gt;x", "x\"x&x'x<x>x")
+
+	checkbad(ctx, "&AMP;", "AMP")
+	checkbad(ctx, "&aMP;", "aMP")
+	checkbad(ctx, "&ampx;", "ampx")
+}
+
+const emoji_test = {ctx
+	check(ctx, "Oh no &#xF0;&#x9F;&#x98;&#xA4;!", "Oh no 😤!")
+}
