@@ -15,24 +15,14 @@ const main = {
 	xml.free(x)
 	*/
 
-	var x = std.try(xml.mkpath("/tmp/65.html"))
+	var x = std.try(xml.mkpath("test/files/rss.xml"))
 	for ev : xml.byevent(x)
 		match ev
+		| `xml.Characters c:
+			var de = std.try(xml.decode(c))
+			std.put("{}\n", de)
+			std.slfree(de)
 		| e:	std.put("{}\n", e)
 		;;
-	;;
-
-	match xml.geterr(x)
-	| `std.Some e:	std.put("{}\n", e)
-	| `std.None:
-	;;
-	xml.free(x)
-
-	var s = xml.decode("& stuff abnd things\n")
-
-	match s
-	| `std.Ok c:
-	| `std.Err c:
-		std.put("'{}'\n", c)
 	;;
 }
