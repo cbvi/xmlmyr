@@ -71,10 +71,19 @@ const charref_test = {ctx
 	check(ctx, "&#9;", "\t")
 	check(ctx, "&#42;", "*")
 
+	check(ctx, "test &#38; stuff", "test & stuff")
+	check(ctx, "test &#38;", "test &")
+	check(ctx, "&#38; stuff", "& stuff")
+	check(ctx, "&#38;test;", "&test;")
+
 	checkbad(ctx, "&#;", "&#;")
 	checkbad(ctx, "&#x;", "&#x;")
 	checkbad(ctx, "&#", "&#")
 	checkbad(ctx, "&#x", "&#x")
+
+	checkbad(ctx, "&#42", "&#42")
+	checkbad(ctx, "&#42and stuff", "&#42and")
+	checkbad(ctx, "&#42& stuff", "&#42&")
 }
 
 const unicode_test = {ctx
