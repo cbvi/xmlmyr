@@ -55,10 +55,19 @@ Creation
 		const mkpath	: (p : byte[:] -> std.result(ctx#, mkerr))
 		const mkfile	: (f : bio.file# -> std.result(ctx#, mkerr))
 		const free	: (x : ctx# -> void)
+
+		type mkerr = union
+			`Efile	byte[:] /* file open failed */
+			`Eenc	byte[:] /* file has unsupported encoding */
+		;;
 	;;
 
 XML can be loaded in various ways to create the context that is used to
-read the content.
+read the content. Creation can fail if there is a problem opening the given
+file, in which was `Efile` is returned, with the slice being the error returned
+from `bio.open`. On creation an attempt is made to check the encoding of the
+file, if the encoding is unsupported, the error `Eenc` will be returned along
+with a description of the encoding found.
 
 	const mkbuf	: (s : byte[:] -> std.result(ctx#, mkerr))
 
@@ -307,7 +316,55 @@ decide whether to decode it or not.
 	const decode	: (s : byte[:] -> std.result(byte[:], byte[:])
 
 Decodes character references (&#xx;) and the default XML entities (eg. &amp;) 
-in the string `s`. If successful the decoded content is returned, the slice
+in the string `s`. If successful the decoded content is returned. The slice
 is heap allocated and must be freed with std.slfree. An error will occur if an
 entity cannot be parsed, in which case a slice containing the token which
 caused the error is returned.
+
+Errors
+-------
+
+	pkg xml =
+		type err = struct
+			line	:	std.size
+			off	:	std.size
+			err	:	errtype
+		;;
+
+		type errtype = union
+			`Inval char	/* this char is invalid here */
+			`Trunc bio.err	/* parsing ended due to io err */
+			`Unclosed (byte[:], byte[:]) /* start with no end */
+			`Unexpected (char, char) /* this wasn't that */
+		;;
+	;;
+
+If an error occurs during parsing, the iterator will stop returning events. It
+is possible to tell an error occured by the absence of the `Eof` event. 
+
+	const geterr :	(x : ctx# -> std.option(err))
+
+This function can be used to get check if an error occured or to get the error
+that occured. The error includes the line it occured on, approximately where
+on the line it occured, and a tag representing the error that occured:
+
+
+	`Inval char
+
+The character `char` is invalid in the context it was found.
+
+	`Trunc bio.err
+
+Reading the stream failed, or it reached EOF while there was partially parsed
+content. The `bio.err` represents the underlying IO error that occured.
+
+	`Unclosed (byte[:], byte[:])
+
+A token that appeared to start a construct was found, but the expected
+terminator was missing. The tuple respetively contains the opening prefix and
+the missing terminator.
+
+	`Unexpected (char, char)
+
+The first char of the tuple was found where the second char of the tuple was
+expected.
