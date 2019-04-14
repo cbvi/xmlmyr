@@ -430,14 +430,15 @@ const unicode_test = {ctx
 const validate_test = {ctx
 	var x = std.try(xml.mkpath("test/files/rss.xml"))
 	var elem, elems = [][:]
-	var i = 0
+	var pro = false
 
 	for ev : xml.byevent(x)
 		match ev
 		| `xml.Instruction ("xml", _):
-			if i > 0
+			if pro
 				testr.fail(ctx, "prolog after start")
 			;;
+			pro = true
 		| `xml.Start (n, _):
 			std.slpush(&elems, std.sldup(n))
 		| `xml.End n:
@@ -446,10 +447,12 @@ const validate_test = {ctx
 				testr.fail(ctx, "mismatch {}:{}", elem, n)
 			;;
 			std.slfree(elem)
+		| `xml.Eof:
+			if elems.len > 0
+				testr.fail(ctx, "unclosed elements {}", elems)
+			;;
 		| _:
 		;;
-
-		i++
 	;;
 	std.slfree(elems)
 	xml.free(x)
