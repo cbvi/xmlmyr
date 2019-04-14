@@ -6,7 +6,7 @@ use xml
 const main = {
 	testr.run([
 		[.name="default", .fn=default_test],
-		[.name="emoji", .fn=emoji_test]
+		[.name="unicode", .fn=unicode_test]
 	][:])
 }
 
@@ -47,6 +47,6 @@ const default_test = {ctx
 	checkbad(ctx, "&ampx;", "ampx")
 }
 
-const emoji_test = {ctx
+const unicode_test = {ctx
 	check(ctx, "Oh no &#xF0;&#x9F;&#x98;&#xA4;!", "Oh no 😤!")
 }
