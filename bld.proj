@@ -10,12 +10,12 @@ lib xml =
 	types.myr
 ;;
 
-bin 2myrl = 
+bin 2myrl {noinst} = 
 	main.myr
 	lib xml
 ;;
 
-bin validate =
-	validate.myr
+bin conformance {noinst} =
+	conformance.myr
 	lib xml
 ;;
