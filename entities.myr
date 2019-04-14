@@ -1,7 +1,8 @@
 use std
 
 pkg xml =
-	const decode	:	(s : byte[:] -> std.result(byte[:], byte[:]))
+	const decode	: (s : byte[:] -> std.result(byte[:], byte[:]))
+	const decodex	: (s : byte[:], custom : (byte[:], byte[:])[:] -> std.result(byte[:], byte[:]))
 ;;
 
 type decoded = union
@@ -11,13 +12,11 @@ type decoded = union
 ;;
 
 const decode = {s
-	-> unescape(s, [
-		("quot", '"'),
-		("amp", '&'),
-		("apos", '\''),
-		("lt", '<'),
-		("gt", '>')
-	][:])
+	-> unescape(s, [][:])
+}
+
+const decodex = {s, custom
+	-> unescape(s, custom)
 }
 
 const unescape = {s, ens
@@ -68,15 +67,24 @@ const unescape = {s, ens
 	-> `std.Err s[sidx:eidx]
 }
 
-const pentity = {s, ens
+const pentity = {s, cust
 	match creference(s)
 	| `std.Some c:	-> `std.Some `Byte c
 	| `std.None:
 	;;
 
-	for (name, char) : ens
+	match s
+	|"quot":	-> `std.Some `Char '"'
+	|"amp":		-> `std.Some `Char '&'
+	|"apos":	-> `std.Some `Char '\''
+	|"lt":		-> `std.Some `Char '<'
+	|"gt":		-> `std.Some `Char '>'
+	| _:
+	;;
+
+	for (name, res) : cust
 		if std.sleq(name, s)
-			-> `std.Some `Char char
+			-> `std.Some `String res
 		;;
 	;;
 
