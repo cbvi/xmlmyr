@@ -84,6 +84,7 @@ const charref_test = {ctx
 	checkbad(ctx, "&#42", "&#42")
 	checkbad(ctx, "&#42and stuff", "&#42and")
 	checkbad(ctx, "&#42& stuff", "&#42&")
+	checkbad(ctx, "stuff &#42", "&#42")
 }
 
 const unicode_test = {ctx
