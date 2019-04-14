@@ -1,7 +1,7 @@
 use std
 use xml
 
-const dotest = {test, dir, v
+const dotest = {test, dir
 	var id, uri, description
 	var path
 	var x
@@ -45,11 +45,7 @@ const dotest = {test, dir, v
 		std.put("\n")
 		std.put("FAIL: ({}) {}: {}\n", id, description, e)
 	| `std.None:
-		if v
-			std.put("PASS: {}\n", id)
-		else
-			std.put(".")
-		;;
+		std.put(".")
 	;;
 
 	if !eof
@@ -63,15 +59,12 @@ const dotest = {test, dir, v
 	xml.free(x)
 }
 
-const xmltest = {dir, suite, v
+const xmltest = {dir, suite
 	var x = std.try(xml.mkpath(suite))
 	var valid = false
 	var test
 
 	std.put("{}: ", suite)
-	if v
-		std.put("\n")
-	;;
 
 	test = std.mkht()
 
@@ -119,7 +112,7 @@ const xmltest = {dir, suite, v
 			;;
 		| `xml.End "TEST":
 			if valid
-				dotest(test, dir, v)
+				dotest(test, dir)
 				std.htfree(test)
 				valid = false
 				test = std.mkht()
@@ -134,13 +127,13 @@ const xmltest = {dir, suite, v
 }
 
 const main = {
-	xmltest("xmlconf/xmltest", "xmlconf/xmltest/xmltest.xml", false)
-	xmltest("xmlconf/sun", "xmlconf/sun/sun-valid.xml", false)
-	xmltest("xmlconf/oasis", "xmlconf/oasis/oasis.xml", false)
-	xmltest("xmlconf/ibm", "xmlconf/ibm/ibm_oasis_valid.xml", false)
-	xmltest("xmlconf/eduni/errata-4e", "xmlconf/eduni/errata-4e/errata4e.xml", false)
-	xmltest("xmlconf/eduni/errata-3e", "xmlconf/eduni/errata-3e/errata3e.xml", false)
-	xmltest("xmlconf/eduni/errata-2e", "xmlconf/eduni/errata-2e/errata2e.xml", false)
-	xmltest("xmlconf/eduni/namespaces/1.0", "xmlconf/eduni/namespaces/1.0/rmt-ns10.xml", false)
-	xmltest("xmlconf/japanese", "xmlconf/japanese/japanese.xml", false)
+	xmltest("xmlconf/xmltest", "xmlconf/xmltest/xmltest.xml")
+	xmltest("xmlconf/sun", "xmlconf/sun/sun-valid.xml")
+	xmltest("xmlconf/oasis", "xmlconf/oasis/oasis.xml")
+	xmltest("xmlconf/ibm", "xmlconf/ibm/ibm_oasis_valid.xml")
+	xmltest("xmlconf/eduni/errata-4e", "xmlconf/eduni/errata-4e/errata4e.xml")
+	xmltest("xmlconf/eduni/errata-3e", "xmlconf/eduni/errata-3e/errata3e.xml")
+	xmltest("xmlconf/eduni/errata-2e", "xmlconf/eduni/errata-2e/errata2e.xml")
+	xmltest("xmlconf/eduni/namespaces/1.0", "xmlconf/eduni/namespaces/1.0/rmt-ns10.xml")
+	xmltest("xmlconf/japanese", "xmlconf/japanese/japanese.xml")
 }
