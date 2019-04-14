@@ -4,6 +4,11 @@ pkg xml =
 	const decode	:	(s : byte[:] -> std.result(byte[:], byte[:]))
 ;;
 
+type decoded = union
+	`Char		char
+	`Byte		byte
+	`String		byte[:]
+;;
 
 const decode = {s
 	-> unescape(s, [
@@ -35,14 +40,18 @@ const unescape = {s, ens
 			;;
 
 			match pentity(s[sidx + std.charlen('&'):eidx], ens)
-			| `std.Some c:
+			| `std.Some `Char c:
 				std.sbputb(sb, (c : byte))
-				sidx = eidx + delim.len
+			| `std.Some `Byte b:
+				std.sbputb(sb, b)
+			| `std.Some `String sl:
+				std.sbputs(sb, sl)
 			| `std.None:
 				eidx += delim.len
 				goto err
 			;;
 
+			sidx = eidx + delim.len
 			start = stop = sidx
 		| c:
 			sidx += std.charlen(c)
@@ -61,13 +70,13 @@ const unescape = {s, ens
 
 const pentity = {s, ens
 	match creference(s)
-	| `std.Some c:	-> `std.Some c
+	| `std.Some c:	-> `std.Some `Byte c
 	| `std.None:
 	;;
 
 	for (name, char) : ens
 		if std.sleq(name, s)
-			-> `std.Some char
+			-> `std.Some `Char char
 		;;
 	;;
 
