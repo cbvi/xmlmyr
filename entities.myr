@@ -1,10 +1,9 @@
 use std
 
-use "types"
-
 pkg xml =
 	const decode	:	(s : byte[:] -> std.result(byte[:], byte[:]))
 ;;
+
 
 const decode = {s
 	-> unescape(s, [
@@ -17,32 +16,37 @@ const decode = {s
 }
 
 const unescape = {s, ens
-	var start, stop, idx
+	const delim = ";"
+	var start, stop, sidx, eidx
 	var sb = std.mksb()
-	var err
 
-	idx = start = stop = 0
+	sidx = eidx = start = stop = 0
 
-	while idx < s.len
-		var c = std.decode(s[idx:])
-		idx += std.charlen(c)
-
-		match c
+	while sidx < s.len
+		match std.decode(s[sidx:])
 		| '&':
 			std.sbputs(sb, s[start:stop])
-
-			match pentity(s[idx:], ens)
-			| `std.Ok (e, i):
-				idx += i
-				std.sbputb(sb, e)
-			| `std.Err e:
-				err = e
+			match std.strfind(s[sidx:], delim)
+			| `std.Some i:
+				eidx = i + sidx
+			| `std.None:
+				eidx = errend(s[sidx:]) + sidx
 				goto err
 			;;
 
-			start = stop = idx
-		| _:
-			stop = idx
+			match pentity(s[sidx + std.charlen('&'):eidx], ens)
+			| `std.Some c:
+				std.sbputb(sb, (c : byte))
+				sidx = eidx + delim.len
+			| `std.None:
+				eidx += delim.len
+				goto err
+			;;
+
+			start = stop = sidx
+		| c:
+			sidx += std.charlen(c)
+			stop = sidx
 		;;
 	;;
 
@@ -52,71 +56,67 @@ const unescape = {s, ens
 
 :err
 	std.sbfree(sb)
-	-> `std.Err err
+	-> `std.Err s[sidx:eidx]
 }
 
 const pentity = {s, ens
-	const delim = ";"
-	var index
-	var c
-
-	match std.strfind(s, delim)
-	| `std.Some in:	index = in
+	match creference(s)
+	| `std.Some c:	-> `std.Some c
 	| `std.None:
-		var i = 0
-		var z
-		while i < s.len
-			z = std.decode(s[i:])
-			if z == '\r' || std.isspace(z)
-				break
-			;;
-			i += std.charlen(z)
-		;;
-		-> `std.Err s[:i]
 	;;
 
-	if std.decode(s) == '#'
-		match pcodepoint(s[:index])
-		| `std.Ok ch:
-			c = ch
-			goto end
-		| `std.Err e:
-			-> `std.Err e
-		;;
-	else
-		for (name, char) : ens
-			if std.sleq(name, s[:index])
-				c = char
-				goto end
-			;;
+	for (name, char) : ens
+		if std.sleq(name, s)
+			-> `std.Some char
 		;;
 	;;
 
-	-> `std.Err s[:index]
-
-:end
-	-> `std.Ok ((c : byte), index + delim.len)
+	-> `std.None
 }
 
-const pcodepoint = {s
+const creference = {s
 	var idx = 0
 	var base
 
-	match std.decode(s[idx:])
+	if s.len < 2
+		std.put("{}\n", s)
+		-> `std.None
+	;;
+
+	match std.decode(s)
 	| '#':	idx += std.charlen('#')
-	| _:	-> `std.Err s
+	| c:	-> `std.None
 	;;
 
 	match std.decode(s[idx:])
 	| 'x':
 		base = 16
 		idx += std.charlen('x')
+		if s.len <= idx
+			-> `std.None
+		;;
 	| _:
 		base = 10
 	;;
 
-	match std.intparsebase(s[idx:], base)
-	| `std.Some i:	-> `std.Ok i
-	| `std.None:	-> `std.Err s
+	-> std.intparsebase(s[idx:], base)
+}
+
+/*
+ * something started with a & but had no terminating ; so find the first
+ * space to return something logical to report as the erroneous token
+ */
+const errend = {s
+	var i = 0
+	var c
+
+	while i < s.len
+		c = std.decode(s[i:])
+		if c == '\r' || std.isspace(c)
+			break
+		;;
+		i += std.charlen(c)
 	;;
+
+	-> i
 }

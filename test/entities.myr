@@ -6,6 +6,7 @@ use xml
 const main = {
 	testr.run([
 		[.name="default", .fn=default_test],
+		[.name="charref", .fn=charref_test],
 		[.name="unicode", .fn=unicode_test]
 	][:])
 }
@@ -42,9 +43,38 @@ const default_test = {ctx
 	check(ctx, "&quot;&amp;&apos;&lt;&gt;", "\"&'<>")
 	check(ctx, "x&quot;x&amp;x&apos;x&lt;x&gt;x", "x\"x&x'x<x>x")
 
-	checkbad(ctx, "&AMP;", "AMP")
-	checkbad(ctx, "&aMP;", "aMP")
-	checkbad(ctx, "&ampx;", "ampx")
+	checkbad(ctx, "&AMP;", "&AMP;")
+	checkbad(ctx, "&aMP;", "&aMP;")
+	checkbad(ctx, "&ampx;", "&ampx;")
+	checkbad(ctx, "&amp", "&amp")
+
+	checkbad(ctx, "testing &ampx; stuff", "&ampx;")
+	checkbad(ctx, "testing &amp stuff", "&amp")
+	checkbad(ctx, "testing & stuff", "&")
+	checkbad(ctx, "testing &; stuff", "&;")
+	checkbad(ctx, "& testing", "&")
+	checkbad(ctx, "&; testing", "&;")
+	checkbad(ctx, "testing &", "&")
+	checkbad(ctx, "testing &;", "&;")
+
+	checkbad(ctx, "&l;", "&l;")
+	checkbad(ctx, "&;", "&;")
+
+	checkbad(ctx, "&l", "&l")
+	checkbad(ctx, "&", "&")
+
+	checkbad(ctx, "&&", "&&")
+	checkbad(ctx, "&&;", "&&;")
+}
+
+const charref_test = {ctx
+	check(ctx, "&#9;", "\t")
+	check(ctx, "&#42;", "*")
+
+	checkbad(ctx, "&#;", "&#;")
+	checkbad(ctx, "&#x;", "&#x;")
+	checkbad(ctx, "&#", "&#")
+	checkbad(ctx, "&#x", "&#x")
 }
 
 const unicode_test = {ctx
