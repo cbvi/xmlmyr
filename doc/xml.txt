@@ -115,9 +115,9 @@ the iterator API.
 The content returned with an event is a slice into a temporary buffer that will
 change as further parsing occurs. This prevents allocations for data you don't
 need but means it is up to the application to copy any data that will be needed
-later. The guaranteed lifetime for content returned with an event is only until
-the next iteration, after that all bets are off as to what that slice may
-point to.
+later. The guaranteed lifetime for content returned with an event is only
+during the current iteration; after the next iteration has occured all bets are
+off as to what any held slice may point to.
 
 	const byevent	: (x : ctx# -> eventiter)
 
@@ -150,7 +150,7 @@ remember to copy it:
 			// Mistake! Don't do this:
 			//std.slpush(&elems, name)
 
-			// Correct! Using sldup to copy it to the heap:
+			// Use sldup to copy it to the heap:
 			std.slpush(&elems, std.sldup(name))
 		| `xml.End name:
 			ele = std.slpop(&elems)
