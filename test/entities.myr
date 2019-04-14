@@ -13,7 +13,7 @@ const main = {
 const check = {ctx, buf, ex
 	var u
 
-	match xml.unescape(buf)
+	match xml.decode(buf)
 	| `std.Ok o:
 		u = o
 	| `std.Err e:
@@ -26,7 +26,7 @@ const check = {ctx, buf, ex
 }
 
 const checkbad = {ctx, buf, er
-	match xml.unescape(buf)
+	match xml.decode(buf)
 	| `std.Ok o:	testr.fail(ctx, "unexpectedly parsed: {}", o)
 	| `std.Err e:
 		testr.check(ctx, std.sleq(e, er), "got {} expected {}", e, er)

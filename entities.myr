@@ -3,11 +3,11 @@ use std
 use "types"
 
 pkg xml =
-	const unescape	:	(s : byte[:] -> std.result(byte[:], byte[:]))
+	const decode	:	(s : byte[:] -> std.result(byte[:], byte[:]))
 ;;
 
-const unescape = {s
-	-> dounescape(s, [
+const decode = {s
+	-> unescape(s, [
 		("quot", '"'),
 		("amp", '&'),
 		("apos", '\''),
@@ -16,7 +16,7 @@ const unescape = {s
 	][:])
 }
 
-const dounescape = {s, ens
+const unescape = {s, ens
 	var start, stop, idx
 	var sb = std.mksb()
 	var err

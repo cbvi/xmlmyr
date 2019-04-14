@@ -451,6 +451,9 @@ const validate_test = {ctx
 			if elems.len > 0
 				testr.fail(ctx, "unclosed elements {}", elems)
 			;;
+			for ele : elems
+				std.slfree(ele)
+			;;
 		| _:
 		;;
 	;;
