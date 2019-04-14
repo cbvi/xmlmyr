@@ -6,21 +6,11 @@ use xml
 
 const main = {
 	testr.run([
-		[.name="utf8bom", .fn={ctx
-			utf8bom_test(ctx)
-		}],
-		[.name="utf16bom", .fn={ctx
-			utf16bom_test(ctx)
-		}],
-		[.name="utf16lebom", .fn={ctx
-			utf16lebom_test(ctx)
-		}],
-		[.name="unowned", .fn={ctx
-			unowned_test(ctx)
-		}],
-		[.name="auto", .fn={ctx
-			auto_test(ctx)
-		}]
+		[.name="utf8bom", .fn=utf8bom_test],
+		[.name="utf16bom", .fn=utf16bom_test],
+		[.name="utf16lebom", .fn=utf16lebom_test],
+		[.name="unowned", .fn=unowned_test],
+		[.name="auto", .fn=auto_test]
 	][:])
 }
 

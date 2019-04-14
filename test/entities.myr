@@ -5,12 +5,8 @@ use xml
 
 const main = {
 	testr.run([
-		[.name="default", .fn={ctx
-			default_test(ctx)
-		}],
-		[.name="emoji", .fn={ctx
-			emoji_test(ctx)
-		}]
+		[.name="default", .fn=default_test],
+		[.name="emoji", .fn=emoji_test]
 	][:])
 }
 

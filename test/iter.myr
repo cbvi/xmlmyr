@@ -4,33 +4,15 @@ use testr
 
 const main = {
 	testr.run([
-		[.name="simple", .fn={ctx
-			simple_test(ctx)
-		}],
-		[.name="attrs", .fn={ctx
-			attrs_test(ctx)
-		}],
-		[.name="empty", .fn={ctx
-			empty_test(ctx)
-		}],
-		[.name="twigil", .fn={ctx
-			twigil_test(ctx)
-		}],
-		[.name="crlf", .fn={ctx
-			crlf_test(ctx)
-		}],
-		[.name="space", .fn={ctx
-			space_test(ctx)
-		}],
-		[.name="frag", .fn={ctx
-			frag_test(ctx)
-		}],
-		[.name="break", .fn={ctx
-			break_test(ctx)
-		}],
-		[.name="unicode", .fn={ctx
-			unicode_test(ctx)
-		}]
+		[.name="simple", .fn=simple_test],
+		[.name="attrs", .fn=attrs_test],
+		[.name="empty", .fn=empty_test],
+		[.name="twigil", .fn=twigil_test],
+		[.name="crlf", .fn=crlf_test],
+		[.name="space", .fn=space_test],
+		[.name="frag", .fn=frag_test],
+		[.name="break", .fn=break_test],
+		[.name="unicode", .fn=unicode_test],
 	][:])
 }
 

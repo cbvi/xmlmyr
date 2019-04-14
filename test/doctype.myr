@@ -4,18 +4,10 @@ use testr
 
 const main = {
 	testr.run([
-		[.name="quote", .fn={ctx
-			quote_test(ctx)
-		}],
-		[.name="apos", .fn={ctx
-			apos_test(ctx)
-		}],
-		[.name="comment", .fn={ctx
-			comment_test(ctx)
-		}],
-		[.name="malformed", .fn={ctx
-			malformed_test(ctx)
-		}]
+		[.name="quote", .fn=quote_test],
+		[.name="apos", .fn=apos_test],
+		[.name="comment", .fn=comment_test],
+		[.name="malformed", .fn=malformed_test]
 	][:])
 }
 
