@@ -4,6 +4,10 @@ Summary
 A low-level, non-validating, streaming XML parser. Provides an interface
 to load XML from a file or memory and iterate through its content.
 
+The parser will return arbitrary events as it finds them. It cares not for
+order, or arcane minitua. The penalty for the mortal sin of allowing "--" to 
+appear literally in comments is left for the application to determine.
+
 	pkg xml =
 		type ctx
 
@@ -76,12 +80,37 @@ will not be closed when the context is freed.
 Frees any storage associated with the context `x` and closes any files
 opened by the context.
 
+The context type has the disposable trait can be declared auto to free it when
+it leaves the scope:
+
+	const main = {
+		var x = auto std.try(xml.mkpath("/path/to/document.xml"))
+
+		for event : xml.byevent(x)
+			/* do things here */
+		;;
+
+		/* `x` will be automatically freed here */
+	}
+
 Iteration
 -------
 
 	pkg xml =
 		const byevent	: (x : ctx# -> eventiter)
 	;;
+
+The primary way your application will interact with the XML data is through
+the iterator API.
+
+The content returned with an event is a slice into a temporary buffer that will
+change as further parsing occurs. This prevents allocations for data you don't
+need but means its up to the application to copy any data that will be neeed
+later. The guaranteed lifetime for content returned with an event is only until
+the next iteration, after that all bets are off as to what that slice may
+point to.
+
+	const byevent	: (x : ctx# -> eventiter)
 
 Makes an iterator from the context `x` which can be used to read events
 that represent the various XML components of the data.
@@ -99,6 +128,39 @@ that represent the various XML components of the data.
 		| `xml.Eof:
 		;;
 	;;
+
+If you need something to stick around after the iteration it occured in, 
+remember to copy it:
+
+	var elems = [][:]
+	var ele
+
+	for event : xml.byevent(x)
+		match event
+		| `xml.Start (name, _):
+			// Mistake! Don't do this:
+			//std.slpush(&elems, name)
+
+			// Correct! Using sldup to copy it to the heap:
+			std.slpush(&elems, std.sldup(name))
+		| `xml.End name:
+			ele = std.slpop(&elems)
+			if !std.sleq(ele, name)
+				std.put("{} closed while {} open\n", ele, name)
+			;;
+			std.slfree(ele)
+		| `xml.Eof:
+			if elems.len > 0
+				std.put("unclosed tags:\n")
+				for e : elems
+					std.put("{}\n", e)
+					std.slfree(e)
+				;;
+		| _:
+		;;
+	;;
+
+	std.slfree(elems)
 
 Events
 -------
@@ -150,7 +212,7 @@ parsing is done on the contents.
 Indicates that the stream terminated at a point where there was no
 partially parsed content, such as at the end of the file. Note that as no
 validation is performed, you must track open and end tags yourself if you
-really care about ensuring the file was not truncated.
+really care about ensuring the data was not truncated.
 
 ### Start
 
@@ -176,4 +238,77 @@ are none.
 
 	`End		byte[:]
 
-An end tag such as `</foo>` or the follow up to an empty tag eg. `<foo />`.
+An end tag such as `</foo>` or the follow up to an empty tag such as `<foo />`.
+
+	</foo>
+		-> `xml.End "foo"
+	<foo />		(after the Start event has been received)
+		-> `xml.End "foo"
+
+### Characters
+
+Character data is text that appears in the document outside of any other
+element. As no validation is performed, any stray text that is not otherwise
+XML data will be treated as character data.
+
+	foo bar baz
+		-> `xml.Characters "foo bar baz"
+	<doc>foo</doc>		(after the Start event has been received)
+		-> `xml.Characters "foo"
+
+Generally, character data is anything that appears between any element. In the
+example:
+
+	<doc>foo <b>bar</b> <i>baz</i></doc>
+
+This will return the following sequence of events:
+
+	`xml.Start		"doc"
+	`xml.Characters		"foo "
+	`xml.Start		"b"
+	`xml.Characters		"bar"
+	`xml.End		"b"
+	`xml.Start		"i"
+	`xml.End		"i"
+	`xmo.End		"doc"
+
+Note the trailing space in the "foo " event, and that there is no event for the
+whitespace between `</b> <i>` as character data that is only whitespace between
+elements is discarded.
+
+### Cdata
+
+CDATA is similar to character data except CDATA can contain characters that are
+normally forbidden and would otherwise have needed to be escaped.
+
+	<![CDATA[<doc>foo <b>bar</b> <i>baz</i></doc>]]>
+		-> `xml.Cdata "<doc>foo <b>bar</b> <i>baz</i></doc>"
+
+You should not decode any entities in CDATA.
+
+### Comment
+
+Comments are not considered to be part of the document structure but are 
+returned for convenience in case you have some need for them.
+
+	<!-- this is a comment -->
+		-> `xml.Comment "this is a comment"
+
+Decoding
+-------
+
+	pkg xml =
+		const decode	: (s : byte[:] -> std.result(byte[:], byte[:])
+	;;
+
+Data in XML (outside of CDATA) is escaped using entity references. The parser
+returns the literal data to the application and leaves it to the application to
+decide whether to decode it or not.
+
+	const decode	: (s : byte[:] -> std.result(byte[:], byte[:])
+
+Decodes character references (&#xx;) and the default XML entities (eg. &amp;) 
+in the string `s`. If successful the decoded content is returned, the slice
+is heap allocated and must be freed with std.slfree. An error will occur if an
+entity cannot be parsed, in which case the entity which caused the error is
+returned.
