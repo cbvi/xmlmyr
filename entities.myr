@@ -7,7 +7,6 @@ pkg xml =
 type decoded = union
 	`Char		char
 	`Byte		byte
-	`String		byte[:]
 ;;
 
 const decode = {s
@@ -38,8 +37,6 @@ const unescape = {s
 				std.sbputb(sb, (c : byte))
 			| `std.Some `Byte b:
 				std.sbputb(sb, b)
-			| `std.Some `String sl:
-				std.sbputs(sb, sl)
 			| `std.None:
 				eidx += delim.len
 				goto err
