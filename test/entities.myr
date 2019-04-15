@@ -7,8 +7,6 @@ const main = {
 	testr.run([
 		[.name="default", .fn=default_test],
 		[.name="charref", .fn=charref_test],
-		[.name="decodex", .fn=decodex_test],
-		[.name="mixed",   .fn=mixed_test],
 		[.name="unicode", .fn=unicode_test]
 	][:])
 }
@@ -30,29 +28,6 @@ const check = {ctx, buf, ex
 
 const checkbad = {ctx, buf, er
 	match xml.decode(buf)
-	| `std.Ok o:	testr.fail(ctx, "unexpectedly parsed: {}", o)
-	| `std.Err e:
-		testr.check(ctx, std.sleq(e, er), "got {} expected {}", e, er)
-	;;
-}
-
-const checkx = {ctx, buf, cust, ex
-	var u
-
-	match xml.decodex(buf, cust)
-	| `std.Ok o:
-		u = o
-	| `std.Err e:
-		testr.fail(ctx, "unknown entity {}", e)
-		-> void
-	;;
-
-	testr.check(ctx, std.sleq(ex, u), "got {} expected {}", u, ex)
-	std.slfree(u)
-}
-
-const checkxbad = {ctx, buf, cust, er
-	match xml.decodex(buf, cust)
 	| `std.Ok o:	testr.fail(ctx, "unexpectedly parsed: {}", o)
 	| `std.Err e:
 		testr.check(ctx, std.sleq(e, er), "got {} expected {}", e, er)
@@ -112,42 +87,6 @@ const charref_test = {ctx
 	checkbad(ctx, "stuff &#42", "&#42")
 }
 
-const decodex_test = {ctx
-	checkx(ctx, "&test;", [("test", "testing")][:], "testing")
-	checkx(ctx, "&a;", [("a", "&b;"), ("b", "c")][:], "&b;")
-	checkx(ctx, "&foo;&bar;&baz;", [
-		("foo", "foo"),
-		("bar", "bar"),
-		("baz", "baz")
-	][:], "foobarbaz")
-
-	checkxbad(ctx, "&notfound;", [("test", "testing")][:], "&notfound;")
-	checkxbad(ctx, "&found; &notfound;", [("found", "f")][:], "&notfound;")
-}
-
-const mixed_test = {ctx
-	checkx(ctx, "&test;&amp;&#42;", [("test", "test")][:], "test&*")
-	checkx(ctx, "&test; &amp; stuff", [("test", "test")][:], "test & stuff")
-	checkx(ctx, "&test;and", [("test", "test")][:], "testand")
-	checkx(ctx, "and&things;", [("things", "things")][:], "andthings")
-
-	checkx(ctx, "only &this; here &bar;", [
-		("foo", "foo"),
-		("bar", "bar"),
-		("this", "something"),
-		("baz", "baz")
-	][:], "only something here bar")
-
-	/* trying to override a default entity will have no effect */
-	checkx(ctx, "&amp;", [("amp", "!")][:], "&")
-	checkx(ctx, "&#42;", [("#42", "!")][:], "*")
-
-	checkxbad(ctx, "&found;&amp;&notfound;", [
-		("found", "f")
-	][:], "&notfound;")
-}
-
 const unicode_test = {ctx
 	check(ctx, "Oh no &#xF0;&#x9F;&#x98;&#xA4;!", "Oh no 😤!")
-	checkx(ctx, "&face;", [("face", "😤")][:],"😤")
 }

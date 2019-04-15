@@ -2,7 +2,6 @@ use std
 
 pkg xml =
 	const decode	: (s : byte[:] -> std.result(byte[:], byte[:]))
-	const decodex	: (s : byte[:], custom : (byte[:], byte[:])[:] -> std.result(byte[:], byte[:]))
 ;;
 
 type decoded = union
@@ -12,14 +11,10 @@ type decoded = union
 ;;
 
 const decode = {s
-	-> unescape(s, [][:])
+	-> unescape(s)
 }
 
-const decodex = {s, custom
-	-> unescape(s, custom)
-}
-
-const unescape = {s, ens
+const unescape = {s
 	const delim = ";"
 	var start, stop, sidx, eidx
 	var sb = std.mksb()
@@ -38,7 +33,7 @@ const unescape = {s, ens
 				goto err
 			;;
 
-			match pentity(s[sidx + std.charlen('&'):eidx], ens)
+			match pentity(s[sidx + std.charlen('&'):eidx])
 			| `std.Some `Char c:
 				std.sbputb(sb, (c : byte))
 			| `std.Some `Byte b:
@@ -67,7 +62,7 @@ const unescape = {s, ens
 	-> `std.Err s[sidx:eidx]
 }
 
-const pentity = {s, cust
+const pentity = {s
 	match creference(s)
 	| `std.Some c:	-> `std.Some `Byte c
 	| `std.None:
@@ -80,12 +75,6 @@ const pentity = {s, cust
 	|"lt":		-> `std.Some `Char '<'
 	|"gt":		-> `std.Some `Char '>'
 	| _:
-	;;
-
-	for (name, res) : cust
-		if std.sleq(name, s)
-			-> `std.Some `String res
-		;;
 	;;
 
 	-> `std.None
