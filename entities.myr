@@ -2,51 +2,28 @@ use std
 
 pkg xml =
 	const decode	: (s : byte[:] -> std.result(byte[:], byte[:]))
-;;
-
-type decoded = union
-	`Char		char
-	`Byte		byte
+	const decodef	: (s : byte[:] -> byte[:])
 ;;
 
 const decode = {s
-	-> unescape(s)
-}
-
-const unescape = {s
-	const delim = ";"
-	var start, stop, sidx, eidx
 	var sb = std.mksb()
+	var start, idx
 
-	sidx = eidx = start = stop = 0
+	start = idx = 0
 
-	while sidx < s.len
-		match std.decode(s[sidx:])
-		| '&':
-			std.sbputs(sb, s[start:stop])
-			match std.strfind(s[sidx:], delim)
-			| `std.Some i:
-				eidx = i + sidx
-			| `std.None:
-				eidx = errend(s[sidx:]) + sidx
-				goto err
-			;;
-
-			match pentity(s[sidx + std.charlen('&'):eidx])
-			| `std.Some `Char c:
-				std.sbputb(sb, (c : byte))
-			| `std.Some `Byte b:
+	while idx < s.len
+		match std.decode(s[idx:])
+		| '&':	match unencode(s[idx:])
+			| `std.Some (b, i):
+				std.sbputs(sb, s[start:idx])
 				std.sbputb(sb, b)
+
+				idx += i
+				start = idx
 			| `std.None:
-				eidx += delim.len
 				goto err
 			;;
-
-			sidx = eidx + delim.len
-			start = stop = sidx
-		| c:
-			sidx += std.charlen(c)
-			stop = sidx
+		| c:	idx += std.charlen(c)
 		;;
 	;;
 
@@ -56,69 +33,114 @@ const unescape = {s
 
 :err
 	std.sbfree(sb)
-	-> `std.Err s[sidx:eidx]
+	-> `std.Err s[idx : idx + errend(s[idx:])]
 }
 
-const pentity = {s
-	match creference(s)
-	| `std.Some c:	-> `std.Some `Byte c
-	| `std.None:
+const decodef = {s
+	var sb = std.mksb()
+	var start, idx
+
+	start = idx = 0
+
+	while idx < s.len
+		match std.decode(s[idx:])
+		| '&':	match unencode(s[idx:])
+			| `std.Some (b, i):
+				std.sbputs(sb, s[start:idx])
+				std.sbputb(sb, b)
+
+				idx += i
+				start = idx
+			| `std.None:
+				idx += std.charlen('&')
+			;;
+		| c:	idx += std.charlen(c)
+		;;
 	;;
 
-	match s
-	|"quot":	-> `std.Some `Char '"'
-	|"amp":		-> `std.Some `Char '&'
-	|"apos":	-> `std.Some `Char '\''
-	|"lt":		-> `std.Some `Char '<'
-	|"gt":		-> `std.Some `Char '>'
-	| _:
+	std.sbputs(sb, s[start:])
+
+	-> std.sbfin(sb)
+}
+
+const unencode = {s
+	const cr = "&#"
+	const ens = [
+		("&amp;", '&'),
+		("&apos;", '\''),
+		("&lt;", '<'),
+		("&gt;", '>'),
+		("&quot;", '"')
+	][:]
+
+	if std.hasprefix(s, cr)
+		-> charref(s, cr.len)
+	;;
+
+	for (name, char) : ens
+		if s.len >= name.len && std.sleq(name, s[:name.len])
+			-> `std.Some ((char : byte), name.len)
+		;;
 	;;
 
 	-> `std.None
 }
 
-const creference = {s
-	var idx = 0
+const charref = {s, idx
+	var end
 	var base
 
-	if s.len < 2
-		std.put("{}\n", s)
-		-> `std.None
-	;;
+	end = idx
 
-	match std.decode(s)
-	| '#':	idx += std.charlen('#')
-	| c:	-> `std.None
+	match findsc(s)
+	| `std.Some i:	end = i
+	| `std.None:	-> `std.None
 	;;
 
 	match std.decode(s[idx:])
 	| 'x':
 		base = 16
 		idx += std.charlen('x')
-		if s.len <= idx
-			-> `std.None
-		;;
 	| _:
 		base = 10
 	;;
 
-	-> std.intparsebase(s[idx:], base)
+	if end - idx < 1
+		-> `std.None
+	;;
+
+	match std.intparsebase(s[idx:end], base)
+	| `std.Some i:	-> `std.Some (i, end + std.charlen(';'))
+	| `std.None:	-> `std.None
+	;;
 }
 
-/*
- * something started with a & but had no terminating ; so find the first
- * space to return something logical to report as the erroneous token
- */
+const findsc = {s
+	var c
+	for var i = 0; i < s.len; i += std.charlen(c)
+		c = std.decode(s[i:])
+		if c == ';'
+			-> `std.Some i
+		;;
+	;;
+
+	-> `std.None
+}
+
 const errend = {s
 	var i = 0
 	var c
 
 	while i < s.len
 		c = std.decode(s[i:])
-		if c == '\r' || std.isspace(c)
+		if c == ';'
+			i += std.charlen(c)
 			break
+		elif c == '\r' || std.isspace(c)
+			break
+		else
+			i += std.charlen(c)
 		;;
-		i += std.charlen(c)
 	;;
 
 	-> i
