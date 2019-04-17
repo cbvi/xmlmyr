@@ -2,5 +2,43 @@ use std
 use bio
 use xml
 
-const main = {
+const processtext = {s
+	var d
+
+	match xml.decode(s)
+	| `std.Ok t:
+		std.put("{}\n", t)
+		std.slfree(t)
+	| `std.Err e:
+		std.put("{}\n", e)
+	;;
+
+	d = xml.decodef(s)
+	std.put("{}\n", d)
+	std.slfree(d)
+}
+
+const main = {arg : byte[:][:]
+	if arg.len < 2
+		std.fatal("requries an arg\n")
+	;;
+
+	var x = std.try(xml.mkpath(arg[1]))
+
+	for event : xml.byevent(x)
+		match event
+		| `xml.Characters c: processtext(c)
+		| `xml.Cdata c: processtext(c)
+		| `xml.Comment c: processtext(c)
+		| `xml.Doctype d: processtext(d)
+		| `xml.Start (_, a):
+			for (k, v) : a
+				processtext(v)
+			;;
+		| e:
+			std.put("{}\n", e)
+		;;
+	;;
+
+	xml.free(x)
 }
