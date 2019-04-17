@@ -51,6 +51,7 @@ const default_test = {ctx
 	check(ctx, "&gt;", ">")
 	check(ctx, "&quot;&amp;&apos;&lt;&gt;", "\"&'<>")
 	check(ctx, "x&quot;x&amp;x&apos;x&lt;x&gt;x", "x\"x&x'x<x>x")
+	check(ctx, "", "")
 
 	checkbad(ctx, "&AMP;", "&AMP;")
 	checkbad(ctx, "&aMP;", "&aMP;")
@@ -116,6 +117,7 @@ const force_test = {ctx
 	checkf(ctx, "&gt;", ">")
 	checkf(ctx, "&quot;&amp;&apos;&lt;&gt;", "\"&'<>")
 	checkf(ctx, "x&quot;x&amp;x&apos;x&lt;x&gt;x", "x\"x&x'x<x>x")
+	checkf(ctx, "", "")
 
 	checkf(ctx, "&AMP;", "&AMP;")
 	checkf(ctx, "&aMP;", "&aMP;")
