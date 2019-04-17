@@ -53,6 +53,10 @@ const prune = {b
 		ft += std.charlen(c)
 	;;
 
+	if ft == b.len
+		-> ""
+	;;
+
 	bk = b.len
 
 	for var i = b.len; i != 0; i--

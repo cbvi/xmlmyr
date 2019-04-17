@@ -246,6 +246,13 @@ const twigil_test = {ctx
 		`xml.Eof
 	][:])
 
+	comparebuf(ctx, "<doc><!-- --></doc>", [
+		`xml.Start ("doc", [][:]),
+		`xml.Comment "",
+		`xml.End "doc",
+		`xml.Eof
+	][:])
+
 	comparebuf(ctx, "<doc><!--> --></doc>", [
 		`xml.Start ("doc", [][:]),
 		`xml.Comment ">",
