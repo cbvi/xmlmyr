@@ -13,7 +13,8 @@ const main = {
 		[.name="frag", .fn=frag_test],
 		[.name="break", .fn=break_test],
 		[.name="unicode", .fn=unicode_test],
-		[.name="validate", .fn=validate_test]
+		[.name="validate", .fn=validate_test],
+		[.name="regress", .fn=regress_test]
 	][:])
 }
 
@@ -75,6 +76,39 @@ const compareerr = {ctx, str, expect, err
 	match xml.geterr(x)
 	| `std.Some e:	checkevent(ctx, e, err)
 	| `std.None:	testr.fail(ctx, "expected error from \"{}\"", str)
+	;;
+
+	xml.free(x)
+}
+
+const regress = {ctx, path
+	var x = std.try(xml.mkpath(path))
+	var rd = {s
+		var d = xml.decodef(s)
+		var f = std.fmt("{}", d)
+		std.slfree(f)
+		std.slfree(d)
+	}
+
+	for event : xml.byevent(x)
+		match event
+		| `xml.Instruction (targ, data):
+			rd(data)
+		| `xml.Doctype d:
+			rd(d)
+		| `xml.Start (name, attrs):
+			rd(name)
+			for (k, v) : attrs
+				rd(k)
+				rd(v)
+			;;
+		| `xml.End name:
+			rd(name)
+		| `xml.Characters c:	rd(c)
+		| `xml.Cdata c:		rd(c)
+		| `xml.Comment c:	rd(c)
+		| `xml.Eof:
+		;;
 	;;
 
 	xml.free(x)
@@ -479,4 +513,14 @@ const validate_test = {ctx
 	;;
 	std.slfree(elems)
 	xml.free(x)
+}
+
+const regress_test = {ctx
+	regress(ctx, "test/files/regress/bug1a.xml")
+	regress(ctx, "test/files/regress/bug1b.xml")
+	regress(ctx, "test/files/regress/bug1c.xml")
+	regress(ctx, "test/files/regress/bug2a.xml")
+	regress(ctx, "test/files/regress/bug2b.xml")
+	regress(ctx, "test/files/regress/bug2c.xml")
+	regress(ctx, "test/files/regress/bug3.xml")
 }
