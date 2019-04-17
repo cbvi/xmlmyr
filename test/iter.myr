@@ -265,10 +265,10 @@ const twigil_test = {ctx
 
 	compareerr(ctx, "<doc><![CDATA[</doc>", [
 		`xml.Start ("doc", [][:])
-	][:], [.line=1,.off=7,.err=`xml.Unclosed ("<![CDATA[", "]]>")])
+	][:], [.line=1, .off=7, .err=`xml.Unclosed ("<![CDATA[", "]]>")])
 
 	compareerr(ctx, "<??><doc></doc>", [][:],
-		[.line=1,.off=3,.err=`xml.Inval '?'])
+		[.line=1, .off=3, .err=`xml.Inval '?'])
 
 	compareerr(ctx, "<? ?><doc></doc>", [][:],
 		[.line=1, .off=3, .err=`xml.Inval ' '])

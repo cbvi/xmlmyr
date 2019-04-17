@@ -299,34 +299,27 @@ const parseinstruction = {x
 	const suf = "?>"
 	var start, stop
 
-	match bio.readterm(x.file, "?")
+	match bio.getc(x.file)
+	| `std.Ok '?':	x.p.off += std.charlen('?')
+	| `std.Ok c:	-> `std.Err error(x, `Unexpected (c, '?'))
+	| `std.Err e:	-> `std.Err error(x, `Trunc e)
+	;;
+
+	match bio.readterm(x.file, suf)
 	| `std.Ok b:	newbuf(x, b)
 	| `std.Err e:	-> `std.Err error(x, `Trunc e)
 	;;
 
-	match bnext(x)
-	| '?':
-	| c:	-> `std.Err error(x, `Unexpected (c, '?'))
-	;;
-
-	match bio.readterm(x.file, suf)
-	| `std.Ok b:
-		if !std.hassuffix(b, suf)
-			-> `std.Err error(x, `Unclosed ("<?", suf))
-		;;
-		newbuf(x, b[:b.len-suf.len])
-	| `std.Err e:	-> `std.Err error(x, `Trunc e)
+	if !std.hassuffix(x.p.buf, suf)
+		-> `std.Err error(x, `Unclosed ("<?", "?>"))
 	;;
 
 	match startname(x)
 	| `std.Ok o:	(start, stop) = o
-	| `std.Err [.line=l, .off=o, .err=`Trunc `bio.Eof]:
-		/* special case for <??> */
-		-> `std.Err [.line=l, .off=o+1, .err=`Inval '?']
 	| `std.Err e:	-> `std.Err e
 	;;
 
-	while x.p.bidx < x.p.buf.len
+	while x.p.bidx < x.p.buf.len - suf.len
 		match bnext(x)
 		| c:	if namechar(c)
 				stop = x.p.bidx
@@ -339,5 +332,5 @@ const parseinstruction = {x
 		;;
 	;;
 
-	-> `std.Ok `Instruction (x.p.buf[start:stop], x.p.buf[x.p.bidx:])
+	-> `std.Ok `Instruction (x.p.buf[start:stop], x.p.buf[x.p.bidx:x.p.buf.len-suf.len])
 }
