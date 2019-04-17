@@ -91,10 +91,10 @@ const charref = {s
 	var idx, end
 	var base
 
-	end = idx = 0
-
 	if std.hasprefix(s, pref)
-		idx += pref.len
+		idx = pref.len
+	else
+		-> `std.None
 	;;
 
 	match findsc(s)
