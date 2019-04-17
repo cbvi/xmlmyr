@@ -74,6 +74,8 @@ const default_test = {ctx
 
 	checkbad(ctx, "&&", "&&")
 	checkbad(ctx, "&&;", "&&;")
+
+	checkbad(ctx, "&foo&amp;", "&foo&amp;")
 }
 
 const charref_test = {ctx
@@ -102,6 +104,8 @@ const charref_test = {ctx
 	checkbad(ctx, "&#42and stuff", "&#42and")
 	checkbad(ctx, "&#42& stuff", "&#42&")
 	checkbad(ctx, "stuff &#42", "&#42")
+
+	checkbad(ctx, "&foo&#42;", "&foo&#42;")
 }
 
 const force_test = {ctx
@@ -135,6 +139,8 @@ const force_test = {ctx
 
 	checkf(ctx, "&&", "&&")
 	checkf(ctx, "&&;", "&&;")
+
+	checkf(ctx, "&foo&amp;", "&foo&")
 }
 
 const forcecr_test = {ctx
@@ -163,8 +169,11 @@ const forcecr_test = {ctx
 	checkf(ctx, "&#42and stuff", "&#42and stuff")
 	checkf(ctx, "&#42& stuff", "&#42& stuff")
 	checkf(ctx, "stuff &#42", "stuff &#42")
+
+	checkf(ctx, "&foo&#42;", "&foo*")
 }
 
 const unicode_test = {ctx
 	check(ctx, "Oh no &#xF0;&#x9F;&#x98;&#xA4;!", "Oh no 😤!")
+	checkf(ctx, "Oh no &#xF0;&#x9F;&#x98;&#xA4;!", "Oh no 😤!")
 }
