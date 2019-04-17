@@ -8,6 +8,7 @@ const main = {
 		[.name="default", .fn=default_test],
 		[.name="charref", .fn=charref_test],
 		[.name="force",   .fn=force_test],
+		[.name="forcecr", .fn=forcecr_test],
 		[.name="unicode", .fn=unicode_test]
 	][:])
 }
@@ -104,7 +105,64 @@ const charref_test = {ctx
 }
 
 const force_test = {ctx
-	checkf(ctx, "&test;", "&test;")
+	checkf(ctx, "&quot;", "\"")
+	checkf(ctx, "&amp;", "&")
+	checkf(ctx, "&apos;", "'")
+	checkf(ctx, "&lt;", "<")
+	checkf(ctx, "&gt;", ">")
+	checkf(ctx, "&quot;&amp;&apos;&lt;&gt;", "\"&'<>")
+	checkf(ctx, "x&quot;x&amp;x&apos;x&lt;x&gt;x", "x\"x&x'x<x>x")
+
+	checkf(ctx, "&AMP;", "&AMP;")
+	checkf(ctx, "&aMP;", "&aMP;")
+	checkf(ctx, "&ampx;", "&ampx;")
+	checkf(ctx, "&amp", "&amp")
+
+	checkf(ctx, "testing &ampx; stuff", "testing &ampx; stuff")
+	checkf(ctx, "testing &amp stuff", "testing &amp stuff")
+	checkf(ctx, "testing & stuff", "testing & stuff")
+	checkf(ctx, "testing &; stuff", "testing &; stuff")
+	checkf(ctx, "& testing", "& testing")
+	checkf(ctx, "&; testing", "&; testing")
+	checkf(ctx, "testing &", "testing &")
+	checkf(ctx, "testing &;", "testing &;")
+
+	checkf(ctx, "&l;", "&l;")
+	checkf(ctx, "&;", "&;")
+
+	checkf(ctx, "&l", "&l")
+	checkf(ctx, "&", "&")
+
+	checkf(ctx, "&&", "&&")
+	checkf(ctx, "&&;", "&&;")
+}
+
+const forcecr_test = {ctx
+	checkf(ctx, "&#9;", "\t")
+	checkf(ctx, "&#42;", "*")
+
+	checkf(ctx, "test &#38; stuff", "test & stuff")
+	checkf(ctx, "test &#38;", "test &")
+	checkf(ctx, "&#38; stuff", "& stuff")
+	checkf(ctx, "&#38;test;", "&test;")
+
+	checkf(ctx, "&#x9;", "\t")
+	checkf(ctx, "&#x2A;", "*")
+
+	checkf(ctx, "test &#x26; stuff", "test & stuff")
+	checkf(ctx, "test &#x26;", "test &")
+	checkf(ctx, "&#x26; stuff", "& stuff")
+	checkf(ctx, "&#x26;test;", "&test;")
+
+	checkf(ctx, "&#;", "&#;")
+	checkf(ctx, "&#x;", "&#x;")
+	checkf(ctx, "&#", "&#")
+	checkf(ctx, "&#x", "&#x")
+
+	checkf(ctx, "&#42", "&#42")
+	checkf(ctx, "&#42and stuff", "&#42and stuff")
+	checkf(ctx, "&#42& stuff", "&#42& stuff")
+	checkf(ctx, "stuff &#42", "stuff &#42")
 }
 
 const unicode_test = {ctx
