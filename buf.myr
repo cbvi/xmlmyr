@@ -31,35 +31,30 @@ const expandbuf = {x, buf
 }
 
 const fillbuf = {x, full, pref, suf
-	var start
+	for p : std.bychar(pref)
+		match bio.getc(x.file)
+		| `std.Ok c:
+			if c != p
+				x.p.off += std.charlen(c)
+				-> `std.Err error(x, `Unexpected (c, p))
+			;;
+		| `std.Err e:
+			-> `std.Err error(x, `Trunc e)
+		;;
+	;;
 
-	match bio.readterm(x.file, pref)
+	match bio.readterm(x.file, suf)
 	| `std.Ok s:	newbuf(x, s)
 	| `std.Err e:	-> `std.Err error(x, `Trunc e)
 	;;
 
-	match bio.readterm(x.file, suf)
-	| `std.Ok s:	expandbuf(x, s)
-	| `std.Err e:	-> `std.Err error(x, `Trunc e)
-	;;
-
-	if !std.hassuffix(x.p.buf, suf)
+	if !std.hassuffix(x.p.buf[x.p.bidx:], suf)
 		-> `std.Err error(x, `Unclosed (full, suf))
 	;;
 
-	for p : std.bychar(pref)
-		match bnext(x)
-		| c:	if c != p
-				-> `std.Err error(x, `Unexpected (c, p))
-			;;
-		;;
-	;;
-
-	start = x.p.bidx
-
 	btaste(x)
 
-	-> `std.Ok x.p.buf[start:x.p.buf.len-suf.len]
+	-> `std.Ok x.p.buf[:x.p.buf.len-suf.len]
 }
 
 const bnext = {x
