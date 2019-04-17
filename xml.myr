@@ -299,6 +299,16 @@ const parseinstruction = {x
 	const suf = "?>"
 	var start, stop
 
+	match bio.readterm(x.file, "?")
+	| `std.Ok b:	newbuf(x, b)
+	| `std.Err e:	-> `std.Err error(x, `Trunc e)
+	;;
+
+	match bnext(x)
+	| '?':
+	| c:	-> `std.Err error(x, `Unexpected (c, '?'))
+	;;
+
 	match bio.readterm(x.file, suf)
 	| `std.Ok b:
 		if !std.hassuffix(b, suf)
@@ -306,11 +316,6 @@ const parseinstruction = {x
 		;;
 		newbuf(x, b[:b.len-suf.len])
 	| `std.Err e:	-> `std.Err error(x, `Trunc e)
-	;;
-
-	match bnext(x)
-	| '?':
-	| c:	-> `std.Err error(x, `Unexpected (c, '?'))
 	;;
 
 	match startname(x)

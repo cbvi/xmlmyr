@@ -33,8 +33,13 @@ const expandbuf = {x, buf
 const fillbuf = {x, full, pref, suf
 	var start
 
-	match bio.readterm(x.file, suf)
+	match bio.readterm(x.file, pref)
 	| `std.Ok s:	newbuf(x, s)
+	| `std.Err e:	-> `std.Err error(x, `Trunc e)
+	;;
+
+	match bio.readterm(x.file, suf)
+	| `std.Ok s:	expandbuf(x, s)
 	| `std.Err e:	-> `std.Err error(x, `Trunc e)
 	;;
 
