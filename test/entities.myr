@@ -84,6 +84,14 @@ const charref_test = {ctx
 	check(ctx, "&#38; stuff", "& stuff")
 	check(ctx, "&#38;test;", "&test;")
 
+	check(ctx, "&#x9;", "\t")
+	check(ctx, "&#x2A;", "*")
+
+	check(ctx, "test &#x26; stuff", "test & stuff")
+	check(ctx, "test &#x26;", "test &")
+	check(ctx, "&#x26; stuff", "& stuff")
+	check(ctx, "&#x26;test;", "&test;")
+
 	checkbad(ctx, "&#;", "&#;")
 	checkbad(ctx, "&#x;", "&#x;")
 	checkbad(ctx, "&#", "&#")

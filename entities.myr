@@ -64,7 +64,6 @@ const decodef = {s
 }
 
 const unencode = {s
-	const cr = "&#"
 	const ens = [
 		("&amp;", '&'),
 		("&apos;", '\''),
@@ -73,8 +72,9 @@ const unencode = {s
 		("&quot;", '"')
 	][:]
 
-	if std.hasprefix(s, cr)
-		-> charref(s, cr.len)
+	match charref(s)
+	| `std.Some cr:	-> `std.Some cr
+	| `std.None:
 	;;
 
 	for (name, char) : ens
@@ -86,11 +86,16 @@ const unencode = {s
 	-> `std.None
 }
 
-const charref = {s, idx
-	var end
+const charref = {s
+	const pref = "&#"
+	var idx, end
 	var base
 
-	end = idx
+	end = idx = 0
+
+	if std.hasprefix(s, pref)
+		idx += pref.len
+	;;
 
 	match findsc(s)
 	| `std.Some i:	end = i
