@@ -297,21 +297,21 @@ const parsecomment = {x
 
 const parseinstruction = {x
 	const suf = "?>"
+	var targ
 	var start, stop
+	var err
 
 	match bio.getc(x.file)
-	| `std.Ok '?':	x.p.off += std.charlen('?')
+	| `std.Ok '?':	x.p.off += 1
 	| `std.Ok c:	-> `std.Err error(x, `Unexpected (c, '?'))
 	| `std.Err e:	-> `std.Err error(x, `Trunc e)
 	;;
 
+	err = [.line=x.p.line, .off=x.p.off, .err=`Unclosed ("<?", "?>")]
+
 	match bio.readterm(x.file, suf)
 	| `std.Ok b:	newbuf(x, b)
 	| `std.Err e:	-> `std.Err error(x, `Trunc e)
-	;;
-
-	if !std.hassuffix(x.p.buf, suf)
-		-> `std.Err error(x, `Unclosed ("<?", "?>"))
 	;;
 
 	match startname(x)
@@ -332,5 +332,20 @@ const parseinstruction = {x
 		;;
 	;;
 
-	-> `std.Ok `Instruction (x.p.buf[start:stop], x.p.buf[x.p.bidx:x.p.buf.len-suf.len])
+	targ = x.p.buf[start:stop]
+	start = stop = x.p.bidx
+
+	while x.p.bidx < x.p.buf.len - suf.len
+		bnext(x)
+	;;
+
+	stop = x.p.bidx
+
+	for s : std.bychar(suf)
+		if s != bnext(x)
+			-> `std.Err err
+		;;
+	;;
+
+	-> `std.Ok `Instruction (targ, x.p.buf[start:stop])
 }

@@ -31,11 +31,14 @@ const expandbuf = {x, buf
 }
 
 const fillbuf = {x, full, pref, suf
+	var start, stop
+	var err
+
 	for p : std.bychar(pref)
 		match bio.getc(x.file)
 		| `std.Ok c:
+			x.p.off += 1
 			if c != p
-				x.p.off += std.charlen(c)
 				-> `std.Err error(x, `Unexpected (c, p))
 			;;
 		| `std.Err e:
@@ -43,18 +46,28 @@ const fillbuf = {x, full, pref, suf
 		;;
 	;;
 
+
 	match bio.readterm(x.file, suf)
 	| `std.Ok s:	newbuf(x, s)
 	| `std.Err e:	-> `std.Err error(x, `Trunc e)
 	;;
 
-	if !std.hassuffix(x.p.buf[x.p.bidx:], suf)
-		-> `std.Err error(x, `Unclosed (full, suf))
+	start = x.p.bidx
+	err = [.line=x.p.line, .off=x.p.off, .err=`Unclosed (full, suf)]
+
+	while x.p.bidx < x.p.buf.len - suf.len
+		bnext(x)
 	;;
 
-	btaste(x)
+	stop = x.p.bidx
 
-	-> `std.Ok x.p.buf[:x.p.buf.len-suf.len]
+	for s : std.bychar(suf)
+		if s != bnext(x)
+			-> `std.Err err
+		;;
+	;;
+
+	-> `std.Ok x.p.buf[start:stop]
 }
 
 const bnext = {x

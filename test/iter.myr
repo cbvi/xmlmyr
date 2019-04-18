@@ -295,11 +295,11 @@ const twigil_test = {ctx
 	][:])
 
 	compareerr(ctx, "<!-->", [][:],
-		[.line=1, .off=2, .err=`xml.Unclosed ("<!--", "-->")])
+		[.line=1, .off=4, .err=`xml.Unclosed ("<!--", "-->")])
 
 	compareerr(ctx, "<doc><![CDATA[</doc>", [
 		`xml.Start ("doc", [][:])
-	][:], [.line=1, .off=7, .err=`xml.Unclosed ("<![CDATA[", "]]>")])
+	][:], [.line=1, .off=14, .err=`xml.Unclosed ("<![CDATA[", "]]>")])
 
 	compareerr(ctx, "<??><doc></doc>", [][:],
 		[.line=1, .off=3, .err=`xml.Inval '?'])
@@ -308,7 +308,7 @@ const twigil_test = {ctx
 		[.line=1, .off=3, .err=`xml.Inval ' '])
 
 	compareerr(ctx, "<?>", [][:],
-		[.line=1, .off=2, .err=`xml.Unclosed ("<?", "?>")])
+		[.line=1, .off=3, .err=`xml.Inval '>'])
 
 	compareerr(ctx, "<doc>\n<?target example instruction>\n</doc>", [
 		`xml.Start ("doc", [][:])
@@ -523,4 +523,6 @@ const regress_test = {ctx
 	regress(ctx, "test/files/regress/bug2b.xml")
 	regress(ctx, "test/files/regress/bug2c.xml")
 	regress(ctx, "test/files/regress/bug3.xml")
+	regress(ctx, "test/files/regress/bug4a.xml")
+	regress(ctx, "test/files/regress/bug4b.xml")
 }
