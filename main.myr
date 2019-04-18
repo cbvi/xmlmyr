@@ -3,18 +3,7 @@ use bio
 use xml
 
 const processtext = {s
-	var d
-
-	match xml.decode(s)
-	| `std.Ok t:
-		std.put("{}\n", t)
-		std.slfree(t)
-	| `std.Err e:
-		std.put("{}\n", e)
-	;;
-
-	d = xml.decodef(s)
-	std.put("{}\n", d)
+	var d = std.fmt("{}", s)
 	std.slfree(d)
 }
 
@@ -27,16 +16,23 @@ const main = {arg : byte[:][:]
 
 	for event : xml.byevent(x)
 		match event
-		| `xml.Characters c: processtext(c)
-		| `xml.Cdata c: processtext(c)
-		| `xml.Comment c: processtext(c)
-		| `xml.Doctype d: processtext(d)
-		| `xml.Start (_, a):
+		| `xml.Characters c:	processtext(c)
+		| `xml.Cdata c:		processtext(c)
+		| `xml.Comment c:
+			std.put("{}\n", c.len)
+			processtext(c)
+		| `xml.Doctype d:	processtext(d)
+		| `xml.Start (n, a):
+			processtext(n)
 			for (k, v) : a
+				processtext(k)
 				processtext(v)
 			;;
-		| e:
-			std.put("{}\n", e)
+		| `xml.End n:		processtext(n)
+		| `xml.Instruction (targ, data):
+			processtext(targ)
+			processtext(data)
+		| `xml.Eof:
 		;;
 	;;
 
