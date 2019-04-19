@@ -360,5 +360,15 @@ const oasis = {
 		dt("doc SYSTEM \"p09pass1.dtd\""), st("doc"), en("doc"), eof()
 	][:])
 
+	/* p10 */
+
+	pass("p10pass1.xml", [
+		st("doc"),
+		sta("A", [("a", "asdf>'&#34;>\r\nasdf\r\n\t?>%")][:]),
+		en("A"),
+		sta("A", [("a", "\"\">&#39;&#34;")][:]), en("A"),
+		en("doc"), eof()
+	][:])
+
 	std.put("\n")
 }

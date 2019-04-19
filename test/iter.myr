@@ -180,6 +180,26 @@ const attrs_test = {ctx
 		`xml.Eof
 	][:])
 
+	comparebuf(ctx, "<doc a=\"123\"/>", [
+		`xml.Start ("doc", [("a", "123")][:]),
+		`xml.End "doc",
+		`xml.Eof
+	][:])
+
+	comparebuf(ctx, "<doc a=\"one>two>three>four>five>\" />", [
+		`xml.Start ("doc", [("a", "one>two>three>four>five>")][:]),
+		`xml.End "doc",
+		`xml.Eof
+	][:])
+
+	comparebuf(ctx, "<doc a=\"asdf>'&#34;>\r\nasdf\r\n\t?>%\"/>", [
+		`xml.Start ("doc", [
+			("a", "asdf>'&#34;>\r\nasdf\r\n\t?>%")
+		][:]),
+		`xml.End "doc",
+		`xml.Eof
+	][:])
+
 	compareerr(ctx, "<doc an></doc>", [][:],
 		[.line=1,.off=8,.err=`xml.Inval '>'])
 

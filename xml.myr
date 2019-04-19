@@ -95,7 +95,7 @@ const parseelemname = {x
 			if !ex
 				stop = x.p.bcur
 			;;
-			-> `std.Ok `Start (x.p.buf[start:stop], attrs)
+			-> `std.Ok  `Start (x.p.buf[start:stop], attrs)
 		| '/':
 			if !ex
 				stop = x.p.bcur
@@ -204,13 +204,14 @@ const parseselfclose = {x, name, attrs
 
 const parseattrs = {x, attrs
 	var name, val
+	var offs = [][:]
 
 	beatspace(x)
 
 	while x.p.bidx < x.p.buf.len
 		match bpeek(x)
-		| '>':	-> `std.Ok void
-		| '/':	-> `std.Ok void
+		| '>':	goto done
+		| '/':	goto done
 		| _:
 		;;
 
@@ -224,12 +225,22 @@ const parseattrs = {x, attrs
 		| `std.Err e:	-> `std.Err e
 		;;
 
-		std.slpush(attrs, (name, val))
+		std.slpush(&offs, (name, val))
 
 		beatspace(x)
 	;;
 
 	-> `std.Err error(x, `Trunc `bio.Eof)
+
+:done
+	for off : offs
+		match off
+		| ((ns, ne), (vs, ve)):
+			std.slpush(attrs, (x.p.buf[ns:ne], x.p.buf[vs:ve]))
+		;;
+	;;
+	std.slfree(offs)
+	-> `std.Ok void
 }
 
 const parseattrname = {x
@@ -249,7 +260,7 @@ const parseattrname = {x
 			if !spaced
 				stop = x.p.bcur
 			;;
-			-> `std.Ok x.p.buf[start:stop]
+			-> `std.Ok (start, stop)
 		| c:
 			if spaced
 				-> `std.Err error(x, `Unexpected (c, '='))
@@ -286,7 +297,7 @@ const parseattrval = {x
 		while x.p.bidx < x.p.buf.len
 			if bnext(x) == q
 				stop = x.p.bcur
-				-> `std.Ok x.p.buf[start:stop]
+				-> `std.Ok (start, stop)
 			;;
 		;;
 
