@@ -121,6 +121,7 @@ const parseelemname = {x
 		;;
 	;;
 
+	std.slfree(attrs)
 	-> `std.Err error(x, `Unclosed ("<", ">"))
 }
 
@@ -205,6 +206,7 @@ const parseselfclose = {x, name, attrs
 const parseattrs = {x, attrs
 	var name, val
 	var offs = [][:]
+	var err
 
 	beatspace(x)
 
@@ -217,12 +219,16 @@ const parseattrs = {x, attrs
 
 		match parseattrname(x)
 		| `std.Ok n:	name = n
-		| `std.Err e:	-> `std.Err e
+		| `std.Err e:
+			err = e
+			goto err
 		;;
 
 		match parseattrval(x)
 		| `std.Ok v:	val = v
-		| `std.Err e:	-> `std.Err e
+		| `std.Err e:
+			err = e
+			goto err
 		;;
 
 		std.slpush(&offs, (name, val))
@@ -241,6 +247,10 @@ const parseattrs = {x, attrs
 	;;
 	std.slfree(offs)
 	-> `std.Ok void
+
+:err
+	std.slfree(offs)
+	-> `std.Err err
 }
 
 const parseattrname = {x
