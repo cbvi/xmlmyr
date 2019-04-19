@@ -95,7 +95,7 @@ const parseelemname = {x
 			if !ex
 				stop = x.p.bcur
 			;;
-			-> `std.Ok  `Start (x.p.buf[start:stop], attrs)
+			-> `std.Ok `Start (x.p.buf[start:stop], attrs)
 		| '/':
 			if !ex
 				stop = x.p.bcur
@@ -325,8 +325,8 @@ const parsecomment = {x
 
 const parseinstruction = {x
 	const suf = "?>"
-	var targ
 	var start, stop
+	var ts, te
 	var err
 
 	match bio.getc(x.file)
@@ -360,8 +360,8 @@ const parseinstruction = {x
 		;;
 	;;
 
-	targ = x.p.buf[start:stop]
-	start = stop = x.p.bidx
+	(ts, te) = (start, stop)
+	start = x.p.bidx
 
 	while x.p.bidx < x.p.buf.len - suf.len
 		bnext(x)
@@ -375,5 +375,5 @@ const parseinstruction = {x
 		;;
 	;;
 
-	-> `std.Ok `Instruction (targ, x.p.buf[start:stop])
+	-> `std.Ok `Instruction (x.p.buf[ts:te], x.p.buf[start:stop])
 }
