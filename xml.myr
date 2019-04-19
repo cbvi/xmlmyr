@@ -33,21 +33,21 @@ const close = {x
 		-> `std.Err error(x, `Trunc e)
 	;;
 
-	start = stop = x.p.bidx
+	start = x.p.bidx
 
 	while x.p.bidx < x.p.buf.len
-		match bnext(x)
-		| '<':
+		if bnext(x) == '<'
+			stop = x.p.bcur
 			x.p.state = `Open
 			if prune(x.p.buf[start:stop]).len > 0
 				-> `std.Ok `Characters x.p.buf[start:stop]
 			else
 				-> dispatch(x)
 			;;
-		| c:
-			stop = x.p.bidx
 		;;
 	;;
+
+	stop = x.p.bidx
 
 	if prune(x.p.buf).len > 0
 		-> `std.Ok `Characters x.p.buf[start:stop]
