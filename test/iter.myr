@@ -166,6 +166,9 @@ const simple_test = {ctx
 	compareerr(ctx, "<doc></doc?>", [
 		`xml.Start ("doc", [][:])
 	][:], [.line=1, .off=11, .err=`xml.Inval '?'])
+
+	compareerr(ctx, "<doc", [][:],
+		[.line=1, .off=4, .err=`xml.Unclosed ("<", ">")])
 }
 
 const attrs_test = {ctx
