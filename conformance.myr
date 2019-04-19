@@ -338,5 +338,21 @@ const oasis = {
 		st("doc"), en("doc"), eof()
 	][:])
 
+	/* p08 */
+
+	pass("p08pass1.xml", [
+		dt("" \
+			"doc\r\n[\r\n<!ELEMENT doc (A*)>\r\n" \
+			"<!ELEMENT A EMPTY>\r\n" \
+			"<!ATTLIST A att NMTOKENS #IMPLIED>\r\n" \
+			"]" \
+		),
+		st("doc"),
+		sta("A", [("att", "abc")][:]), en("A"),
+		sta("A", [("att", "abc def . :")][:]), en("A"),
+		sta("A", [("att", "\r\nabc\r\ndef\r\n")][:]), en("A"),
+		en("doc"), eof()
+	][:])
+
 	std.put("\n")
 }
