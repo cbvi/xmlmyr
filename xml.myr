@@ -92,15 +92,22 @@ const parseelemname = {x
 	while x.p.bidx < x.p.buf.len
 		match bnext(x)
 		| '>':
+			if !ex
+				stop = x.p.bcur
+			;;
 			-> `std.Ok `Start (x.p.buf[start:stop], attrs)
 		| '/':
+			if !ex
+				stop = x.p.bcur
+			;;
 			-> parseselfclose(x, x.p.buf[start:stop], attrs)
 		| c:
 			if ex
 				-> `std.Err error(x, `Unexpected (c, '>'))
 			elif namechar(c)
-				stop = x.p.bidx
+				continue
 			elif isspace(c)
+				stop = x.p.bcur
 				match parseattrs(x, &attrs)
 				| `std.Ok _:
 					ex = true
