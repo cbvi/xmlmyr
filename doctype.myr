@@ -13,7 +13,7 @@ pkg xml =
 const parsedoctype = {x
 	const pref = "DOCTYPE"
 	const suf = ">"
-	var start, stop
+	var start
 	var open
 	var c
 
@@ -40,7 +40,7 @@ const parsedoctype = {x
 
 	beatspace(x)
 
-	start = stop = x.p.bidx
+	start = x.p.bidx
 	open = 1
 
 	while x.p.bidx < x.p.buf.len
