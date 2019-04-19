@@ -186,8 +186,14 @@ const attrs_test = {ctx
 	compareerr(ctx, "<doc an=val></doc>", [][:],
 		[.line=1,.off=9,.err=`xml.Unexpected ('v', '"')])
 
+	compareerr(ctx, "<doc an = val></doc>", [][:],
+		[.line=1,.off=11,.err=`xml.Unexpected ('v', '"')])
+
 	compareerr(ctx, "<doc an=></doc>", [][:],
 		[.line=1,.off=9,.err=`xml.Unexpected ('>', '"')])
+
+	compareerr(ctx, "<doc an = ></doc>", [][:],
+		[.line=1,.off=11,.err=`xml.Unexpected ('>', '"')])
 
 	compareerr(ctx, "<doc an=\"val\" \"val\"></doc>", [][:],
 		[.line=1, .off=15, .err=`xml.Inval '"'])
