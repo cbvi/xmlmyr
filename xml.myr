@@ -232,14 +232,19 @@ const parseattrname = {x
 
 	while x.p.bidx < x.p.buf.len
 		match bnext(x)
-		| '=':	-> `std.Ok x.p.buf[start:stop]
+		| '=':
+			if !spaced
+				stop = x.p.bcur
+			;;
+			-> `std.Ok x.p.buf[start:stop]
 		| c:
 			if spaced
 				-> `std.Err error(x, `Unexpected (c, '='))
 			elif namechar(c)
-				stop = x.p.bidx
+				continue
 			elif isspace(c)
 				spaced = true
+				stop = x.p.bcur
 				beatspace(x)
 			else
 				-> `std.Err error(x, `Inval c)
