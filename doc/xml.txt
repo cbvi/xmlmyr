@@ -287,7 +287,8 @@ elements is discarded.
 ### Cdata
 
 CDATA is similar to character data except CDATA can contain characters that are
-normally forbidden and would otherwise have needed to be escaped.
+normally forbidden and would otherwise have needed to be escaped. Any content
+in a CDATA section is interpreted literally and not parsed as XML.
 
 	<![CDATA[<doc>foo <b>bar</b> <i>baz</i></doc>]]>
 		-> `xml.Cdata "<doc>foo <b>bar</b> <i>baz</i></doc>"
@@ -325,6 +326,8 @@ Errors
 -------
 
 	pkg xml =
+		const geterr :	(x : ctx# -> std.option(err))
+
 		type err = struct
 			line	:	std.size
 			off	:	std.size
@@ -368,3 +371,37 @@ the missing terminator.
 
 The first char of the tuple was found where the second char of the tuple was
 expected.
+
+Entities
+-------
+
+	pkg xml =
+		const decode	: (s : byte[:] -> std.result(byte[:], byte[:]))
+		const decodef	: (s : byte[:] -> byte[:])
+	;;
+
+Entities and character references are not automatically parsed, instead helper
+functions are provided that applications can use to parse entities if they
+deem it necessary. Only the default XML entities are parsed, custom entities
+will need to be parsed and decoded by the application. Implementing entity
+expansion vulnerabilities is left as an exercise for the reader.
+
+	const decode	: (s : byte[:] -> std.result(byte[:], byte[:]))
+
+Parses the entities in the string `s` and returns a result. An error will be
+returned if any entitiy in the string could not be parsed, or was unrecognised,
+in which case the body of the error is the token that caused the error. The
+sucessfully decoded string needs to be freed with std.slfree.
+
+	const decodef	: (s : byte[:] -> byte[:])
+
+Like `decode` but forcibly decodes the string `s`. Any token that would have
+caused an error is skipped and included literally in the returned string. The
+returned string must be freed with std.slfree.
+
+	xml.decode("Hello &amp; welcome&#33;")	// `std.Ok "Hello and welcome!"
+	xml.decode("Hello & welcome&#33;")	// `std.Err "&"
+	xml.decode("Hello &amp; welcome&#33")	// `std.Err "&#33"
+
+	xml.decodef("Hello & welcome&#33;")	// "Hello & welcome!"
+	xml.decodef("Hello &amp; welcome&#33")	// "Hello & welcome&#33"
