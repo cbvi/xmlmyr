@@ -292,6 +292,11 @@ const twigil_test = {ctx
 		`xml.Instruction ("test", "t<<<<<>>"),
 		`xml.Eof
 	][:])
+	
+	comparebuf(ctx, "<?test one>two>three>four>five?>", [
+		`xml.Instruction ("test", "one>two>three>four>five"),
+		`xml.Eof
+	][:])
 
 	comparebuf(ctx, "<doc><?test <??></doc>", [
 		`xml.Start ("doc", [][:]),
