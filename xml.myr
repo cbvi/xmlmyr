@@ -166,13 +166,17 @@ const parseend = {x
 	while x.p.bidx < x.p.buf.len
 		match bnext(x)
 		| '>':
+			if !spaced
+				stop = x.p.bcur
+			;;
 			-> `std.Ok `End x.p.buf[start:stop]
 		| c:
 			if isspace(c)
+				stop = x.p.bcur
 				spaced = true
 				beatspace(x)
 			elif !spaced && namechar(c)
-				stop = x.p.bidx
+				continue
 			else
 				-> `std.Err error(x, `Inval c)
 			;;
