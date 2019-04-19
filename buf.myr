@@ -13,7 +13,6 @@ pkg xml =
 	pkglocal const bnext :		(x : ctx# -> char)
 	pkglocal const bpeek :		(x : ctx# -> char)
 	pkglocal const beatspace :	(x : ctx# -> void)
-	pkglocal const btaste :		(x : ctx# -> void)
 	pkglocal const bskip :		(x : ctx#, n : int -> void)
 
 	pkglocal const startname:	(x : ctx# -> std.result((std.size, std.size), err))
@@ -108,20 +107,6 @@ const beatspace = {x
 			break
 		;;
 	;;
-}
-
-const btaste = {x
-	for c : std.bychar(x.p.buf[x.p.bidx:])
-		match c
-		| '\n':
-			x.p.line++
-			x.p.off = 0
-		| _:
-			x.p.off++
-		;;
-	;;
-
-	x.p.bcur = x.p.bidx = x.p.buf.len
 }
 
 const bskip = {x, n
