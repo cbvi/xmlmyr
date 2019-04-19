@@ -158,6 +158,14 @@ const simple_test = {ctx
 	compareerr(ctx, "<doc></doc", [
 		`xml.Start ("doc", [][:])
 	][:], [.line=1, .off=10, .err=`xml.Unclosed ("</", ">")])
+
+	compareerr(ctx, "<doc></doc ?>", [
+		`xml.Start ("doc", [][:])
+	][:], [.line=1, .off=12, .err=`xml.Unexpected ('?', '>')])
+
+	compareerr(ctx, "<doc></doc?>", [
+		`xml.Start ("doc", [][:])
+	][:], [.line=1, .off=11, .err=`xml.Inval '?'])
 }
 
 const attrs_test = {ctx
@@ -330,6 +338,12 @@ const crlf_test = {ctx
 
 const space_test = {ctx
 	compare(ctx, "test/files/009_space.xml", [
+		`xml.Start ("doc", [][:]),
+		`xml.End "doc",
+		`xml.Eof
+	][:])
+
+	comparebuf(ctx, "<doc    ></doc    >", [
 		`xml.Start ("doc", [][:]),
 		`xml.End "doc",
 		`xml.Eof

@@ -177,6 +177,8 @@ const parseend = {x
 				beatspace(x)
 			elif !spaced && namechar(c)
 				continue
+			elif spaced
+				-> `std.Err error(x, `Unexpected (c, '>'))
 			else
 				-> `std.Err error(x, `Inval c)
 			;;
