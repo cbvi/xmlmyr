@@ -143,7 +143,6 @@ const parseexclamation = {x
 
 const parseend = {x
 	var start, stop
-	var spaced = false
 
 	match bio.readterm(x.file, ">")
 	| `std.Ok s:	newbuf(x, s)
@@ -155,37 +154,47 @@ const parseend = {x
 	| c:	-> `std.Err error(x, `Unexpected (c, '/'))
 	;;
 
-	if x.p.bidx >= x.p.buf.len
-		-> `std.Err error(x, `Unclosed ("</", ">"))
-	;;
-
 	match startname(x)
 	| `std.Ok o:	(start, stop) = o
+	| `std.Err [.line=_, .off=_, .err=`Trunc `bio.Eof]:
+		goto unclosed
 	| `std.Err e:	-> `std.Err e
 	;;
 
 	while x.p.bidx < x.p.buf.len
 		match bnext(x)
 		| '>':
-			if !spaced
-				stop = x.p.bcur
-			;;
-			-> `std.Ok `End x.p.buf[start:stop]
+			stop = x.p.bcur
+			goto end
 		| c:
-			if isspace(c)
-				stop = x.p.bcur
-				spaced = true
-				beatspace(x)
-			elif !spaced && namechar(c)
+			if namechar(c)
 				continue
-			elif spaced
-				-> `std.Err error(x, `Unexpected (c, '>'))
+			elif isspace(c)
+				stop = x.p.bcur
+				beatspace(x)
+				goto ending
 			else
 				-> `std.Err error(x, `Inval c)
 			;;
 		;;
 	;;
 
+	goto unclosed
+
+:ending
+	if x.p.bidx < x.p.buf.len
+		match bnext(x)
+		| '>':	goto end
+		| c:	-> `std.Err error(x, `Unexpected (c, '>'))
+		;;
+	else
+		goto unclosed
+	;;
+
+:end
+	-> `std.Ok `End x.p.buf[start:stop]
+
+:unclosed
 	-> `std.Err error(x, `Unclosed ("</", ">"))
 }
 
