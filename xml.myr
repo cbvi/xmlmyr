@@ -350,16 +350,20 @@ const parseinstruction = {x
 	while x.p.bidx < x.p.buf.len - suf.len
 		match bnext(x)
 		| c:	if namechar(c)
-				stop = x.p.bidx
+				continue
 			elif isspace(c)
+				stop = x.p.bcur
 				beatspace(x)
-				break
+				goto namedone
 			else
 				-> `std.Err error(x, `Inval c)
 			;;
 		;;
 	;;
 
+	stop = x.p.bidx
+
+:namedone
 	(ts, te) = (start, stop)
 	start = x.p.bidx
 
