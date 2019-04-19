@@ -267,14 +267,13 @@ const parseattrval = {x
 	| c:	-> `std.Err error(x, `Unexpected (c, '"'))
 	;;
 
-	start = stop = x.p.bidx
+	start = x.p.bidx
 
 	while true
 		while x.p.bidx < x.p.buf.len
 			if bnext(x) == q
+				stop = x.p.bcur
 				-> `std.Ok x.p.buf[start:stop]
-			else
-				stop = x.p.bidx
 			;;
 		;;
 
