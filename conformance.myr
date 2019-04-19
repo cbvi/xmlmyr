@@ -136,4 +136,196 @@ const main = {
 	xmltest("xmlconf/eduni/errata-2e", "xmlconf/eduni/errata-2e/errata2e.xml")
 	xmltest("xmlconf/eduni/namespaces/1.0", "xmlconf/eduni/namespaces/1.0/rmt-ns10.xml")
 	xmltest("xmlconf/japanese", "xmlconf/japanese/japanese.xml")
+
+	oasis()
+}
+
+const checkevent = {name, got, expect
+	var g, e
+	var r = true
+
+	g = std.fmt("{}", got)
+	e = std.fmt("{}", expect)
+
+	if !std.sleq(g, e)
+		std.put("{}: got \"{}\" expected \"{}\"\n", name, g, e)
+		std.put("[")
+		for b : g
+			std.put("{} ", b)
+		;;
+		std.put("]\n[")
+		for b : e
+			std.put("{} ", b)
+		;;
+		std.put("]\n")
+		r = false
+	;;
+
+	std.slfree(g)
+	std.slfree(e)
+
+	-> r
+}
+
+const pass = {name, expect
+	const pref = "xmlconf/oasis"
+	var path, x
+	var i = 0
+	var r = true
+
+	path = std.pathcat(pref, name)
+	x = std.try(xml.mkpath(path))
+
+	for ev : xml.byevent(x)
+		if i >= expect.len
+			std.put("{}: too many events {}>{}\n",
+				path, i+1, expect.len)
+			goto end
+		;;
+
+		if !checkevent(name, ev, expect[i])
+			r = false
+		;;
+		i++
+	;;
+
+	if r
+		std.put(".")
+	;;
+
+:end
+	xml.free(x)
+	std.slfree(path)
+}
+
+const st = {n
+	-> `xml.Start (n, [][:])
+}
+
+const sta = {n, a
+	-> `xml.Start (n, a)
+}
+
+const en = {n
+	-> `xml.End n
+}
+
+const pi = {t, d
+	-> `xml.Instruction (t, d)
+}
+
+const dt = {d
+	-> `xml.Doctype d
+}
+
+const com = {c
+	-> `xml.Comment c
+}
+
+const eof = {
+	-> `xml.Eof
+}
+
+const oasis = {
+	std.put("OASIS: ")
+
+	pass("p01pass1.xml", [
+		st("doc"), st("a"), st("b"), st("c"), en("c"),
+		en("b"), en("a"), en("doc"), eof()
+	][:])
+
+	/* p01 */
+
+	pass("p01pass2.xml", [
+		pi("PI", "before document element"),
+		com("comment after document element"),
+		pi("PI", "before document element"),
+		com("comment after document element"),
+		pi("PI", "before document element"),
+		com("comment after document element"),
+		pi("PI", "before document element"),
+		dt(""\
+			"doc\r\n" \
+			"[\r\n" \
+			"<!ELEMENT doc ANY>\r\n<!ELEMENT a ANY>\r\n" \
+			"<!ELEMENT b ANY>\r\n<!ELEMENT c ANY>\r\n]" \
+		),
+		st("doc"), st("a"), st("b"), st("c"), en("c"),
+		en("b"), en("a"), en("doc"),
+		com("comment after document element"),
+		pi("PI", "after document element"),
+		com("comment after document element"),
+		pi("PI", "after document element"),
+		com("comment after document element"),
+		pi("PI", "after document element"),
+		eof()
+	][:])
+
+	pass("p01pass3.xml", [
+		st("doc"), st("a"), st("b"), st("c"), en("c"),
+		en("b"), en("a"), en("doc"),
+		com("comment after document element"),
+		pi("PI", "after document element"),
+		com("comment after document element"),
+		pi("PI", "after document element"),
+		com("comment after document element"),
+		pi("PI", "after document element"),
+		eof()
+	][:])
+
+	/* p03 */
+
+	pass("p03pass1.xml", [st("doc"), en("doc"), eof()][:])
+
+	/* p04 */
+
+	pass("p04pass1.xml", [
+		st("doc"),
+		st("abcdefghijklmnopqrstuvwxyz"),
+		en("abcdefghijklmnopqrstuvwxyz"),
+		st("ABCDEFGHIJKLMNOPQRSTUVWXYZ"),
+		en("ABCDEFGHIJKLMNOPQRSTUVWXYZ"),
+		st("A01234567890"), en("A01234567890"),
+		st([0x41, 0x2e, 0x2d, 0x3a, 0xcc, 0x80, 0xc2, 0xb7][:]),
+		en([0x41, 0x2e, 0x2d, 0x3a, 0xcc, 0x80, 0xc2, 0xb7][:]),
+		en("doc"), eof()
+	][:])
+
+	/* p05 */
+
+	pass("p05pass1.xml", [
+		st("doc"),
+		st("A:._-0"), en("A:._-0"),
+		st("::._-0"), en("::._-0"),
+		st("_:._-0"), en("_:._-0"),
+		st("A"), en("A"),
+		st("_"), en("_"),
+		st(":"), en(":"),
+		en("doc"),
+		eof()
+	][:])
+
+	/* p06 */
+
+	pass("p06pass1.xml", [
+		dt("" \
+			"doc\r\n[\r\n" \
+			"<!ELEMENT doc (a|refs)*>\r\n<!ELEMENT a EMPTY>\r\n" \
+			"<!ELEMENT refs EMPTY>\r\n" \
+			"<!ATTLIST refs refs IDREFS #REQUIRED>\r\n" \
+			"<!ATTLIST a id ID #REQUIRED>\r\n" \
+			"]" \
+		),
+		st("doc"),
+		sta("a", [("id", "A1")][:]), en("a"),
+		sta("a", [("id", "A2")][:]), en("a"),
+		sta("a", [("id", "A3")][:]), en("a"),
+		sta("refs", [("refs", "A1 A2 A3")][:]), en("refs"),
+		sta("refs", [("refs", "A1\r\nA2\tA3")][:]), en("refs"),
+		sta("refs", [("refs", "A1")][:]), en("refs"),
+		en("doc"),
+		eof()
+	][:])
+
+	std.put("\n")
 }
