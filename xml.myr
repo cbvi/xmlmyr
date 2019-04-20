@@ -77,7 +77,6 @@ const closing = {x, name
 const parseelemname = {x
 	var start, stop
 	var attrs = [][:]
-	var ex = false
 
 	match bio.readterm(x.file, ">")
 	| `std.Ok s:	newbuf(x, s)
@@ -102,13 +101,7 @@ const parseelemname = {x
 				continue
 			elif isspace(c)
 				stop = x.p.bcur
-				match parseattrs(x, &attrs)
-				| `std.Ok _:
-					goto ending
-				| `std.Err e:
-					std.slfree(attrs)
-					-> `std.Err e
-				;;
+				goto attrs
 			else
 				-> `std.Err error(x, `Inval c)
 			;;
@@ -117,12 +110,22 @@ const parseelemname = {x
 
 	goto unclosed
 
+:attrs
+	match parseattrs(x, &attrs)
+	| `std.Ok _:
+	| `std.Err e:
+		std.slfree(attrs)
+		-> `std.Err e
+	;;
+
 :ending
 	if x.p.bidx < x.p.buf.len
 		match bnext(x)
 		| '/':	goto selfclose
 		| '>':	/* fallthrough to end */
-		| c:	-> `std.Err error(x, `Unexpected (c, '>'))
+		| c:
+			std.slfree(attrs)
+			-> `std.Err error(x, `Unexpected (c, '>'))
 		;;
 	else
 		goto unclosed
