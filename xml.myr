@@ -184,7 +184,7 @@ const parseend = {x
 :ending
 	if x.p.bidx < x.p.buf.len
 		match bnext(x)
-		| '>':	goto end
+		| '>':	/* fallthrough to end */
 		| c:	-> `std.Err error(x, `Unexpected (c, '>'))
 		;;
 	else
@@ -264,7 +264,6 @@ const parseattrs = {x, attrs
 
 const parseattrname = {x
 	var start, stop
-	var spaced = false
 
 	beatspace(x)
 
@@ -276,25 +275,37 @@ const parseattrname = {x
 	while x.p.bidx < x.p.buf.len
 		match bnext(x)
 		| '=':
-			if !spaced
-				stop = x.p.bcur
-			;;
-			-> `std.Ok (start, stop)
+			stop = x.p.bcur
+			goto end
 		| c:
-			if spaced
-				-> `std.Err error(x, `Unexpected (c, '='))
-			elif namechar(c)
+			if namechar(c)
 				continue
 			elif isspace(c)
-				spaced = true
 				stop = x.p.bcur
 				beatspace(x)
+				goto ending
 			else
 				-> `std.Err error(x, `Inval c)
 			;;
 		;;
 	;;
 
+	goto eof
+
+:ending
+	if x.p.bidx < x.p.buf.len
+		match bnext(x)
+		| '=':	/* fallthrough to end */
+		| c:	-> `std.Err error(x, `Unexpected (c, '='))
+		;;
+	else
+		goto eof
+	;;
+
+:end
+	-> `std.Ok (start, stop)
+
+:eof
 	-> `std.Err error(x, `Trunc `bio.Eof)
 }
 
