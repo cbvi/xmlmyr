@@ -421,5 +421,11 @@ const oasis = {
 		com(""), st("doc"), en("doc"), eof()
 	][:])
 
+	/* p16 */
+
+	pass("p16pass2.xml", [
+		pi("pitarget", "'"), st("doc"), en("doc"), eof()
+	][:])
+
 	std.put("\n")
 }
