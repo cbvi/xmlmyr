@@ -1,6 +1,8 @@
 use std
 use xml
 
+use iter
+
 const dotest = {test, dir
 	var id, uri, description
 	var path
@@ -148,16 +150,11 @@ const checkevent = {name, got, expect
 	e = std.fmt("{}", expect)
 
 	if !std.sleq(g, e)
-		std.put("{}: got \"{}\" expected \"{}\"\n", name, g, e)
-		std.put("[")
-		for b : g
-			std.put("{} ", b)
+		std.put("\n")
+
+		for (one, two) : iter.byzip(g, e)
+			std.put("{} {}\t{} {}\n", one, two, (one : char), (two : char))
 		;;
-		std.put("]\n[")
-		for b : e
-			std.put("{} ", b)
-		;;
-		std.put("]\n")
 		r = false
 	;;
 
@@ -368,6 +365,20 @@ const oasis = {
 		en("A"),
 		sta("A", [("a", "\"\">&#39;&#34;")][:]), en("A"),
 		en("doc"), eof()
+	][:])
+
+	/* p11 */
+
+	pass("p11pass1.xml", [
+		com("Inability to resolve a notation should not be reported as an error"),
+		dt("doc\r\n[\r\n<!ELEMENT doc EMPTY>\r\n" \
+		   "<!NOTATION not1 SYSTEM \"a%a&b&#0<!ELEMENT<!--<?</>?>/\\''\">\r\n" \
+		   "<!NOTATION not2 SYSTEM 'a\r\n\tb\"\"\"'>\r\n" \
+		   "<!NOTATION not3 SYSTEM \"\">\r\n" \
+		   "<!NOTATION not4 SYSTEM ''>\r\n" \
+		   "]" \
+		),
+		st("doc"), en("doc"), eof()
 	][:])
 
 	std.put("\n")
