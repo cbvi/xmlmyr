@@ -381,5 +381,19 @@ const oasis = {
 		st("doc"), en("doc"), eof()
 	][:])
 
+	/* p12 */
+
+	pass("p12pass1.xml", [
+		com("Inability to resolve a notation should not be reported as an error"),
+		dt("doc\r\n[\r\n<!ELEMENT doc EMPTY>\r\n" \
+		   "<!NOTATION not1 PUBLIC \"a b\r\n" \
+		   "cdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ\">\r\n" \
+		   "<!NOTATION not2 PUBLIC '0123456789-()+,./:=?;!*#@$_%'>\r\n" \
+		   "<!NOTATION not3 PUBLIC \"0123456789-()+,.'/:=?;!*#@$_%\">\r\n" \
+		   "]" \
+		),
+		st("doc"), en("doc"), eof()
+	][:])
+
 	std.put("\n")
 }
