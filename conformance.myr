@@ -617,5 +617,38 @@ const oasis = {
 		st("doc"), en("doc"), eof()
 	][:])
 
+	/* p28 */
+
+	pass("p28pass1.xml", [
+		dt("doc\r\n\r\n[\r\n<!ELEMENT doc EMPTY>\r\n]"),
+		st("doc"), en("doc"), eof()
+	][:])
+
+	pass("p28pass2.xml", [
+		dt("doc\r\n\r\n[\r\n<!ELEMENT doc EMPTY>\r\n]"),
+		st("doc"), en("doc"), eof()
+	][:])
+
+	pass("p28pass3.xml", [
+		dt("doc [\r\n<!ENTITY % eldecl \"<!ELEMENT doc EMPTY>\">\r\n" \
+		   "%eldecl;\r\n]" \
+		),
+		st("doc"), en("doc"), eof()
+	][:])
+
+	pass("p28pass4.xml", [
+		dt("doc SYSTEM \"p28pass4.dtd\""),
+		st("doc"), en("doc"), eof()
+	][:])
+
+	pass("p28pass5.xml", [
+		dt("doc SYSTEM \"p28pass5.dtd\"[\r\n" \
+		   "<!--comment-->\r\n" \
+		   "<!ENTITY % rootdecl \"<!ELEMENT doc (a)>\">\r\n" \
+		   "<!ELEMENT a EMPTY>\r\n]" \
+		),
+		st("doc"), st("a"), en("a"), en("doc"), eof()
+	][:])
+
 	std.put("\n")
 }
