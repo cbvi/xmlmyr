@@ -650,5 +650,22 @@ const oasis = {
 		st("doc"), st("a"), en("a"), en("doc"), eof()
 	][:])
 
+	/* p29 */
+
+	pass("p29pass1.xml", [
+		dt("doc [\r\n" \
+		   "<?Pi?><!--comment-->\r\n" \
+		   "<!ELEMENT doc EMPTY>\r\n" \
+		   "<?Pi?><!--comment-->\r\n" \
+		   "<!ATTLIST doc att CDATA #IMPLIED>\r\n" \
+		   "<?Pi?><!--comment-->\r\n" \
+		   "<!ENTITY % ent \"\">\r\n" \
+		   "<?Pi?><!--comment-->\r\n" \
+		   "<!NOTATION not PUBLIC \"some notation\">\r\n" \
+		   "<?Pi?><!--comment-->\r\n]" \
+		),
+		st("doc"), en("doc"), eof()
+	][:])
+
 	std.put("\n")
 }
