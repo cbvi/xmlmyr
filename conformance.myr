@@ -736,5 +736,18 @@ const oasis = {
 		en("doc"), eof()
 	][:])
 
+	/* p41 */
+
+	pass("p41pass1.xml", [
+		sta("doc", [("att", "val")][:]),
+		en("doc"), eof()
+	][:])
+
+	pass("p41pass2.xml", [
+		sta("doc", [("att", "val")][:]),
+		en("doc"), eof()
+	][:])
+
+
 	std.put("\n")
 }
