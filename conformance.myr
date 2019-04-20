@@ -177,6 +177,7 @@ const pass = {name, expect
 	var path, x
 	var i = 0
 	var r = true
+	var eof = false
 
 	path = std.pathcat(pref, name)
 	x = std.try(xml.mkpath(path))
@@ -193,6 +194,21 @@ const pass = {name, expect
 			r = false
 		;;
 		i++
+
+		match ev
+		| `xml.Eof:	eof = true
+		| _:
+		;;
+	;;
+
+	if !eof
+		std.put("{}: didn't reach eof\n", name)
+	;;
+
+	match xml.geterr(x)
+	| `std.Some s:
+		std.put("{}: had error {}\n", name, s)
+	| `std.None:
 	;;
 
 	if r
@@ -437,6 +453,11 @@ const oasis = {
 
 	pass("p16pass2.xml", [
 		pi("pitarget", "'"), st("doc"), en("doc"), eof()
+	][:])
+
+	pass("p16pass3.xml", [
+		pi("pitarget", "\""),
+		st("doc"), en("doc"), eof()
 	][:])
 
 	std.put("\n")
