@@ -244,6 +244,10 @@ const ch = {c
 	-> `xml.Characters c
 }
 
+const cd = {c
+	-> `xml.Cdata c
+}
+
 const com = {c
 	-> `xml.Comment c
 }
@@ -458,6 +462,17 @@ const oasis = {
 	pass("p16pass3.xml", [
 		pi("pitarget", "\""),
 		st("doc"), en("doc"), eof()
+	][:])
+
+	/* p18 */
+
+	pass("p18pass1.xml", [
+		st("doc"),
+		cd("<doc<!DOCTYPE&a%b&#c]] >] ]> ]"),
+		cd(""),
+		cd("\r\n<![CDATA[\r\n"),
+		en("doc"),
+		eof()
 	][:])
 
 	std.put("\n")
