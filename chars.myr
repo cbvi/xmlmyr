@@ -57,17 +57,13 @@ const prune = {b
 		-> ""
 	;;
 
-	bk = b.len
-
-	for var i = b.len; i != 0; i--
-		var n = i - 1
-		if !isspace(std.decode(b[n:]))
+	for bk = b.len; bk != 0; bk--
+		if !isspace(std.decode(b[bk - 1:]))
 			break
 		;;
-		bk = n
 	;;
 
-	std.assert(ft <= bk, "BUG: prune() end is before start\n")
+	std.assert(bk > ft, "BUG: prune() end is before start\n")
 
 	-> b[ft:bk]
 }
