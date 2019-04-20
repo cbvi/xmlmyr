@@ -574,5 +574,17 @@ const oasis = {
 		st("doc"), en("doc"), eof()
 	][:])
 
+	/* p26 */
+
+	pass("p26pass1.xml", [
+		pi("xml", "version=\"1.0\""),
+		com("because we are testing conformace to XML 1.0, there can be no\r\n" \
+		"    exhaustive tests of the VersionNum production.  The only\r\n" \
+		"    VersionNum a 1.0-compliant processor is required to pass\r\n" \
+		"    is \"1.0\"" \
+		),
+		st("doc"), en("doc"), eof()
+	][:])
+
 	std.put("\n")
 }
