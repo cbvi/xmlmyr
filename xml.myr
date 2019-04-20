@@ -92,25 +92,19 @@ const parseelemname = {x
 	while x.p.bidx < x.p.buf.len
 		match bnext(x)
 		| '>':
-			if !ex
-				stop = x.p.bcur
-			;;
-			-> `std.Ok `Start (x.p.buf[start:stop], attrs)
+			stop = x.p.bcur
+			goto end
 		| '/':
-			if !ex
-				stop = x.p.bcur
-			;;
-			-> parseselfclose(x, x.p.buf[start:stop], attrs)
+			stop = x.p.bcur
+			goto selfclose
 		| c:
-			if ex
-				-> `std.Err error(x, `Unexpected (c, '>'))
-			elif namechar(c)
+			if namechar(c)
 				continue
 			elif isspace(c)
 				stop = x.p.bcur
 				match parseattrs(x, &attrs)
 				| `std.Ok _:
-					ex = true
+					goto ending
 				| `std.Err e:
 					std.slfree(attrs)
 					-> `std.Err e
@@ -121,6 +115,26 @@ const parseelemname = {x
 		;;
 	;;
 
+	goto unclosed
+
+:ending
+	if x.p.bidx < x.p.buf.len
+		match bnext(x)
+		| '/':	goto selfclose
+		| '>':	/* fallthrough to end */
+		| c:	-> `std.Err error(x, `Unexpected (c, '>'))
+		;;
+	else
+		goto unclosed
+	;;
+
+:end
+	-> `std.Ok `Start (x.p.buf[start:stop], attrs)
+
+:selfclose
+	-> parseselfclose(x, x.p.buf[start:stop], attrs)
+
+:unclosed
 	std.slfree(attrs)
 	-> `std.Err error(x, `Unclosed ("<", ">"))
 }
