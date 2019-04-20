@@ -1,5 +1,6 @@
 lib xml =
 	xml.myr
+	attributes.myr
 	buf.myr
 	chars.myr
 	doctype.myr
