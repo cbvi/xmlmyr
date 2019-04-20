@@ -716,5 +716,25 @@ const oasis = {
 		eof()
 	][:])
 
+	/* p40 */
+
+	pass("p40pass1.xml", [
+		st("doc"), en("doc"), eof()
+	][:])
+
+	pass("p40pass2.xml", [
+		st("doc"), en("doc"), eof()
+	][:])
+
+	pass("p40pass3.xml", [
+		sta("doc", [("att", "val")][:]),
+		en("doc"), eof()
+	][:])
+
+	pass("p40pass4.xml", [
+		sta("doc", [("att", "val"), ("att2", "val2"), ("att3", "val3")][:]),
+		en("doc"), eof()
+	][:])
+
 	std.put("\n")
 }
