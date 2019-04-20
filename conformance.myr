@@ -540,5 +540,27 @@ const oasis = {
 		st("doc"), en("doc"), eof()
 	][:])
 
+	/* p24 */
+
+	pass("p24pass1.xml", [
+		pi("xml", "version=\"1.0\""),
+		st("doc"), en("doc"), eof()
+	][:])
+
+	pass("p24pass2.xml", [
+		pi("xml", "version=\'1.0\'"),
+		st("doc"), en("doc"), eof()
+	][:])
+
+	pass("p24pass3.xml", [
+		pi("xml", "version\r\n=\r\n'1.0'\r\n"),
+		st("doc"), en("doc"), eof()
+	][:])
+
+	pass("p24pass4.xml", [
+		pi("xml", "version = \'1.0\'"),
+		st("doc"), en("doc"), eof()
+	][:])
+
 	std.put("\n")
 }
