@@ -691,5 +691,17 @@ const oasis = {
 		st("doc"), en("doc"), eof()
 	][:])
 
+	/* p32 */
+
+	pass("p32pass1.xml", [
+		pi("xml", "version=\"1.0\" standalone=\"yes\""),
+		st("doc"), en("doc"), eof()
+	][:])
+
+	pass("p32pass2.xml", [
+		pi("xml", "version=\"1.0\" standalone=\'no\'"),
+		st("doc"), en("doc"), eof()
+	][:])
+
 	std.put("\n")
 }
