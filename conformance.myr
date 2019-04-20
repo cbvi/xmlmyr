@@ -475,5 +475,48 @@ const oasis = {
 		eof()
 	][:])
 
+	/* p22 */
+
+	pass("p22pass1.xml", [
+		st("doc"), en("doc"), eof()
+	][:])
+
+	pass("p22pass2.xml", [
+		pi("xml", "version=\"1.0\""),
+		st("doc"), en("doc"), eof()
+	][:])
+
+	pass("p22pass3.xml", [
+		pi("xml", "version=\"1.0\""),
+		com("comment"),
+		pi("pi", ""),
+		st("doc"), en("doc"), eof()
+	][:])
+
+	pass("p22pass4.xml", [
+		pi("xml", "version=\"1.0\""),
+		com("comment"),
+		pi("pi", ""),
+		dt("doc\r\n[\r\n<!ELEMENT doc EMPTY>\r\n]"),
+		com("comment"),
+		pi("pi", ""),
+		st("doc"), en("doc"), eof()
+	][:])
+
+	pass("p22pass5.xml", [
+		com("comment"),
+		pi("pi", ""),
+		dt("doc\r\n[\r\n<!ELEMENT doc EMPTY>\r\n]"),
+		com("comment"),
+		pi("pi", ""),
+		st("doc"), en("doc"), eof()
+	][:])
+
+	pass("p22pass6.xml", [
+		pi("xml", "version=\"1.0\""),
+		dt("doc\r\n[\r\n<!ELEMENT doc EMPTY>\r\n]"),
+		st("doc"), en("doc"), eof()
+	][:])
+
 	std.put("\n")
 }
