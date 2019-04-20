@@ -153,9 +153,11 @@ const checkevent = {name, got, expect
 		std.put("\nMISMATCH:\n")
 
 		for (one, two) : iter.byzip(g, e)
+			std.put("{} {}\t{} {}", one, two, (one : char), (two : char))
 			if one != two
-				std.put("{} {}\t{} {}\n", one, two, (one : char), (two : char))
+				std.put("\t<=========")
 			;;
+			std.put("\n")
 		;;
 
 		if g.len != e.len
@@ -187,6 +189,7 @@ const pass = {name, expect
 		;;
 
 		if !checkevent(name, ev, expect[i])
+			std.put("event {} failed\n", i+1)
 			r = false
 		;;
 		i++
@@ -422,6 +425,15 @@ const oasis = {
 	][:])
 
 	/* p16 */
+
+	pass("p16pass1.xml", [
+		pi("pitarget", ""),
+		pi("xmla", "<!DOCTYPE <[ CDATA [</doc> &a%b&#c"),
+		pi("pitarget", "..."),
+		pi("pitarget", ""),
+		pi("pitarget", "> "),
+		st("doc"), en("doc"), eof()
+	][:])
 
 	pass("p16pass2.xml", [
 		pi("pitarget", "'"), st("doc"), en("doc"), eof()
