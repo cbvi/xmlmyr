@@ -847,5 +847,16 @@ const oasis = {
 		st("doc"), en("doc"), eof()
 	][:])
 
+	/* p49 */
+
+	pass("p49pass1.xml", [
+		dt("doc\r\n[\r\n<!ELEMENT doc ANY>\r\n" \
+		   "<!--NOTE: XML doesn't specify whether this is a choice or a seq-->\r\n" \
+		   "<!ELEMENT a (doc?)>\r\n<!ELEMENT b (doc|a)>\r\n" \
+		   "<!ELEMENT c (\r\ndoc\r\n|\r\na\r\n|\r\nc?\r\n)>\r\n]" \
+		),
+		st("doc"), en("doc"), eof()
+	][:])
+
 	std.put("\n")
 }
