@@ -114,6 +114,8 @@ const charref = {s
 		-> `std.None
 	;;
 
+	/* XXX FIXME split large codepoints */
+
 	match std.intparsebase(s[idx:end], base)
 	| `std.Some i:	-> `std.Some (i, end + std.charlen(';'))
 	| `std.None:	-> `std.None
