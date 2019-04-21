@@ -178,4 +178,8 @@ const forcecr_test = {ctx
 const unicode_test = {ctx
 	check(ctx, "Oh no &#xF0;&#x9F;&#x98;&#xA4;!", "Oh no 😤!")
 	checkf(ctx, "Oh no &#xF0;&#x9F;&#x98;&#xA4;!", "Oh no 😤!")
+	check(ctx, "Oh no &#128548;!", "Oh no 😤!")
+	check(ctx, "Oh no &#x1F624;!", "Oh no 😤!")
+
+	check(ctx, "&#x10F2ec;", [244, 143, 139, 172][:])
 }

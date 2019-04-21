@@ -5,6 +5,11 @@ pkg xml =
 	const decodef	: (s : byte[:] -> byte[:])
 ;;
 
+type entity = union
+	`Char	char
+	`Byte	byte
+;;
+
 const decode = {s
 	var sb = std.mksb()
 	var start, idx
@@ -14,10 +19,14 @@ const decode = {s
 	while idx < s.len
 		match std.decode(s[idx:])
 		| '&':	match unencode(s[idx:])
-			| `std.Some (b, i):
+			| `std.Some (`Char c, i):
+				std.sbputs(sb, s[start:idx])
+				std.sbputc(sb, c)
+				idx += i
+				start = idx
+			| `std.Some (`Byte b, i):
 				std.sbputs(sb, s[start:idx])
 				std.sbputb(sb, b)
-
 				idx += i
 				start = idx
 			| `std.None:
@@ -45,10 +54,14 @@ const decodef = {s
 	while idx < s.len
 		match std.decode(s[idx:])
 		| '&':	match unencode(s[idx:])
-			| `std.Some (b, i):
+			| `std.Some (`Char c, i):
+				std.sbputs(sb, s[start:idx])
+				std.sbputc(sb, c)
+				idx += i
+				start = idx
+			| `std.Some (`Byte b, i):
 				std.sbputs(sb, s[start:idx])
 				std.sbputb(sb, b)
-
 				idx += i
 				start = idx
 			| `std.None:
@@ -79,7 +92,7 @@ const unencode = {s
 
 	for (name, char) : ens
 		if s.len >= name.len && std.sleq(name, s[:name.len])
-			-> `std.Some ((char : byte), name.len)
+			-> `std.Some (`Char char, name.len)
 		;;
 	;;
 
@@ -90,6 +103,8 @@ const charref = {s
 	const pref = "&#"
 	var idx, end
 	var base
+	var ipb : uint32
+	var r
 
 	if std.hasprefix(s, pref)
 		idx = pref.len
@@ -114,10 +129,15 @@ const charref = {s
 		-> `std.None
 	;;
 
-	/* XXX FIXME split large codepoints */
-
 	match std.intparsebase(s[idx:end], base)
-	| `std.Some i:	-> `std.Some (i, end + std.charlen(';'))
+	| `std.Some i:
+		ipb = i
+		if ipb > 255
+			r = `Char (ipb : char)
+		else
+			r = `Byte (ipb : byte)
+		;;
+		-> `std.Some (r, end + std.charlen(';'))
 	| `std.None:	-> `std.None
 	;;
 }
