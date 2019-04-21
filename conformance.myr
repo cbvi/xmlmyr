@@ -931,5 +931,28 @@ const oasis = {
 		st("doc"), en("doc"), eof()
 	][:])
 
+	/* p56 */
+
+	pass("p56pass1.xml", [
+		dt("doc\r\n[\r\n<!ELEMENT doc (a|b|c|d|e|f|g)*>\r\n" \
+		   "<!ELEMENT a EMPTY>\r\n" \
+		   "<!ELEMENT b EMPTY>\r\n" \
+		   "<!ELEMENT c EMPTY>\r\n" \
+		   "<!ELEMENT d EMPTY>\r\n" \
+		   "<!ELEMENT e EMPTY>\r\n" \
+		   "<!ELEMENT f EMPTY>\r\n" \
+		   "<!ELEMENT g EMPTY>\r\n" \
+		   "<!ATTLIST a att ID #IMPLIED>\r\n" \
+		   "<!ATTLIST b att IDREF #IMPLIED>\r\n" \
+		   "<!ATTLIST c att IDREFS #IMPLIED>\r\n" \
+		   "<!ATTLIST d att ENTITY #IMPLIED>\r\n" \
+		   "<!ATTLIST e att ENTITIES #IMPLIED>\r\n" \
+		   "<!ATTLIST f att NMTOKEN #IMPLIED>\r\n" \
+		   "<!ATTLIST g att NMTOKENS #IMPLIED>\r\n" \
+		   "]" \
+		),
+		st("doc"), en("doc"), eof()
+	][:])
+
 	std.put("\n")
 }
