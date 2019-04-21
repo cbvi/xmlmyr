@@ -224,7 +224,7 @@ const parseselfclose = {x, name, attrs
 			-> `std.Err error(x, `Unexpected (c, '>'))
 		;;
 	else
-		-> `std.Err error(x, `Trunc `bio.Eof)
+		-> `std.Err error(x, `Unclosed ("<", "/>"))
 	;;
 }
 
