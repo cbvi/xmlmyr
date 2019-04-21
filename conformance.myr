@@ -1051,5 +1051,20 @@ const oasis = {
 		eof()
 	][:])
 
+	/* p68 */
+
+	pass("p68pass1.xml", [
+		dt("doc\r\n[\r\n<!ELEMENT doc (#PCDATA)>\r\n" \
+		   "<!ENTITY ent \"replacement text\">\r\n]" \
+		),
+		st("doc"),
+		ch("\r\n&ent;aaa&ent;\r\n"),
+		com("Not a reference:"),
+		com("Charref to & doesn't make a delimiter"),
+		ch("\r\n&#38;en\r\n"),
+		en("doc"),
+		eof()
+	][:])
+
 	std.put("\n")
 }
