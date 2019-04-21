@@ -1012,5 +1012,33 @@ const oasis = {
 		eof()
 	][:])
 
+	/* p61 */
+
+	pass("p61pass1.xml", [
+		dt("doc SYSTEM \"p61pass1.dtd\""),
+		st("doc"), en("doc"), eof()
+	][:])
+
+	/* p62 */
+
+	pass("p62pass1.xml", [
+		dt("doc SYSTEM \"p62pass1.dtd\""),
+		st("doc"), en("doc"), eof()
+	][:])
+
+	/* p63 */
+
+	pass("p63pass1.xml", [
+		dt("doc SYSTEM \"p63pass1.dtd\""),
+		st("doc"), en("doc"), eof()
+	][:])
+
+	/* p64 */
+
+	pass("p64pass1.xml", [
+		dt("doc SYSTEM \"p64pass1.dtd\""),
+		st("doc"), en("doc"), eof()
+	][:])
+
 	std.put("\n")
 }
