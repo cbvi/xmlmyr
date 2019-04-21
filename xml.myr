@@ -145,8 +145,9 @@ const parseelemname = {x
 
 const parseexclamation = {x
 	match bio.getc(x.file)
-	| `std.Ok '!':	x.p.off++
-	| `std.Ok c:	-> `std.Err error(x, `Unexpected (c, '!'))
+	| `std.Ok c:
+		std.assert(c == '!', "BUG: parseexclamation() ! missing\n")
+		x.p.off++
 	| `std.Err e:	-> `std.Err error(x, `Trunc e)
 	;;
 
@@ -167,10 +168,7 @@ const parseend = {x
 	| `std.Err e:	-> `std.Err error(x, `Trunc e)
 	;;
 
-	match bnext(x)
-	| '/':
-	| c:	-> `std.Err error(x, `Unexpected (c, '/'))
-	;;
+	std.assert(bnext(x) == '/', "BUG: parseend() / missing\n")
 
 	match startname(x)
 	| `std.Ok o:	(start, stop) = o
@@ -251,8 +249,9 @@ const parseinstruction = {x
 	var err
 
 	match bio.getc(x.file)
-	| `std.Ok '?':	x.p.off += 1
-	| `std.Ok c:	-> `std.Err error(x, `Unexpected (c, '?'))
+	| `std.Ok c:
+		std.assert(c == '?', "BUG: parseinstruction() ? missing\n")
+		x.p.off++
 	| `std.Err e:	-> `std.Err error(x, `Trunc e)
 	;;
 
