@@ -980,7 +980,17 @@ const oasis = {
 		st("doc"), en("doc"), eof()
 	][:])
 
+	/* p59 */
 
+	pass("p59pass1.xml", [
+		dt("doc\r\n[\r\n<!ELEMENT doc (a|b)*>\r\n" \
+		   "<!ELEMENT a EMPTY>\r\n" \
+		   "<!ELEMENT b EMPTY>\r\n" \
+		   "<!ATTLIST a att (a) #IMPLIED>\r\n" \
+		   "<!ATTLIST b att ( a | b ) #IMPLIED>\r\n]" \
+		),
+		st("doc"), en("doc"), eof()
+	][:])
 
 	std.put("\n")
 }
