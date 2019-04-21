@@ -869,5 +869,16 @@ const oasis = {
 		st("doc"), en("doc"), eof()
 	][:])
 
+	/* p51 */
+
+	pass("p51pass1.xml", [
+		dt("doc\r\n[\r\n<!ELEMENT doc (#PCDATA)>\r\n" \
+		   "<!ELEMENT a (#PCDATA|doc)*>\r\n" \
+		   "<!ELEMENT b (\r\n#PCDATA\r\n|\r\ndoc\r\n|\r\na\r\n|\r\nb\r\n" \
+		   ")*>\r\n<!ELEMENT c (#PCDATA)*>\r\n]" \
+		),
+		st("doc"), en("doc"), eof()
+	][:])
+
 	std.put("\n")
 }
