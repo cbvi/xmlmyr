@@ -880,5 +880,25 @@ const oasis = {
 		st("doc"), en("doc"), eof()
 	][:])
 
+	/* p52 */
+
+	pass("p52pass1.xml", [
+		dt("doc\r\n[\r\n<!ELEMENT doc (#PCDATA|a|b|c|d)*>\r\n" \
+		   "<!ELEMENT a EMPTY>\r\n<!ELEMENT b EMPTY>\r\n" \
+		   "<!ELEMENT c EMPTY>\r\n<!ELEMENT d EMPTY>\r\n" \
+		   "<!ATTLIST a>\r\n<!ATTLIST b >\r\n" \
+		   "<!ATTLIST c att CDATA #IMPLIED>\r\n" \
+		   "<!ATTLIST d att CDATA #IMPLIED>\r\n" \
+		   "<!ATTLIST\r\nc att CDATA\r\n #IMPLIED\r\natt2\r\n" \
+		   " CDATA\r\n \"second declaration is OK\"\r\n" \
+		   "att2 CDATA\r\n #REQUIRED\r\n >\r\n<!ATTLIST d>\r\n]" \
+		),
+		st("doc"), st("c"), en("c"),
+		sta("c", [("att2", "test")][:]),
+		en("c"),
+		en("doc"),
+		eof()
+	][:])
+
 	std.put("\n")
 }
