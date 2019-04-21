@@ -1147,5 +1147,19 @@ const oasis = {
 		st("doc"), en("doc"), eof()
 	][:])
 
+	/* p76 */
+
+	pass("p76pass1.xml", [
+		dt("doc\r\n[\r\n<!ELEMENT doc (#PCDATA)>\r\n" \
+		   "<!NOTATION unknot PUBLIC \"Unknown\">\r\n" \
+		   "<!ENTITY ge SYSTEM \"nop.ent\" NDATA unknot>\r\n" \
+		   "<!ENTITY ge2 SYSTEM \"nop.ent\"\r\n" \
+		   "  NDATA\r\n" \
+		   "  unknot\r\n" \
+		   "  >\r\n]" \
+		),
+		st("doc"), en("doc"), eof()
+	][:])
+
 	std.put("\n")
 }
