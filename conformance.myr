@@ -835,5 +835,17 @@ const oasis = {
 		st("doc"), en("doc"), eof()
 	][:])
 
+	/* p48 */
+
+	pass("p48pass1.xml", [
+		dt("doc\r\n[\r\n<!ELEMENT doc ANY>\r\n<!ELEMENT a (doc)>\r\n" \
+		   "<!ELEMENT b ((doc|a?))>\r\n<!ELEMENT c ((a,b))>\r\n" \
+		   "<!ELEMENT d (doc*)>\r\n<!ELEMENT e (doc+)>\r\n" \
+		   "<!ELEMENT f (doc?)>\r\n<!ELEMENT g ((a,b)*)>\r\n" \
+		   "<!ELEMENT h ((a,b)?)>\r\n<!ELEMENT i ((a,b)+)>\r\n]" \
+		),
+		st("doc"), en("doc"), eof()
+	][:])
+
 	std.put("\n")
 }
