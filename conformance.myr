@@ -900,5 +900,14 @@ const oasis = {
 		eof()
 	][:])
 
+	/* p53 */
+
+	pass("p53pass1.xml", [
+		dt("doc\r\n[\r\n<!ELEMENT doc EMPTY>\r\n" \
+		   "<!ATTLIST doc att CDATA #IMPLIED>\r\n]" \
+		),
+		st("doc"), en("doc"), eof()
+	][:])
+
 	std.put("\n")
 }
