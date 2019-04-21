@@ -758,5 +758,26 @@ const oasis = {
 		st("doc"), en("doc"), eof()
 	][:])
 
+	/* p43 */
+
+	pass("p43pass1.xml", [
+		dt("elem\r\n[\r\n<!ELEMENT elem (#PCDATA|elem)*>\r\n" \
+		   "<!ENTITY ent \"<elem>CharData</elem>\">\r\n]" \
+		),
+		st("elem"),
+		ch("\r\nCharData&#32;\r\n"),
+		com("comment"),
+		cd("\r\n<elem>\r\nCharData&#32;\r\n<!--comment-->\r\n" \
+		   "<?pi?>&ent;&quot;\r\nCharData\r\n</elem>\r\n" \
+		),
+		cd("\r\n<elem>\r\nCharData&#32;\r\n<!--comment-->\r\n" \
+		   "<?pi?>&ent;&quot;\r\nCharData\r\n</elem>\r\n" \
+		),
+		pi("pi", ""),
+		ch("&ent;&quot;\r\nCharData\r\n"),
+		en("elem"),
+		eof()
+	][:])
+
 	std.put("\n")
 }
