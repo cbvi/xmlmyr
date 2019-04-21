@@ -1113,6 +1113,39 @@ const oasis = {
 		st("doc"), en("doc"), eof()
 	][:])
 
+	/* p73 */
+
+	pass("p73pass1.xml", [
+		dt("doc\r\n[\r\n<!ELEMENT doc (#PCDATA)>\r\n" \
+		   "<!NOTATION unknot PUBLIC \"Unknown\">\r\n" \
+		   "<!ENTITY ge \"replacement text\">\r\n" \
+		   "<!ENTITY ge2 SYSTEM \"nop.ent\">\r\n" \
+		   "<!ENTITY ge3 SYSTEM \"nop.ent\" NDATA unknot>\r\n]" \
+		),
+		st("doc"), en("doc"), eof()
+	][:])
+
+	/* p74 */
+
+	pass("p74pass1.xml", [
+		dt("doc\r\n[\r\n<!ENTITY % pe \"<!--replacement decl-->\">\r\n" \
+		   "<!ENTITY % pe2 SYSTEM \"nop.ent\">\r\n]" \
+		),
+		st("doc"), en("doc"), eof()
+	][:])
+
+	/* p75 */
+
+	pass("p75pass1.xml", [
+		dt("doc\r\n[\r\n<!ENTITY ent SYSTEM \"nop.ent\">\r\n" \
+		   "<!ENTITY ent2 PUBLIC \"PublicID\" \"nop.ent\">\r\n" \
+		   "<!ENTITY ent3 PUBLIC\r\n" \
+		   "              \"PublicID\"\r\n" \
+		   "              \"nop.ent\"\r\n" \
+		   "              >\r\n]" \
+		),
+		st("doc"), en("doc"), eof()
+	][:])
 
 	std.put("\n")
 }
