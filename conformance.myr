@@ -992,5 +992,25 @@ const oasis = {
 		st("doc"), en("doc"), eof()
 	][:])
 
+	/* p60 */
+
+	pass("p60pass1.xml", [
+		dt("doc\r\n[\r\n<!ELEMENT doc (a|b|c|d)*>\r\n" \
+		   "<!ELEMENT a EMPTY>\r\n" \
+		   "<!ELEMENT b EMPTY>\r\n" \
+		   "<!ELEMENT c EMPTY>\r\n" \
+		   "<!ELEMENT d EMPTY>\r\n" \
+		   "<!ATTLIST a att CDATA #REQUIRED>\r\n" \
+		   "<!ATTLIST b att CDATA #IMPLIED>\r\n" \
+		   "<!ATTLIST c att CDATA #FIXED \"value\">\r\n" \
+		   "<!ATTLIST d att CDATA 'default'>\r\n]" \
+		),
+		st("doc"),
+		st("c"), en("c"),
+		sta("c", [("att", "value")][:]), en("c"),
+		en("doc"),
+		eof()
+	][:])
+
 	std.put("\n")
 }
