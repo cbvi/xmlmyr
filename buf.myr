@@ -31,7 +31,6 @@ const expandbuf = {x, buf
 
 const fillbuf = {x, full, pref, suf
 	var start, stop
-	var err
 
 	for p : std.bychar(pref)
 		match bio.getc(x.file)
@@ -52,7 +51,6 @@ const fillbuf = {x, full, pref, suf
 	;;
 
 	start = x.p.bidx
-	err = [.line=x.p.line, .off=x.p.off, .err=`Unclosed (full, suf)]
 
 	while x.p.bidx < x.p.buf.len - suf.len
 		bnext(x)
@@ -62,7 +60,7 @@ const fillbuf = {x, full, pref, suf
 
 	for s : std.bychar(suf)
 		if s != bnext(x)
-			-> `std.Err err
+			-> `std.Err error(x, `Unclosed (full, suf))
 		;;
 	;;
 
