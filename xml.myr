@@ -246,7 +246,6 @@ const parseinstruction = {x
 	const suf = "?>"
 	var start, stop
 	var ts, te
-	var err
 
 	match bio.getc(x.file)
 	| `std.Ok c:
@@ -254,8 +253,6 @@ const parseinstruction = {x
 		x.p.off++
 	| `std.Err e:	-> `std.Err error(x, `Trunc e)
 	;;
-
-	err = [.line=x.p.line, .off=x.p.off, .err=`Unclosed ("<?", "?>")]
 
 	match bio.readterm(x.file, suf)
 	| `std.Ok b:	newbuf(x, b)
@@ -295,7 +292,7 @@ const parseinstruction = {x
 
 	for s : std.bychar(suf)
 		if s != bnext(x)
-			-> `std.Err err
+			-> `std.Err error(x, `Unclosed ("<?", "?>"))
 		;;
 	;;
 

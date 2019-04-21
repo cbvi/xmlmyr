@@ -354,7 +354,7 @@ const twigil_test = {ctx
 
 	compareerr(ctx, "<doc>\n<?target example instruction>\n</doc>", [
 		`xml.Start ("doc", [][:])
-	][:], [.line=2, .off=2, .err=`xml.Unclosed ("<?", "?>")])
+	][:], [.line=3, .off=5, .err=`xml.Unclosed ("<?", "?>")])
 
 	compareerr(ctx, "<doc><!", [
 		`xml.Start ("doc", [][:])
