@@ -1040,5 +1040,16 @@ const oasis = {
 		st("doc"), en("doc"), eof()
 	][:])
 
+	/* p66 */
+
+	pass("p66pass1.xml", [
+		st("doc"),
+		ch("\r\n&#65;&#9;&#x41;&#x4f;&#x4F;&#0000000000000000009;\r\n" \
+		   "&#x10F2ec;&#xa;\r\n" \
+		),
+		en("doc"),
+		eof()
+	][:])
+
 	std.put("\n")
 }
