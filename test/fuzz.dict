@@ -1,0 +1,48 @@
+element_start="<"
+element_close=">"
+
+element_exclamation="<!"
+
+tag_close="</"
+tag_self="/>"
+
+cdata_start="<![CDATA["
+cdata_close="]]>"
+cdata_ex="<![CDATA[cdata]]>"
+
+comment_start="<!--"
+comment_close="-->"
+comment_ex="<!-- comment -->"
+
+instruction_start="<?"
+instruction_close="?>"
+instruction_ex="<?test?>"
+instruction_d_ex="<?test data?>"
+
+doctype_start="<!DOCTYPE"
+doctype_close=">"
+doctype_ex="<!DOCTYPE doc>"
+
+entity_start="&"
+entity_close=";"
+charref_start="&#"
+hexref_start="&#x"
+
+entity_amp="&amp;"
+entity_quot="&quot;"
+entity_apos="&apos;"
+entity_lt="&lt;"
+entity_gt="&gt;"
+
+entity_ex="&a;"
+charref_ex="&#1;"
+hexref_ex="&#x1;"
+wideref_ex="&#x10F2ec;"
+
+element_start_ex="<a>"
+element_close_ex="</a>"
+element_self_ex="<a />"
+element_dangle_ex="<a "
+
+attribute_ex=" a=\"1\""
+attribute_ex2=" a=\">\""
