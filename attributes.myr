@@ -40,10 +40,25 @@ const parseattrs = {x, attrs
 
 		std.slpush(&offs, (name, val))
 
-		beatspace(x)
+		if x.p.bidx < x.p.buf.len
+			match bpeek(x)
+			| '>':	goto done
+			| '/':	goto done
+			| c:
+				if isspace(c)
+					beatspace(x)
+				else
+					err = error(x, `Inval c)
+					goto err
+				;;
+			;;
+		else
+			break
+		;;
 	;;
 
-	-> `std.Err error(x, `Trunc `bio.Eof)
+	err = error(x, `Trunc `bio.Eof)
+	goto err
 
 :done
 	for off : offs

@@ -226,6 +226,9 @@ const attrs_test = {ctx
 
 	compareerr(ctx, "<doc an=\"fo>", [][:],
 		[.line=1, .off=12, .err=`xml.Trunc `bio.Eof])
+
+	compareerr(ctx, "<doc a=\"1\"b=\"2\"></doc>", [][:],
+		[.line=1, .off=10, .err=`xml.Inval 'b'])
 }
 
 const empty_test = {ctx
