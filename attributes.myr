@@ -131,14 +131,14 @@ const parseattrval = {x
 	| c:	-> `std.Err error(x, `Unexpected (c, '"'))
 	;;
 
-	start = stop = x.p.bidx
+	start = x.p.bidx
 
 	while true
 		while x.p.bidx < x.p.buf.len
+			stop = x.p.bidx
 			if bnext(x) == q
 				-> `std.Ok (start, stop)
 			;;
-			stop = x.p.bidx
 		;;
 
 		match bio.readterm(x.file, ">")

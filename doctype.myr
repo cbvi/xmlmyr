@@ -40,10 +40,11 @@ const parsedoctype = {x
 
 	beatspace(x)
 
-	start = stop = x.p.bidx
+	start = x.p.bidx
 	open = 1
 
 	while x.p.bidx < x.p.buf.len
+		stop = x.p.bidx
 		match bnext(x)
 		| '<':
 			if std.hasprefix(x.p.buf[x.p.bidx:], "!--")
@@ -62,7 +63,6 @@ const parsedoctype = {x
 			;;
 		| _:
 		;;
-		stop = x.p.bidx
 	;;
 
 	-> `std.Err error(x, `Trunc `bio.Eof)
