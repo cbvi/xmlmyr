@@ -530,6 +530,11 @@ const unicode_test = {ctx
 		`xml.Start ("test", [][:]),
 		`xml.Characters "表ポあA鷗ŒéＢ逍Üßªąñ丂㐀𠀀"
 	][:], [.line=1, .off=26, .err=`xml.Inval '»'])
+
+	compareerr(ctx,
+		/* <doc a <ff>="1" /> */
+		[60, 100, 111, 99, 32, 97, 32, -1, 61, 34, 49, 34, 32, 47, 62][:],
+		[][:], [.line=1, .off=8, .err=`xml.Unexpected (-1, '=')])
 }
 
 const validate_test = {ctx
