@@ -20,7 +20,7 @@ pkg xml =
 
 const newbuf = {x, buf
 	std.slfree(x.p.buf)
-	x.p.bidx = x.p.bcur = 0
+	x.p.bidx = 0
 	x.p.buf = buf
 }
 
@@ -75,7 +75,6 @@ const bnext = {x
 	;;
 
 	c = std.decode(x.p.buf[x.p.bidx:])
-	x.p.bcur = x.p.bidx
 	x.p.bidx += std.charlen(c)
 
 	match c
@@ -115,14 +114,16 @@ const bskip = {x, n
 
 const startname = {x
 	var c
+	var start
 
 	if x.p.bidx >= x.p.buf.len
 		-> `std.Err error(x, `Trunc `bio.Eof)
 	;;
 
+	start = x.p.bidx
 	c = bnext(x)
 	if namestartchar(c)
-		-> `std.Ok (x.p.bcur, x.p.bidx)
+		-> `std.Ok (start, x.p.bidx)
 	else
 		-> `std.Err error(x, `Inval c)
 	;;

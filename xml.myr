@@ -34,11 +34,10 @@ const close = {x
 		-> `std.Err error(x, `Trunc e)
 	;;
 
-	start = x.p.bidx
+	start = stop = x.p.bidx
 
 	while x.p.bidx < x.p.buf.len
 		if bnext(x) == '<'
-			stop = x.p.bcur
 			x.p.state = `Open
 			if prune(x.p.buf[start:stop]).len > 0
 				-> `std.Ok `Characters x.p.buf[start:stop]
@@ -46,9 +45,8 @@ const close = {x
 				-> dispatch(x)
 			;;
 		;;
+		stop = x.p.bidx
 	;;
-
-	stop = x.p.bidx
 
 	if prune(x.p.buf).len > 0
 		-> `std.Ok `Characters x.p.buf[start:stop]
@@ -91,17 +89,12 @@ const parseelemname = {x
 
 	while x.p.bidx < x.p.buf.len
 		match bnext(x)
-		| '>':
-			stop = x.p.bcur
-			goto end
-		| '/':
-			stop = x.p.bcur
-			goto selfclose
+		| '>':	goto end
+		| '/':	goto selfclose
 		| c:
 			if namechar(c)
-				continue
+				stop = x.p.bidx
 			elif isspace(c)
-				stop = x.p.bcur
 				goto attrs
 			else
 				-> `std.Err error(x, `Inval c)
@@ -179,14 +172,11 @@ const parseend = {x
 
 	while x.p.bidx < x.p.buf.len
 		match bnext(x)
-		| '>':
-			stop = x.p.bcur
-			goto end
+		| '>':	goto end
 		| c:
 			if namechar(c)
-				continue
+				stop = x.p.bidx
 			elif isspace(c)
-				stop = x.p.bcur
 				beatspace(x)
 				goto ending
 			else
@@ -267,9 +257,8 @@ const parseinstruction = {x
 	while x.p.bidx < x.p.buf.len - suf.len
 		match bnext(x)
 		| c:	if namechar(c)
-				continue
+				stop = x.p.bidx
 			elif isspace(c)
-				stop = x.p.bcur
 				beatspace(x)
 				goto namedone
 			else
@@ -277,8 +266,6 @@ const parseinstruction = {x
 			;;
 		;;
 	;;
-
-	stop = x.p.bidx
 
 :namedone
 	(ts, te) = (start, stop)

@@ -13,7 +13,7 @@ pkg xml =
 const parsedoctype = {x
 	const pref = "DOCTYPE"
 	const suf = ">"
-	var start
+	var start, stop
 	var open
 	var c
 
@@ -40,13 +40,13 @@ const parsedoctype = {x
 
 	beatspace(x)
 
-	start = x.p.bidx
+	start = stop = x.p.bidx
 	open = 1
 
 	while x.p.bidx < x.p.buf.len
 		match bnext(x)
 		| '<':
-			if std.hasprefix(x.p.buf[x.p.bcur:], "<!--")
+			if std.hasprefix(x.p.buf[x.p.bidx:], "!--")
 				docomment(x)
 			else
 				open++
@@ -56,12 +56,13 @@ const parsedoctype = {x
 		| '>':
 			open--
 			if open == 0
-				-> `std.Ok `Doctype prune(x.p.buf[start:x.p.bcur])
+				-> `std.Ok `Doctype prune(x.p.buf[start:stop])
 			else
 				refill(x)
 			;;
 		| _:
 		;;
+		stop = x.p.bidx
 	;;
 
 	-> `std.Err error(x, `Trunc `bio.Eof)

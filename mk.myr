@@ -30,7 +30,6 @@ const mk = {f, owned
 		.p = std.mk([
 			.buf = [][:],
 			.bidx = 0,
-			.bcur = 0,
 			.line = 1,
 			.off = 0,
 			.state = `Close,

@@ -87,14 +87,11 @@ const parseattrname = {x
 
 	while x.p.bidx < x.p.buf.len
 		match bnext(x)
-		| '=':
-			stop = x.p.bcur
-			goto end
+		| '=':	goto end
 		| c:
 			if namechar(c)
-				continue
+				stop = x.p.bidx
 			elif isspace(c)
-				stop = x.p.bcur
 				beatspace(x)
 				goto ending
 			else
@@ -134,14 +131,14 @@ const parseattrval = {x
 	| c:	-> `std.Err error(x, `Unexpected (c, '"'))
 	;;
 
-	start = x.p.bidx
+	start = stop = x.p.bidx
 
 	while true
 		while x.p.bidx < x.p.buf.len
 			if bnext(x) == q
-				stop = x.p.bcur
 				-> `std.Ok (start, stop)
 			;;
+			stop = x.p.bidx
 		;;
 
 		match bio.readterm(x.file, ">")
