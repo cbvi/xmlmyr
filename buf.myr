@@ -97,12 +97,23 @@ const bpeek = {x
 }
 
 const beatspace = {x
+	var p
 	while true
-		if isspace(bpeek(x))
-			bnext(x)
-		else
+		p = bpeek(x)
+		match p
+		| ' ':
+		| '\n':
+			x.p.line++
+			x.p.off = 0
+			goto next
+		| '\t':
+		| '\r':
+		| _:
 			break
 		;;
+		x.p.off++
+:next
+		x.p.bidx += std.charlen(p)
 	;;
 }
 
