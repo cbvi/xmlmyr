@@ -59,7 +59,7 @@ const dodecode = {s, fatal
 
 :err
 	std.sbfree(sb)
-	-> `std.Err s[idx : idx + errend(s[idx:])]
+	-> `std.Err errend(s[idx:])
 }
 
 const unencode = {s
@@ -139,5 +139,5 @@ const errend = {s
 		;;
 	;;
 
-	-> i
+	-> s[:i]
 }
