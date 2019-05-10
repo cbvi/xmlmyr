@@ -12,8 +12,6 @@ pkg xml =
 
 	const free	:	(x : ctx# -> void)
 
-	pkglocal const eventfree	:	(ev : event -> void)
-
 	impl disposable ctx#
 ;;
 
@@ -35,6 +33,11 @@ const mk = {f, owned
 			.state = `Close,
 			.more = true,
 			.error = `std.None
+		]),
+		.a = std.mk([
+			.offs = std.slalloc(1),
+			.attrs = std.slalloc(1),
+			.cnt = 0
 		])
 	])
 
@@ -67,16 +70,12 @@ const free = {x
 	if x.owned
 		bio.close(x.file)
 	;;
+	std.slfree(x.a.offs)
+	std.slfree(x.a.attrs)
+	std.free(x.a)
 	std.slfree(x.p.buf)
 	std.free(x.p)
 	std.free(x)
-}
-
-const eventfree = {ev
-	match ev
-	| `Start (_, a):	std.slfree(a)
-	| _:
-	;;
 }
 
 const bom = {x

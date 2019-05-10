@@ -7,15 +7,16 @@ use "err"
 use "types"
 
 pkg xml =
-	pkglocal const parseattrs : (x : ctx#, attrs : (byte[:], byte[:])[:]# -> std.result(void, err))
+	pkglocal const parseattrs : (x : ctx# -> std.result(void, err))
 ;;
 
-const parseattrs = {x, attrs
+const parseattrs = {x
 	var name, val
-	var offs = [][:]
 	var err
 
 	beatspace(x)
+
+	x.a.cnt = 0
 
 	while x.p.bidx < x.p.buf.len
 		match bpeek(x)
@@ -38,7 +39,12 @@ const parseattrs = {x, attrs
 			goto err
 		;;
 
-		std.slpush(&offs, (name, val))
+		if x.a.cnt >= x.a.offs.len
+			x.a.offs = std.slgrow(&x.a.offs, 2 * x.a.offs.len)
+		;;
+
+		x.a.offs[x.a.cnt] = (name, val)
+		x.a.cnt++
 
 		if x.p.bidx < x.p.buf.len
 			match bpeek(x)
@@ -61,17 +67,19 @@ const parseattrs = {x, attrs
 	goto err
 
 :done
-	for off : offs
-		match off
+	if x.a.attrs.len < x.a.offs.len
+		x.a.attrs = std.slgrow(&x.a.attrs, x.a.offs.len)
+	;;
+
+	for var i = 0; i < x.a.cnt; i++
+		match x.a.offs[i]
 		| ((ns, ne), (vs, ve)):
-			std.slpush(attrs, (x.p.buf[ns:ne], x.p.buf[vs:ve]))
+			x.a.attrs[i] = (x.p.buf[ns:ne], x.p.buf[vs:ve])
 		;;
 	;;
-	std.slfree(offs)
 	-> `std.Ok void
 
 :err
-	std.slfree(offs)
 	-> `std.Err err
 }
 

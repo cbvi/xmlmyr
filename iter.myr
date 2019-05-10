@@ -27,7 +27,6 @@ impl iterable eventiter -> event =
 	}
 
 	__iterfin__ = {iterp, valp
-		eventfree(valp#)
 	}
 ;;
 

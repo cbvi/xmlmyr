@@ -8,6 +8,7 @@ pkg xml =
 		file	:	bio.file#
 		owned	:	bool
 		p	:	parser#
+		a	:	attrstore#
 	;;
 
 	type parser = struct
@@ -18,6 +19,12 @@ pkg xml =
 		state	:	state
 		more	:	bool
 		error	:	std.option(err)
+	;;
+
+	type attrstore = struct
+		offs	:	((std.size, std.size), (std.size, std.size))[:]
+		attrs	:	(byte[:], byte[:])[:]
+		cnt	:	std.size
 	;;
 
 	type event = union
