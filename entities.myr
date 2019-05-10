@@ -10,6 +10,14 @@ type entity = union
 	`Byte	byte
 ;;
 
+const ens = [
+	("&amp;", '&'),
+	("&apos;", '\''),
+	("&lt;", '<'),
+	("&gt;", '>'),
+	("&quot;", '"')
+][:]
+
 const decode = {s
 	var sb = std.mksb()
 	var start, idx
@@ -77,14 +85,6 @@ const decodef = {s
 }
 
 const unencode = {s
-	const ens = [
-		("&amp;", '&'),
-		("&apos;", '\''),
-		("&lt;", '<'),
-		("&gt;", '>'),
-		("&quot;", '"')
-	][:]
-
 	match charref(s)
 	| `std.Some cr:	-> `std.Some cr
 	| `std.None:
