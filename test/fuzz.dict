@@ -8,20 +8,15 @@ tag_self="/>"
 
 cdata_start="<![CDATA["
 cdata_close="]]>"
-cdata_ex="<![CDATA[cdata]]>"
 
 comment_start="<!--"
 comment_close="-->"
-comment_ex="<!-- comment -->"
 
 instruction_start="<?"
 instruction_close="?>"
-instruction_ex="<?test?>"
-instruction_d_ex="<?test data?>"
 
 doctype_start="<!DOCTYPE"
 doctype_close=">"
-doctype_ex="<!DOCTYPE doc>"
 
 entity_start="&"
 entity_close=";"
