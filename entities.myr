@@ -5,14 +5,6 @@ pkg xml =
 	const decodef	: (s : byte[:] -> byte[:])
 ;;
 
-const ens = [
-	("&amp;", '&'),
-	("&apos;", '\''),
-	("&lt;", '<'),
-	("&gt;", '>'),
-	("&quot;", '"')
-][:]
-
 const decode = {s
 	-> dodecode(s, true)
 }
@@ -26,101 +18,137 @@ const decodef = {s
 
 const dodecode = {s, fatal
 	var sb = std.mksb()
-	var start, idx
+	var idx = 0
+	var stok = idx
+	var sp
+	var base
+	var c
 
-	start = idx = 0
-
-	while idx < s.len
-		match std.decode(s[idx:])
-		| '&':	match unencode(s[idx:])
-			| `std.Some (i, len):
-				std.sbputs(sb, s[start:idx])
-				if i > 255
-					std.sbputc(sb, (i : char))
-				else
-					std.sbputb(sb, (i : byte))
-				;;
-				idx += len
-				start = idx
-			| `std.None:
-				if fatal
-					goto err
-				else
-					idx += std.charlen('&')
-				;;
-			;;
-		| c:	idx += std.charlen(c)
+:again
+	if idx < s.len
+		c = std.decode(s[idx:])
+		if c != '&'
+			idx += std.charlen(c)
+			goto again
+		else
+			std.sbputs(sb, s[stok:idx])
+			stok = idx
+			idx += std.charlen(c)
+			sp = idx
 		;;
+	else
+		goto end
 	;;
 
-	std.sbputs(sb, s[start:])
+	if idx < s.len
+		c = std.decode(s[idx:])
+		idx += std.charlen(c)
+		match c
+		| '#':	goto charref
+		| ';':	goto err
+		| _:
+		;;
+	else
+		goto eof
+	;;
 
+:findentend
+	if idx < s.len
+		c = std.decode(s[idx:])
+		if c != ';'
+			idx += std.charlen(c)
+			goto findentend
+		;;
+	else
+		goto eof
+	;;
+
+	match s[sp:idx]
+	| "amp":	std.sbputc(sb, '&')
+	| "lt":		std.sbputc(sb, '<')
+	| "gt":		std.sbputc(sb, '>')
+	| "apos":	std.sbputc(sb, '\'')
+	| "quot":	std.sbputc(sb, '"')
+	| _:
+		idx += std.charlen(c)
+		goto err
+	;;
+
+	idx += std.charlen(c)
+	stok = idx
+	goto again
+
+:charref
+	if idx < s.len
+		sp += std.charlen(c)
+		c = std.decode(s[idx:])
+		idx += std.charlen(c)
+		match c
+		| 'x':
+			sp += std.charlen(c)
+			base = 16
+		| ';':	goto err
+		| _:	base = 10
+		;;
+	else
+		goto eof
+	;;
+
+:findrefend
+	if idx < s.len
+		c = std.decode(s[idx:])
+		if c != ';'
+			idx += std.charlen(c)
+			goto findrefend
+		;;
+	else
+		goto eof
+	;;
+
+	if sp == idx
+		goto err
+	;;
+
+	match std.intparsebase(s[sp:idx], base)
+	| `std.Some i:
+		if i > 255
+			std.sbputc(sb, (i : char))
+		else
+			std.sbputb(sb, (i : byte))
+		;;
+	| `std.None:	goto err
+	;;
+
+	idx += std.charlen(c)
+	stok = idx
+	goto again
+
+:end
+	std.sbputs(sb, s[stok:])
 	-> `std.Ok std.sbfin(sb)
 
 :err
-	std.sbfree(sb)
-	-> `std.Err errend(s[idx:])
-}
-
-const unencode = {s
-	match charref(s)
-	| `std.Some cr:	-> `std.Some cr
-	| `std.None:
-	;;
-
-	for (name, char) : ens
-		if s.len >= name.len && std.sleq(name, s[:name.len])
-			-> `std.Some (char, name.len)
-		;;
-	;;
-
-	-> `std.None
-}
-
-const charref = {s
-	const pref = "&#"
-	var idx, end
-	var base
-
-	if std.hasprefix(s, pref)
-		idx = pref.len
+	if fatal
+		std.sbfree(sb)
+		//-> `std.Err start
+		-> `std.Err errend(s[stok:])
 	else
-		-> `std.None
+		c = std.decode(s[stok:])
+		std.sbputc(sb, c)
+		stok += std.charlen(c)
+		idx = stok
+		goto again
 	;;
 
-	match findsc(s)
-	| `std.Some i:	end = i
-	| `std.None:	-> `std.None
+:eof
+	if fatal
+		std.sbfree(sb)
+		//-> `std.Err start
+		-> `std.Err errend(s[stok:])
+	else
+		std.sbputs(sb, s[stok:])
+		-> `std.Ok std.sbfin(sb)
 	;;
-
-	match std.decode(s[idx:])
-	| 'x':
-		base = 16
-		idx += std.charlen('x')
-	| _:
-		base = 10
-	;;
-
-	if end - idx < 1
-		-> `std.None
-	;;
-
-	match std.intparsebase(s[idx:end], base)
-	| `std.Some i:	-> `std.Some (i, end + std.charlen(';'))
-	| `std.None:	-> `std.None
-	;;
-}
-
-const findsc = {s
-	var c
-	for var i = 0; i < s.len; i += std.charlen(c)
-		c = std.decode(s[i:])
-		if c == ';'
-			-> `std.Some i
-		;;
-	;;
-
-	-> `std.None
 }
 
 const errend = {s
