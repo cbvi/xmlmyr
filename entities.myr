@@ -28,6 +28,7 @@ const dodecode = {s, fatal
 	var sb = std.mksb()
 	var idx = 0
 	var stok = idx
+	var max
 	var sp
 	var base
 	var c
@@ -53,6 +54,9 @@ const dodecode = {s, fatal
 		idx += std.charlen(c)
 		if c == '#'
 			goto charref
+		else
+			/* longest entity name is 4 characters */
+			max = sp + 4
 		;;
 	else
 		goto eof
@@ -62,9 +66,14 @@ const dodecode = {s, fatal
 	if idx < s.len
 		c = std.decode(s[idx:])
 		if c != ';'
+			/* sanity checks so decodef can't run away too far */
 			if namechar(c)
 				idx += std.charlen(c)
-				goto findentend
+				if idx <= max
+					goto findentend
+				else
+					goto err
+				;;
 			else
 				goto err
 			;;
@@ -100,8 +109,12 @@ const dodecode = {s, fatal
 		if c == 'x'
 			sp += std.charlen(c)
 			base = 16
+			/* longest valid hex is 10FFFF */
+			max = sp + 6
 		else
 			base = 10
+			/* longest valid codepoint is 1114111 */
+			max = sp + 7
 		;;
 	else
 		goto eof
@@ -111,9 +124,14 @@ const dodecode = {s, fatal
 	if idx < s.len
 		c = std.decode(s[idx:])
 		if c != ';'
+			/* sanity checks so decodef can't run away too far */
 			if charrefchars(c)
-				idx += std.charlen(c)
-				goto findrefend
+				if idx <= max
+					idx += std.charlen(c)
+					goto findrefend
+				else
+					goto err
+				;;
 			else
 				goto err
 			;;
