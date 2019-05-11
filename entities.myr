@@ -1,5 +1,7 @@
 use std
 
+use "chars"
+
 pkg xml =
 	const decode	: (s : byte[:] -> std.result(byte[:], byte[:]))
 	const decodef	: (s : byte[:] -> byte[:])
@@ -14,6 +16,12 @@ const decodef = {s
 	| `std.Ok d:	-> d
 	| `std.Err _:	std.die("BUG: decodef can't fail\n")
 	;;
+}
+
+const charrefchars = {c
+	-> c >= '0' && c <= '9' || \
+	   c >= 'a' && c <= 'f' || \
+	   c >= 'A' && c <= 'F'
 }
 
 const dodecode = {s, fatal
@@ -54,8 +62,12 @@ const dodecode = {s, fatal
 	if idx < s.len
 		c = std.decode(s[idx:])
 		if c != ';'
-			idx += std.charlen(c)
-			goto findentend
+			if namechar(c)
+				idx += std.charlen(c)
+				goto findentend
+			else
+				goto err
+			;;
 		;;
 	else
 		goto eof
@@ -99,8 +111,12 @@ const dodecode = {s, fatal
 	if idx < s.len
 		c = std.decode(s[idx:])
 		if c != ';'
-			idx += std.charlen(c)
-			goto findrefend
+			if charrefchars(c)
+				idx += std.charlen(c)
+				goto findrefend
+			else
+				goto err
+			;;
 		;;
 	else
 		goto eof
