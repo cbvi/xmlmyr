@@ -182,4 +182,8 @@ const unicode_test = {ctx
 	check(ctx, "Oh no &#x1F624;!", "Oh no 😤!")
 
 	check(ctx, "&#x10F2ec;", [244, 143, 139, 172][:])
+
+	/* largest valid character references */
+	check(ctx, "&#x10FFFF;", [244, 143, 191, 191][:])
+	check(ctx, "&#1114111;", [244, 143, 191, 191][:])
 }
