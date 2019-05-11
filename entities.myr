@@ -43,10 +43,8 @@ const dodecode = {s, fatal
 	if idx < s.len
 		c = std.decode(s[idx:])
 		idx += std.charlen(c)
-		match c
-		| '#':	goto charref
-		| ';':	goto err
-		| _:
+		if c == '#'
+			goto charref
 		;;
 	else
 		goto eof
@@ -61,6 +59,10 @@ const dodecode = {s, fatal
 		;;
 	else
 		goto eof
+	;;
+
+	if sp >= idx
+		goto err
 	;;
 
 	match s[sp:idx]
@@ -83,12 +85,11 @@ const dodecode = {s, fatal
 		sp += std.charlen(c)
 		c = std.decode(s[idx:])
 		idx += std.charlen(c)
-		match c
-		| 'x':
+		if c == 'x'
 			sp += std.charlen(c)
 			base = 16
-		| ';':	goto err
-		| _:	base = 10
+		else
+			base = 10
 		;;
 	else
 		goto eof
