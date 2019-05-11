@@ -9,6 +9,7 @@ const main = {
 		[.name="charref", .fn=charref_test],
 		[.name="force",   .fn=force_test],
 		[.name="forcecr", .fn=forcecr_test],
+		[.name="junk",    .fn=junk_test],
 		[.name="unicode", .fn=unicode_test]
 	][:])
 }
@@ -173,6 +174,18 @@ const forcecr_test = {ctx
 	checkf(ctx, "stuff &#42", "stuff &#42")
 
 	checkf(ctx, "&foo&#42;", "&foo*")
+}
+
+const junk_test = {ctx
+	var s = std.slalloc(64 * std.KiB)
+
+	/*
+	 * test decodef backtracking on error is not pathologically slow
+	 */
+	std.slfill(s, ('&' : byte))
+	s[s.len-1] = (';' : byte)
+
+	checkf(ctx, s, s)
 }
 
 const unicode_test = {ctx
