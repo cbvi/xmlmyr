@@ -218,10 +218,60 @@ const parsecdata = {x
 }
 
 const parsecomment = {x
-	match fillbuf(x, "<!--", "--", "-->")
-	| `std.Ok b:	-> `std.Ok `Comment prune(b)
-	| `std.Err e:	-> `std.Err e
+	var start, stop
+
+	match bio.readterm(x.file, ">")
+	| `std.Ok b:	newbuf(x, b)
+	| `std.Err e:	-> `std.Err error(x, `Trunc e)
 	;;
+
+	for _ : "--"
+		if x.p.bidx < x.p.buf.len
+			match bnext(x)
+			| '-':
+			| c:	-> `std.Err error(x, `Unexpected (c, '-'))
+			;;
+		else
+			-> `std.Err error(x, `Trunc `bio.Eof)
+		;;
+	;;
+
+	start = stop = x.p.bidx
+
+:again
+	while x.p.bidx < x.p.buf.len
+		if bnext(x) == '-'
+			if x.p.bidx < x.p.buf.len
+				if bnext(x) != '-'
+					stop = x.p.bidx
+					goto again
+				;;
+			else
+				break
+			;;
+
+			if x.p.bidx < x.p.buf.len
+				match bnext(x)
+				| '>':
+					-> `std.Ok `Comment prune(x.p.buf[start:stop])
+				| c:
+					-> `std.Err error(x, `Unexpected (c, '>'))
+				;;
+			else
+				break
+			;;
+		else
+			stop = x.p.bidx
+		;;
+	;;
+
+	match bio.readterm(x.file, ">")
+	| `std.Ok b:		expandbuf(x, b)
+	| `std.Err `bio.Eof:	-> `std.Err error(x, `Unclosed ("<!--", "-->"))
+	| `std.Err e:		-> `std.Err error(x, `Trunc e)
+	;;
+
+	goto again
 }
 
 const parseinstruction = {x
