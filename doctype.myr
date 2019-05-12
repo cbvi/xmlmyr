@@ -76,16 +76,13 @@ const refill = {x
 }
 
 const doquote = {x, q
+	var c
 	while x.p.bidx < x.p.buf.len
-		match bnext(x)
-		| '"':	if q == '"'
-				break
-			;;
-		| '\'':	if q == '\''
-				break
-			;;
-		| '>':	refill(x)
-		| _:
+		c = bnext(x)
+		if c == q
+			break
+		elif c == '>'
+			refill(x)
 		;;
 	;;
 }
