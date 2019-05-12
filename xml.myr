@@ -125,7 +125,18 @@ const parseelemname = {x
 	-> `std.Ok `Start (x.p.buf[start:stop], x.a.attrs[:x.a.cnt])
 
 :selfclose
-	-> parseselfclose(x, x.p.buf[start:stop], x.a.attrs[:x.a.cnt])
+	if x.p.bidx < x.p.buf.len
+		match bnext(x)
+		| '>':
+			x.p.state = `Closing x.p.buf[start:stop]
+			-> `std.Ok `Start (x.p.buf[start:stop],
+				x.a.attrs[:x.a.cnt])
+		| c:
+			-> `std.Err error(x, `Unexpected (c, '>'))
+		;;
+	else
+		-> `std.Err error(x, `Unclosed ("<", "/>"))
+	;;
 
 :unclosed
 	-> `std.Err error(x, `Unclosed ("<", ">"))
@@ -197,20 +208,6 @@ const parseend = {x
 
 :unclosed
 	-> `std.Err error(x, `Unclosed ("</", ">"))
-}
-
-const parseselfclose = {x, name, attrs
-	if x.p.bidx < x.p.buf.len
-		match bnext(x)
-		| '>':
-			x.p.state = `Closing name
-			-> `std.Ok `Start (name, attrs)
-		| c:
-			-> `std.Err error(x, `Unexpected (c, '>'))
-		;;
-	else
-		-> `std.Err error(x, `Unclosed ("<", "/>"))
-	;;
 }
 
 const parsecdata = {x
