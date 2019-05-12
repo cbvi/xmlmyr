@@ -13,6 +13,7 @@ pkg xml =
 const parsedoctype = {x
 	const pref = "DOCTYPE"
 	const suf = ">"
+	const qpr = "!--"
 	var start, stop
 	var open
 	var c
@@ -47,7 +48,7 @@ const parsedoctype = {x
 		stop = x.p.bidx
 		match bnext(x)
 		| '<':
-			if std.hasprefix(x.p.buf[x.p.bidx:], "!--")
+			if std.sleq(x.p.buf[x.p.bidx:x.p.bidx+qpr.len], qpr)
 				docomment(x)
 			else
 				open++
