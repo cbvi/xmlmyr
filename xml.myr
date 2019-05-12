@@ -75,6 +75,7 @@ const closing = {x, name
 
 const parseelemname = {x
 	var start, stop
+	var cnt = 0
 
 	match bio.readterm(x.file, ">")
 	| `std.Ok s:	newbuf(x, s)
@@ -105,7 +106,7 @@ const parseelemname = {x
 
 :attrs
 	match parseattrs(x)
-	| `std.Ok _:
+	| `std.Ok i:	cnt = i
 	| `std.Err e:	-> `std.Err e
 	;;
 
@@ -122,15 +123,14 @@ const parseelemname = {x
 	;;
 
 :end
-	-> `std.Ok `Start (x.p.buf[start:stop], x.a.attrs[:x.a.cnt])
+	-> `std.Ok `Start (x.p.buf[start:stop], x.a.attrs[:cnt])
 
 :selfclose
 	if x.p.bidx < x.p.buf.len
 		match bnext(x)
 		| '>':
 			x.p.state = `Closing x.p.buf[start:stop]
-			-> `std.Ok `Start (x.p.buf[start:stop],
-				x.a.attrs[:x.a.cnt])
+			-> `std.Ok `Start (x.p.buf[start:stop], x.a.attrs[:cnt])
 		| c:
 			-> `std.Err error(x, `Unexpected (c, '>'))
 		;;

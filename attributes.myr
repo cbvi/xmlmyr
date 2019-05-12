@@ -7,16 +7,15 @@ use "err"
 use "types"
 
 pkg xml =
-	pkglocal const parseattrs : (x : ctx# -> std.result(void, err))
+	pkglocal const parseattrs : (x : ctx# -> std.result(std.size, err))
 ;;
 
 const parseattrs = {x
 	var name, val
 	var err
+	var cnt = 0
 
 	beatspace(x)
-
-	x.a.cnt = 0
 
 	while x.p.bidx < x.p.buf.len
 		match bpeek(x)
@@ -39,12 +38,12 @@ const parseattrs = {x
 			goto err
 		;;
 
-		if x.a.cnt >= x.a.offs.len
+		if cnt >= x.a.offs.len
 			x.a.offs = std.slgrow(&x.a.offs, 2 * x.a.offs.len)
 		;;
 
-		x.a.offs[x.a.cnt] = (name, val)
-		x.a.cnt++
+		x.a.offs[cnt] = (name, val)
+		cnt++
 
 		if x.p.bidx < x.p.buf.len
 			match bpeek(x)
@@ -71,13 +70,13 @@ const parseattrs = {x
 		x.a.attrs = std.slgrow(&x.a.attrs, x.a.offs.len)
 	;;
 
-	for var i = 0; i < x.a.cnt; i++
+	for var i = 0; i < cnt; i++
 		match x.a.offs[i]
 		| ((ns, ne), (vs, ve)):
 			x.a.attrs[i] = (x.p.buf[ns:ne], x.p.buf[vs:ve])
 		;;
 	;;
-	-> `std.Ok void
+	-> `std.Ok cnt
 
 :err
 	-> `std.Err err

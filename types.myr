@@ -24,7 +24,6 @@ pkg xml =
 	type attrstore = struct
 		offs	:	((std.size, std.size), (std.size, std.size))[:]
 		attrs	:	(byte[:], byte[:])[:]
-		cnt	:	std.size
 	;;
 
 	type event = union

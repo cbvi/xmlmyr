@@ -36,8 +36,7 @@ const mk = {f, owned
 		]),
 		.a = std.mk([
 			.offs = std.slalloc(1),
-			.attrs = std.slalloc(1),
-			.cnt = 0
+			.attrs = std.slalloc(1)
 		])
 	])
 
