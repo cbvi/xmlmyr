@@ -31,6 +31,8 @@ const parseattrs = {x
 			goto err
 		;;
 
+		beatspace(x)
+
 		match parseattrval(x)
 		| `std.Ok v:	val = v
 		| `std.Err e:
@@ -85,8 +87,6 @@ const parseattrs = {x
 const parseattrname = {x
 	var start, stop
 
-	beatspace(x)
-
 	match startname(x)
 	| `std.Ok o:	(start, stop) = o
 	| `std.Err e:	-> `std.Err e
@@ -129,8 +129,6 @@ const parseattrname = {x
 const parseattrval = {x
 	var start, stop
 	var q
-
-	beatspace(x)
 
 	match bnext(x)
 	| '"':	q = '"'
