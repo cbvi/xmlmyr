@@ -302,14 +302,13 @@ const parseinstruction = {x
 				stop = x.p.bidx
 			elif isspace(c)
 				beatspace(x)
-				goto namedone
+				break
 			else
 				-> `std.Err error(x, `Inval c)
 			;;
 		;;
 	;;
 
-:namedone
 	(ts, te) = (start, stop)
 	start = x.p.bidx
 
