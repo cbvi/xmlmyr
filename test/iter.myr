@@ -347,24 +347,8 @@ const twigil_test = {ctx
 		`xml.Eof
 	][:])
 
-	comparebuf(ctx, "<!-- -> -->", [
-		`xml.Comment "->",
-		`xml.Eof
-	][:])
-
-	comparebuf(ctx, "<!-->-->", [
-		`xml.Comment ">",
-		`xml.Eof
-	][:])
-
-	compareerr(ctx, "<!-- --------->", [][:],
-		[.line=1, .off=8, .err=`xml.Unexpected ('-', '>')])
-
 	compareerr(ctx, "<!-->", [][:],
 		[.line=1, .off=5, .err=`xml.Unclosed ("<!--", "-->")])
-
-	compareerr(ctx, "<!-->->->->->->xxxx->->->", [][:],
-		[.line=1, .off=25, .err=`xml.Unclosed ("<!--", "-->")])
 
 	compareerr(ctx, "<doc><![CDATA[</doc>", [
 		`xml.Start ("doc", [][:])
