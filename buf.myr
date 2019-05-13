@@ -12,7 +12,6 @@ pkg xml =
 
 	pkglocal const bexpect :	(x : ctx#, want : char -> std.result(void, errtype))
 	pkglocal const bnext :		(x : ctx# -> char)
-	pkglocal const bpeek :		(x : ctx# -> char)
 	pkglocal const beatspace :	(x : ctx# -> void)
 	pkglocal const bskip :		(x : ctx#, n : int -> void)
 
@@ -100,18 +99,10 @@ const bnext = {x
 	-> c
 }
 
-const bpeek = {x
-	if x.p.bidx < x.p.buf.len
-		-> std.decode(x.p.buf[x.p.bidx:])
-	else
-		-> std.Badchar
-	;;
-}
-
 const beatspace = {x
 	var p
 	while true
-		p = bpeek(x)
+		p = std.decode(x.p.buf[x.p.bidx:])
 		match p
 		| ' ':
 		| '\n':
