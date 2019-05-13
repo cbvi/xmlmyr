@@ -361,7 +361,7 @@ const twigil_test = {ctx
 		[.line=1, .off=5, .err=`xml.Unclosed ("<!--", "-->")])
 
 	compareerr(ctx, "<!-->->->->->->->x->->->", [][:],
-		[.line=1, .off=22, .err=`xml.Unclosed ("<!--", "-->")])
+		[.line=1, .off=24, .err=`xml.Unclosed ("<!--", "-->")])
 
 	compareerr(ctx, "<doc><![CDATA[</doc>", [
 		`xml.Start ("doc", [][:])

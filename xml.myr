@@ -213,10 +213,50 @@ const parsecdata = {x
 }
 
 const parsecomment = {x
-	match fillbuf(x, "<!--", "--", "-->")
-	| `std.Ok b:	-> `std.Ok `Comment prune(b)
-	| `std.Err e:	-> `std.Err e
+	var c0, c1, c2
+	var start, stop
+
+	match bio.readterm(x.file, ">")
+	| `std.Ok b:	newbuf(x, b)
+	| `std.Err e:	-> `std.Err error(x, `Trunc e)
 	;;
+
+	for var i = 0; i < 2; i++
+		match bexpect(x, '-')
+		| `std.Ok _:
+		| `std.Err e:	-> `std.Err error(x, e)
+		;;
+	;;
+
+	c1 = c2 = '\0'
+	start = stop = x.p.bidx
+
+:again
+	while x.p.bidx < x.p.buf.len
+		c0 = bnext(x)
+
+		if c1 == '-' && c2 == '-'
+			if c0 == '>'
+				-> `std.Ok `Comment prune(x.p.buf[start:stop])
+			else
+				-> `std.Err error(x, `Unexpected (c0, '>'))
+			;;
+		elif c0 != '-'
+			stop = x.p.bidx
+		;;
+
+		c1 = c2
+		c2 = c0
+	;;
+
+	match bio.readterm(x.file, ">")
+	| `std.Ok b:	expandbuf(x, b)
+	| `std.Err `bio.Eof:
+			-> `std.Err error(x, `Unclosed ("<!--", "-->"))
+	| `std.Err e:	-> `std.Err error(x, `Trunc e)
+	;;
+
+	goto again
 }
 
 const parseinstruction = {x
