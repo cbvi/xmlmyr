@@ -110,13 +110,10 @@ const parseattrname = {x
 	goto eof
 
 :ending
-	if x.p.bidx < x.p.buf.len
-		match bnext(x)
-		| '=':	/* fallthrough to end */
-		| c:	-> `std.Err error(x, `Unexpected (c, '='))
-		;;
-	else
-		goto eof
+	match bexpect(x, '=')
+	| `std.Ok _:			/* fallthrough to end */
+	| `std.Err `Trunc `bio.Eof:	goto eof
+	| `std.Err e:			-> `std.Err error(x, e)
 	;;
 
 :end

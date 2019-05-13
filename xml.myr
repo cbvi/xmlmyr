@@ -126,16 +126,14 @@ const parseelemname = {x
 	-> `std.Ok `Start (x.p.buf[start:stop], x.a.attrs[:cnt])
 
 :selfclose
-	if x.p.bidx < x.p.buf.len
-		match bnext(x)
-		| '>':
-			x.p.state = `Closing x.p.buf[start:stop]
-			-> `std.Ok `Start (x.p.buf[start:stop], x.a.attrs[:cnt])
-		| c:
-			-> `std.Err error(x, `Unexpected (c, '>'))
-		;;
-	else
+	match bexpect(x, '>')
+	| `std.Ok _:
+		x.p.state = `Closing x.p.buf[start:stop]
+		-> `std.Ok `Start (x.p.buf[start:stop], x.a.attrs[:cnt])
+	| `std.Err `Trunc `bio.Eof:
 		-> `std.Err error(x, `Unclosed ("<", "/>"))
+	| `std.Err e:
+		-> `std.Err error(x, e)
 	;;
 
 :unclosed
@@ -194,13 +192,10 @@ const parseend = {x
 	goto unclosed
 
 :ending
-	if x.p.bidx < x.p.buf.len
-		match bnext(x)
-		| '>':	/* fallthrough to end */
-		| c:	-> `std.Err error(x, `Unexpected (c, '>'))
-		;;
-	else
-		goto unclosed
+	match bexpect(x, '>')
+	| `std.Ok _:			/* fallthrough to end */
+	| `std.Err `Trunc `bio.Eof:	goto unclosed
+	| `std.Err e:			-> `std.Err error(x, e)
 	;;
 
 :end

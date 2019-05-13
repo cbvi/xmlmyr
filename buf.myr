@@ -10,6 +10,7 @@ pkg xml =
 	pkglocal const expandbuf :	(x : ctx#, buf : byte[:] -> void)
 	pkglocal const fillbuf :	(x : ctx#, full : byte[:], pref : byte[:], suf : byte[:] -> std.result(byte[:], err))
 
+	pkglocal const bexpect :	(x : ctx#, want : char -> std.result(void, errtype))
 	pkglocal const bnext :		(x : ctx# -> char)
 	pkglocal const bpeek :		(x : ctx# -> char)
 	pkglocal const beatspace :	(x : ctx# -> void)
@@ -65,6 +66,21 @@ const fillbuf = {x, full, pref, suf
 	;;
 
 	-> `std.Ok x.p.buf[start:stop]
+}
+
+const bexpect = {x, want
+	var c
+
+	if x.p.bidx < x.p.buf.len
+		c = bnext(x)
+		if c == want
+			-> `std.Ok void
+		else
+			-> `std.Err `Unexpected (c, want)
+		;;
+	else
+		-> `std.Err `Trunc `bio.Eof
+	;;
 }
 
 const bnext = {x
