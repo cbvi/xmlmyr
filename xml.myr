@@ -113,8 +113,8 @@ const parseelemname = {x
 :ending
 	if x.p.bidx < x.p.buf.len
 		match bnext(x)
-		| '/':	goto selfclose
 		| '>':	/* fallthrough to end */
+		| '/':	goto selfclose
 		| c:
 			-> `std.Err error(x, `Unexpected (c, '>'))
 		;;
