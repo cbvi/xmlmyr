@@ -86,10 +86,6 @@ const bexpect = {x, want
 const bnext = {x
 	var c
 
-	if x.p.bidx >= x.p.buf.len
-		-> std.Badchar
-	;;
-
 	c = std.decode(x.p.buf[x.p.bidx:])
 	x.p.bidx += std.charlen(c)
 
