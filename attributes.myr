@@ -18,7 +18,7 @@ const parseattrs = {x
 	beatspace(x)
 
 	while x.p.bidx < x.p.buf.len
-		match bpeek(x)
+		match std.decode(x.p.buf[x.p.bidx:])
 		| '>':	goto done
 		| '/':	goto done
 		| _:
@@ -48,7 +48,7 @@ const parseattrs = {x
 		cnt++
 
 		if x.p.bidx < x.p.buf.len
-			match bpeek(x)
+			match std.decode(x.p.buf[x.p.bidx:])
 			| '>':	goto done
 			| '/':	goto done
 			| c:
