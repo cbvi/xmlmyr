@@ -116,8 +116,10 @@ const regress = {ctx, path
 
 const simple_test = {ctx
 	compare(ctx, "test/files/001_simple.xml", [
+		`xml.Instruction ("target", "data"),
+		`xml.Doctype "doc",
 		`xml.Start ("doc", [][:]),
-		`xml.Start ("children", [][:]),
+		`xml.Start ("children", [("order", "desc")][:]),
 		`xml.Start ("child", [][:]),
 		`xml.Start ("id", [][:]),
 		`xml.Characters "1",
@@ -132,6 +134,16 @@ const simple_test = {ctx
 		`xml.Start ("id", [][:]),
 		`xml.Characters "3",
 		`xml.End "id",
+		`xml.End "child",
+		`xml.End "children",
+		`xml.Comment "comment",
+		`xml.Start ("children", [("order", "none")][:]),
+		`xml.Start ("child", [("id", "1"), ("name", "a"), ("ext", "no")][:]),
+		`xml.End "child",
+		`xml.Start ("child", [("id", "22"), ("name", "b")][:]),
+		`xml.End "child",
+		`xml.Start ("child", [("id", "3")][:]),
+		`xml.Cdata "cdata",
 		`xml.End "child",
 		`xml.End "children",
 		`xml.End "doc",

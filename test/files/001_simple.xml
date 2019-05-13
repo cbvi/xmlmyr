@@ -1,5 +1,7 @@
+<?target data?>
+<!DOCTYPE doc>
 <doc>
-	<children>
+	<children order="desc">
 		<child>
 			<id>1</id>
 		</child>
@@ -8,6 +10,14 @@
 		</child>
 		<child>
 			<id>3</id>
+		</child>
+	</children>
+	<!-- comment -->
+	<children order="none">
+		<child id="1" name="a" ext="no" />
+		<child id="22" name="b" />
+		<child id="3">
+			<![CDATA[cdata]]>
 		</child>
 	</children>
 </doc>
