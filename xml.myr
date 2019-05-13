@@ -213,7 +213,7 @@ const parsecdata = {x
 }
 
 const parsecomment = {x
-	var c0, c1, c2
+	var c, end
 	var start, stop
 
 	match bio.readterm(x.file, ">")
@@ -228,25 +228,25 @@ const parsecomment = {x
 		;;
 	;;
 
-	c1 = c2 = '\0'
+	end = 0
 	start = stop = x.p.bidx
 
 :again
 	while x.p.bidx < x.p.buf.len
-		c0 = bnext(x)
+		c = bnext(x)
 
-		if c1 == '-' && c2 == '-'
-			if c0 == '>'
+		if end == 2
+			if c == '>'
 				-> `std.Ok `Comment prune(x.p.buf[start:stop])
 			else
-				-> `std.Err error(x, `Unexpected (c0, '>'))
+				-> `std.Err error(x, `Unexpected (c, '>'))
 			;;
-		elif c0 != '-'
+		elif c == '-'
+			end++
+		else
 			stop = x.p.bidx
+			end = 0
 		;;
-
-		c1 = c2
-		c2 = c0
 	;;
 
 	match bio.readterm(x.file, ">")
