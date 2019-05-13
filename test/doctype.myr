@@ -129,4 +129,7 @@ const malformed_test = {ctx
 
 	compareerr(ctx, "<!DOCTYPE doc [ <!>", [][:],
 		[.line=1, .off=19, .err=`xml.Trunc `bio.Eof])
+
+	compareerr(ctx, "<!DOCTYPE", [][:],
+		[.line=1, .off=2, .err=`xml.Unclosed ("<!DOCTYPE", ">")])
 }
