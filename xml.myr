@@ -260,54 +260,78 @@ const parsecomment = {x
 }
 
 const parseinstruction = {x
-	const suf = "?>"
-	var start, stop
+	var c0, c1
 	var ts, te
+	var ds, de, dq
 
 	match bio.getc(x.file)
-	| `std.Ok c:
-		std.assert(c == '?', "BUG: parseinstruction() ? missing\n")
+	| `std.Ok d:
+		std.assert(d == '?', "BUG: parseinstruction() ? missing\n")
 		x.p.off++
 	| `std.Err e:	-> `std.Err error(x, `Trunc e)
 	;;
 
-	match bio.readterm(x.file, suf)
+	match bio.readterm(x.file, ">")
 	| `std.Ok b:	newbuf(x, b)
 	| `std.Err e:	-> `std.Err error(x, `Trunc e)
 	;;
 
-	match startname(x)
-	| `std.Ok o:	(start, stop) = o
+	match getname(x)
+	| `std.Ok o:	(ts, te) = o
 	| `std.Err e:	-> `std.Err e
 	;;
 
-	while x.p.bidx < x.p.buf.len - suf.len
+	if x.p.bidx < x.p.buf.len
 		match bnext(x)
-		| c:	if namechar(c)
-				stop = x.p.bidx
-			elif isspace(c)
-				beatspace(x)
-				break
-			else
+		| '?':
+			match bexpect(x, '>')
+			| `std.Ok _:
+				-> `std.Ok `Instruction (x.p.buf[ts:te], "")
+			| `std.Err `Unexpected (c, _):
 				-> `std.Err error(x, `Inval c)
+			| `std.Err `Trunc `bio.Eof:
+				-> `std.Err error(x, `Unclosed ("<?", "?>"))
+			| `std.Err e:
+				-> `std.Err error(x, e)
+			;;
+		| c:
+			if !isspace(c)
+				-> `std.Err error(x, `Inval c)
+			else
+				beatspace(x)
 			;;
 		;;
+	else
+		-> `std.Err error(x, `Unclosed ("<?", "?>"))
 	;;
 
-	(ts, te) = (start, stop)
-	start = x.p.bidx
+	c1 = '\0'
+	ds = de = dq = x.p.bidx
 
-	while x.p.bidx < x.p.buf.len - suf.len
-		bnext(x)
-	;;
+:again
+	while x.p.bidx < x.p.buf.len
+		c0 = bnext(x)
 
-	stop = x.p.bidx
-
-	for s : std.bychar(suf)
-		if s != bnext(x)
-			-> `std.Err error(x, `Unclosed ("<?", "?>"))
+		if c0 == '?'
+			if c1 == '?'
+				de = dq
+			else
+				dq = x.p.bidx
+			;;
+		elif c0 == '>' && c1 == '?'
+			-> `std.Ok `Instruction (x.p.buf[ts:te], x.p.buf[ds:de])
+		else
+			de = x.p.bidx
 		;;
+
+		c1 = c0
 	;;
 
-	-> `std.Ok `Instruction (x.p.buf[ts:te], x.p.buf[start:stop])
+	match bio.readterm(x.file, ">")
+	| `std.Ok b:		expandbuf(x, b)
+	| `std.Err `bio.Eof:	-> `std.Err error(x, `Unclosed ("<?", "?>"))
+	| `std.Err e:		-> `std.Err error(x, `Trunc e)
+	;;
+
+	goto again
 }
