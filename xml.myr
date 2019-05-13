@@ -287,8 +287,6 @@ const parseinstruction = {x
 			match bexpect(x, '>')
 			| `std.Ok _:
 				-> `std.Ok `Instruction (x.p.buf[ts:te], "")
-			| `std.Err `Unexpected (c, _):
-				-> `std.Err error(x, `Inval c)
 			| `std.Err `Trunc `bio.Eof:
 				-> `std.Err error(x, `Unclosed ("<?", "?>"))
 			| `std.Err e:
