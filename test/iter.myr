@@ -389,6 +389,9 @@ const twigil_test = {ctx
 	compareerr(ctx, "<?test? ?>", [][:],
 		[.line=1, .off=8, .err=`xml.Unexpected (' ', '>')])
 
+	compareerr(ctx, "<?test> ?>", [][:],
+		[.line=1, .off=7, .err=`xml.Inval '>'])
+
 	compareerr(ctx, "<doc>\n<?target example instruction>\n</doc>", [
 		`xml.Start ("doc", [][:])
 	][:], [.line=3, .off=6, .err=`xml.Unclosed ("<?", "?>")])
