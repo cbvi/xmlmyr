@@ -301,8 +301,9 @@ const parsecomment = {x
 }
 
 const parseinstruction = {x
+	const suf = "?>"
 	var ts, te
-	var ds, de, preq
+	var ds
 	var end
 	var err
 
@@ -340,28 +341,17 @@ const parseinstruction = {x
 	;;
 
 	end = false
-	ds = de = preq = x.p.bidx
+	ds = x.p.bidx
 
 :again
 	while x.p.bidx < x.p.buf.len
 		match bnext(x)
-		| '?':
-			/* need to track possible ?s before the terminator */
-			if end
-				de = preq
-			else
-				preq = x.p.bidx
-				end = true
+		| '?':	end = true
+		| '>':	if end
+				-> `std.Ok `Instruction (x.p.buf[ts:te],
+					x.p.buf[ds:x.p.bidx-suf.len])
 			;;
-		| '>':
-			if end
-				-> `std.Ok `Instruction (x.p.buf[ts:te], x.p.buf[ds:de])
-			else
-				de = x.p.bidx
-			;;
-		| _:
-			de = x.p.bidx
-			end = false
+		| _:	end = false
 		;;
 	;;
 
