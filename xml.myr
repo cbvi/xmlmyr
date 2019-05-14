@@ -263,17 +263,18 @@ const parseinstruction = {x
 	var c0, c1
 	var ts, te
 	var ds, de, dq
+	var err
 
 	match bio.getc(x.file)
 	| `std.Ok d:
 		std.assert(d == '?', "BUG: parseinstruction() ? missing\n")
 		x.p.off++
-	| `std.Err e:	-> `std.Err error(x, `Trunc e)
+	| `std.Err e:	err = `Trunc e ; goto err
 	;;
 
 	match bio.readterm(x.file, ">")
 	| `std.Ok b:	newbuf(x, b)
-	| `std.Err e:	-> `std.Err error(x, `Trunc e)
+	| `std.Err e:	err = `Trunc e ; goto err
 	;;
 
 	match getname(x)
@@ -281,26 +282,24 @@ const parseinstruction = {x
 	| `std.Err e:	-> `std.Err e
 	;;
 
-	if x.p.bidx < x.p.buf.len
-		match bnext(x)
-		| '?':
-			match bexpect(x, '>')
-			| `std.Ok _:
-				-> `std.Ok `Instruction (x.p.buf[ts:te], "")
-			| `std.Err `Trunc `bio.Eof:
-				-> `std.Err error(x, `Unclosed ("<?", "?>"))
-			| `std.Err e:
-				-> `std.Err error(x, e)
-			;;
-		| c:
-			if !isspace(c)
-				-> `std.Err error(x, `Inval c)
-			else
-				beatspace(x)
-			;;
+	match bget(x)
+	| `std.Some '?':
+		match bexpect(x, '>')
+		| `std.Ok _:
+			-> `std.Ok `Instruction (x.p.buf[ts:te], "")
+		| `std.Err `Trunc `bio.Eof:
+			goto unclosed
+		| `std.Err e:
+			err = e ; goto err
 		;;
-	else
-		-> `std.Err error(x, `Unclosed ("<?", "?>"))
+	| `std.Some c:
+		if !isspace(c)
+			err = `Inval c ; goto err
+		else
+			beatspace(x)
+		;;
+	| `std.None:
+		goto unclosed
 	;;
 
 	c1 = '\0'
@@ -327,9 +326,15 @@ const parseinstruction = {x
 
 	match bio.readterm(x.file, ">")
 	| `std.Ok b:		expandbuf(x, b)
-	| `std.Err `bio.Eof:	-> `std.Err error(x, `Unclosed ("<?", "?>"))
-	| `std.Err e:		-> `std.Err error(x, `Trunc e)
+	| `std.Err `bio.Eof:	goto unclosed
+	| `std.Err e:		err = `Trunc e ; goto err
 	;;
 
 	goto again
+
+:unclosed
+	err = `Unclosed ("<?", "?>")
+
+:err
+	-> `std.Err error(x, err)
 }
