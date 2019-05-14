@@ -206,10 +206,48 @@ const parseend = {x
 }
 
 const parsecdata = {x
-	match fillbuf(x, "<![CDATA[", "[CDATA[", "]]>")
-	| `std.Ok b:	-> `std.Ok `Cdata b
-	| `std.Err e:	-> `std.Err e
+	const suf = "]]>"
+	var st
+	var end
+
+	match bio.readterm(x.file, ">")
+	| `std.Ok b:	newbuf(x, b)
+	| `std.Err e:	-> `std.Err error(x, `Trunc e)
 	;;
+
+	/* to get here peek has to show a [ was next up */
+	std.assert(bnext(x) == '[', "BUG parsecdata() '[' missing\n")
+
+	/* already have the ![ need to check the rest */
+	for c : std.bychar("CDATA[")
+		match bexpect(x, c)
+		| `std.Ok _:
+		| `std.Err e:	-> `std.Err error(x, e)
+		;;
+	;;
+
+	end = 0
+	st = x.p.bidx
+
+:again
+	while x.p.bidx < x.p.buf.len
+		match bnext(x)
+		| ']':	end++
+		| '>':	if end > 1
+				-> `std.Ok `Cdata x.p.buf[st:x.p.bidx-suf.len]
+			;;
+		| _:	end = 0
+		;;
+	;;
+
+	match bio.readterm(x.file, ">")
+	| `std.Ok b:	expandbuf(x, b)
+	| `std.Err `bio.Eof:
+			-> `std.Err error(x, `Unclosed ("<![CDATA[", "]]>"))
+	| `std.Err e:	-> `std.Err error(x, `Trunc e)
+	;;
+
+	goto again
 }
 
 const parsecomment = {x
