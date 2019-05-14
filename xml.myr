@@ -335,12 +335,9 @@ const parseinstruction = {x
 	match bget(x)
 	| `std.Some '?':
 		match bexpect(x, '>')
-		| `std.Ok _:
-			-> `std.Ok `Instruction (x.p.buf[ts:te], "")
-		| `std.Err `Trunc `bio.Eof:
-			goto unclosed
-		| `std.Err e:
-			err = e ; goto err
+		| `std.Ok _:	-> `std.Ok `Instruction (x.p.buf[ts:te], "")
+		| `std.Err `Trunc `bio.Eof:	goto unclosed
+		| `std.Err e:	err = e ; goto err
 		;;
 	| `std.Some c:
 		if isspace(c)
