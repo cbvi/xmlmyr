@@ -218,7 +218,7 @@ const parsecdata = {x
 	;;
 
 	/* to get here peek has to show a [ was next up */
-	std.assert(bnext(x) == '[', "BUG parsecdata() '[' missing\n")
+	std.assert(bnext(x) == '[', "BUG: parsecdata() '[' missing\n")
 
 	nidx = x.p.bidx + pre.len
 
