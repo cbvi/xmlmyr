@@ -260,9 +260,9 @@ const parsecomment = {x
 }
 
 const parseinstruction = {x
-	var c0, c1
 	var ts, te
-	var ds, de, dq
+	var ds, de, preq
+	var end
 	var err
 
 	match bio.readterm(x.file, ">")
@@ -298,26 +298,30 @@ const parseinstruction = {x
 		goto unclosed
 	;;
 
-	c1 = '\0'
-	ds = de = dq = x.p.bidx
+	end = false
+	ds = de = preq = x.p.bidx
 
 :again
 	while x.p.bidx < x.p.buf.len
-		c0 = bnext(x)
-
-		if c0 == '?'
-			if c1 == '?'
-				de = dq
+		match bnext(x)
+		| '?':
+			/* need to track possible ?s before the terminator */
+			if end
+				de = preq
 			else
-				dq = x.p.bidx
+				preq = x.p.bidx
+				end = true
 			;;
-		elif c0 == '>' && c1 == '?'
-			-> `std.Ok `Instruction (x.p.buf[ts:te], x.p.buf[ds:de])
-		else
+		| '>':
+			if end
+				-> `std.Ok `Instruction (x.p.buf[ts:te], x.p.buf[ds:de])
+			else
+				de = x.p.bidx
+			;;
+		| _:
 			de = x.p.bidx
+			end = false
 		;;
-
-		c1 = c0
 	;;
 
 	match bio.readterm(x.file, ">")
