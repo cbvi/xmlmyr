@@ -265,17 +265,13 @@ const parseinstruction = {x
 	var ds, de, dq
 	var err
 
-	match bio.getc(x.file)
-	| `std.Ok d:
-		std.assert(d == '?', "BUG: parseinstruction() ? missing\n")
-		x.p.off++
-	| `std.Err e:	err = `Trunc e ; goto err
-	;;
-
 	match bio.readterm(x.file, ">")
 	| `std.Ok b:	newbuf(x, b)
 	| `std.Err e:	err = `Trunc e ; goto err
 	;;
+
+	/* to get here peek has to show a ? was next up */
+	std.assert(bnext(x) == '?', "BUG: parseinstruction() ? missing\n")
 
 	match getname(x)
 	| `std.Ok o:	(ts, te) = o
@@ -293,10 +289,10 @@ const parseinstruction = {x
 			err = e ; goto err
 		;;
 	| `std.Some c:
-		if !isspace(c)
-			err = `Inval c ; goto err
-		else
+		if isspace(c)
 			beatspace(x)
+		else
+			err = `Inval c ; goto err
 		;;
 	| `std.None:
 		goto unclosed
