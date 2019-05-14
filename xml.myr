@@ -221,11 +221,13 @@ const parsecomment = {x
 	| `std.Err e:	-> `std.Err error(x, `Trunc e)
 	;;
 
-	for var i = 0; i < 2; i++
-		match bexpect(x, '-')
-		| `std.Ok _:
-		| `std.Err e:	-> `std.Err error(x, e)
-		;;
+	/* to get here peek has to show a - was next up */
+	std.assert(bnext(x) == '-', "BUG: parsecomment() '-' missing\n")
+
+	/* another - is needed but this one isn't guaranteed */
+	match bexpect(x, '-')
+	| `std.Ok _:
+	| `std.Err e:	-> `std.Err error(x, e)
 	;;
 
 	end = 0
@@ -239,6 +241,7 @@ const parsecomment = {x
 			if c == '>'
 				-> `std.Ok `Comment prune(x.p.buf[start:stop])
 			else
+				/* stray -- in comments is invalid */
 				-> `std.Err error(x, `Unexpected (c, '>'))
 			;;
 		elif c == '-'
@@ -271,7 +274,7 @@ const parseinstruction = {x
 	;;
 
 	/* to get here peek has to show a ? was next up */
-	std.assert(bnext(x) == '?', "BUG: parseinstruction() ? missing\n")
+	std.assert(bnext(x) == '?', "BUG: parseinstruction() '?' missing\n")
 
 	match getname(x)
 	| `std.Ok o:	(ts, te) = o
