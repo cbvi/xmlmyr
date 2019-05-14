@@ -158,6 +158,7 @@ const parseexclamation = {x
 }
 
 const parseend = {x
+	const suf = ">"
 	var start, stop
 
 	match bio.readterm(x.file, ">")
@@ -176,11 +177,14 @@ const parseend = {x
 
 	while x.p.bidx < x.p.buf.len
 		match bnext(x)
-		| '>':	goto end
+		| '>':
+			stop = x.p.bidx - suf.len
+			goto end
 		| c:
 			if namechar(c)
-				stop = x.p.bidx
+				continue
 			elif isspace(c)
+				stop = x.p.bidx - std.charlen(c)
 				beatspace(x)
 				goto ending
 			else
