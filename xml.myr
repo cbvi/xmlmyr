@@ -82,58 +82,45 @@ const parseelemname = {x
 	| `std.Err e:	-> `std.Err error(x, `Trunc e)
 	;;
 
-	match startname(x)
-	| `std.Ok o:	(start, stop) = o
-	| `std.Err e:	-> `std.Err e
+	match getname(x)
+	| `std.Ok o:			(start, stop) = o
+	| `std.Err `Trunc `bio.Eof:	goto unclosed
+	| `std.Err e:			-> `std.Err error(x, e)
 	;;
 
-	while x.p.bidx < x.p.buf.len
-		match bnext(x)
-		| '>':	goto end
-		| '/':	goto selfclose
-		| c:
-			if namechar(c)
-				stop = x.p.bidx
-			elif isspace(c)
-				goto attrs
-			else
-				-> `std.Err error(x, `Inval c)
-			;;
+	match bget(x)
+	| `std.Some '>':	goto end
+	| `std.Some '/':	goto selfclose
+	| `std.Some c:
+		if !isspace(c)
+			-> `std.Err error(x, `Inval c)
 		;;
+		/* fallthrough to parseattrs */
+	| `std.None:	goto unclosed
 	;;
 
-	goto unclosed
-
-:attrs
 	match parseattrs(x)
 	| `std.Ok i:	cnt = i
 	| `std.Err e:	-> `std.Err e
 	;;
 
-:ending
-	if x.p.bidx < x.p.buf.len
-		match bnext(x)
-		| '>':	/* fallthrough to end */
-		| '/':	goto selfclose
-		| c:
-			-> `std.Err error(x, `Unexpected (c, '>'))
-		;;
-	else
-		goto unclosed
+	match bget(x)
+	| `std.Some '>':	/* fallthrough to end */
+	| `std.Some '/':	goto selfclose
+	| `std.Some c:		-> `std.Err error(x, `Unexpected (c, '>'))
+	| `std.None:		goto unclosed
 	;;
 
 :end
 	-> `std.Ok `Start (x.p.buf[start:stop], x.a.attrs[:cnt])
 
 :selfclose
-	match bexpect(x, '>')
-	| `std.Ok _:
+	match bget(x)
+	| `std.Some '>':
 		x.p.state = `Closing x.p.buf[start:stop]
 		-> `std.Ok `Start (x.p.buf[start:stop], x.a.attrs[:cnt])
-	| `std.Err `Trunc `bio.Eof:
-		-> `std.Err error(x, `Unclosed ("<", "/>"))
-	| `std.Err e:
-		-> `std.Err error(x, e)
+	| `std.Some c:	-> `std.Err error(x, `Unexpected (c, '>'))
+	| `std.None:	-> `std.Err error(x, `Unclosed ("<", "/>"))
 	;;
 
 :unclosed
