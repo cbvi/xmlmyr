@@ -104,29 +104,29 @@ const parseattrname = {x
 }
 
 const parseattrval = {x
-	var start, stop
+	var start
 	var q
 
-	match bnext(x)
-	| '"':	q = '"'
-	| '\'':	q = '\''
-	| c:	-> `std.Err error(x, `Unexpected (c, '"'))
+	match bget(x)
+	| `std.Some '"':	q = '"'
+	| `std.Some '\'':	q = '\''
+	| `std.Some c:		-> `std.Err error(x, `Unexpected (c, '"'))
+	| `std.None:		-> `std.Err error(x, `Trunc `bio.Eof)
 	;;
 
 	start = x.p.bidx
 
-	while true
-		while x.p.bidx < x.p.buf.len
-			stop = x.p.bidx
-			if bnext(x) == q
-				-> `std.Ok (start, stop)
-			;;
-		;;
-
-		match bio.readterm(x.file, ">")
-		| `std.Ok s:	expandbuf(x, s)
-		| `std.Err e:	-> `std.Err error(x, `Trunc e)
+:again
+	while x.p.bidx < x.p.buf.len
+		if bnext(x) == q
+			-> `std.Ok (start, x.p.bidx-std.charlen(q))
 		;;
 	;;
-	std.die("unreached\n")
+
+	match bio.readterm(x.file, ">")
+	| `std.Ok s:	expandbuf(x, s)
+	| `std.Err e:	-> `std.Err error(x, `Trunc e)
+	;;
+
+	goto again
 }
