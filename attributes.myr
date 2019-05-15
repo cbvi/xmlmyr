@@ -87,40 +87,20 @@ const parseattrs = {x
 const parseattrname = {x
 	var start, stop
 
-	match startname(x)
+	match getname(x)
 	| `std.Ok o:	(start, stop) = o
-	| `std.Err e:	-> `std.Err e
+	| `std.Err e:	-> `std.Err error(x, e)
 	;;
 
-	while x.p.bidx < x.p.buf.len
-		match bnext(x)
-		| '=':	goto end
-		| c:
-			if namechar(c)
-				stop = x.p.bidx
-			elif isspace(c)
-				beatspace(x)
-				goto ending
-			else
-				-> `std.Err error(x, `Inval c)
-			;;
-		;;
+	beatspace(x)
+
+	match bget(x)
+	| `std.Some '=':
+	| `std.Some c:	-> `std.Err error(x, `Inval c)
+	| `std.None:	-> `std.Err error(x, `Trunc `bio.Eof)
 	;;
 
-	goto eof
-
-:ending
-	match bexpect(x, '=')
-	| `std.Ok _:			/* fallthrough to end */
-	| `std.Err `Trunc `bio.Eof:	goto eof
-	| `std.Err e:			-> `std.Err error(x, e)
-	;;
-
-:end
 	-> `std.Ok (start, stop)
-
-:eof
-	-> `std.Err error(x, `Trunc `bio.Eof)
 }
 
 const parseattrval = {x

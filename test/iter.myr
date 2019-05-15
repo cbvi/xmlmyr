@@ -598,7 +598,7 @@ const unicode_test = {ctx
 	compareerr(ctx,
 		/* <doc a <ff>="1" /> */
 		[60, 100, 111, 99, 32, 97, 32, -1, 61, 34, 49, 34, 32, 47, 62][:],
-		[][:], [.line=1, .off=8, .err=`xml.Unexpected (-1, '=')])
+		[][:], [.line=1, .off=8, .err=`xml.Inval -1])
 }
 
 const validate_test = {ctx
