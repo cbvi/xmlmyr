@@ -26,11 +26,9 @@ const parsedoctype = {x
 		-> `std.Err `Unclosed ("<!DOCTYPE", suf)
 	;;
 
-	for cc : std.bychar(pref)
-		c = bnext(x)
-		if c != cc
-			-> `std.Err `Unexpected (c, cc)
-		;;
+	match bexpect(x, "DOCTYPE")
+	| `std.Ok _:	x.p.off += 7
+	| `std.Err e:	-> `std.Err e
 	;;
 
 	c = bnext(x)
