@@ -103,9 +103,10 @@ const parseattrname = {x
 
 	beatspace(x)
 
-	match bexpect(x, '=')
-	| `std.Ok _:	-> `std.Ok (start, stop)
-	| `std.Err e:	-> `std.Err e
+	match bget(x)
+	| `std.Some '=':	-> `std.Ok (start, stop)
+	| `std.Some c:		-> `std.Err `Unexpected (c, '=')
+	| `std.None:		-> `std.Err `Trunc `bio.Eof
 	;;
 }
 
