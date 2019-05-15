@@ -169,9 +169,9 @@ const parseend = {x
 
 	match getname(x)
 	| `std.Ok o:	(start, stop) = o
-	| `std.Err [.line=_, .off=_, .err=`Trunc `bio.Eof]:
+	| `std.Err `Trunc `bio.Eof:
 		goto unclosed
-	| `std.Err e:	-> `std.Err e
+	| `std.Err e:	-> `std.Err error(x, e)
 	;;
 
 	beatspace(x)
@@ -315,7 +315,7 @@ const parseinstruction = {x
 
 	match getname(x)
 	| `std.Ok o:	(ts, te) = o
-	| `std.Err e:	-> `std.Err e
+	| `std.Err e:	-> `std.Err error(x, e)
 	;;
 
 	match bget(x)

@@ -17,7 +17,7 @@ pkg xml =
 	pkglocal const bskip :		(x : ctx#, n : int -> void)
 
 	pkglocal const startname :	(x : ctx# -> std.result((std.size, std.size), err))
-	pkglocal const getname :	(x : ctx# -> std.result((std.size, std.size), err))
+	pkglocal const getname :	(x : ctx# -> std.result((std.size, std.size), errtype))
 ;;
 
 const newbuf = {x, buf
@@ -158,13 +158,13 @@ const getname = {x
 	var start
 
 	if x.p.bidx >= x.p.buf.len
-		-> `std.Err error(x, `Trunc `bio.Eof)
+		-> `std.Err `Trunc `bio.Eof
 	;;
 
 	start = x.p.bidx
 	c = bnext(x)
 	if !namestartchar(c)
-		-> `std.Err error(x, `Inval c)
+		-> `std.Err `Inval c
 	;;
 
 	while x.p.bidx < x.p.buf.len
