@@ -25,31 +25,29 @@ const close = {x
 	var start, stop
 
 	match bio.readterm(x.file, "<")
-	| `std.Ok s:
-		newbuf(x, s)
+	| `std.Ok s:	newbuf(x, s)
 	| `std.Err `bio.Eof:
 		x.p.more = false
 		-> `std.Ok `Eof
-	| `std.Err e:
-		-> `std.Err error(x, `Trunc e)
+	| `std.Err e:	-> `std.Err error(x, `Trunc e)
 	;;
 
-	start = stop = x.p.bidx
+	start = x.p.bidx
 
 	while x.p.bidx < x.p.buf.len
 		if bnext(x) == '<'
 			x.p.state = `Open
+			stop = x.p.bidx - std.charlen('<')
 			if prune(x.p.buf[start:stop]).len > 0
 				-> `std.Ok `Characters x.p.buf[start:stop]
 			else
 				-> dispatch(x)
 			;;
 		;;
-		stop = x.p.bidx
 	;;
 
 	if prune(x.p.buf).len > 0
-		-> `std.Ok `Characters x.p.buf[start:stop]
+		-> `std.Ok `Characters x.p.buf[start:x.p.bidx]
 	else
 		x.p.more = false
 		-> `std.Ok `Eof
