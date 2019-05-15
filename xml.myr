@@ -163,7 +163,7 @@ const parseend = {x
 
 	match bget(x)
 	| `std.Some '>':	-> `std.Ok `End x.p.buf[start:stop]
-	| `std.Some c:		-> `std.Err error(x, `Unexpected (c, '>')
+	| `std.Some c:		-> `std.Err error(x, `Unexpected (c, '>'))
 	| `std.None:		goto unclosed
 	;;
 
