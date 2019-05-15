@@ -443,6 +443,12 @@ const space_test = {ctx
 		`xml.End "doc",
 		`xml.Eof
 	][:])
+
+	comparebuf(ctx, "<doc\t></doc\t>", [
+		`xml.Start ("doc", [][:]),
+		`xml.End "doc",
+		`xml.Eof
+	][:])
 }
 
 const frag_test = {ctx

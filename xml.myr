@@ -165,27 +165,22 @@ const parseend = {x
 	| `std.Err e:	-> `std.Err error(x, `Trunc e)
 	;;
 
+	/* to get here peek has to show a / was next up */
 	std.assert(bnext(x) == '/', "BUG: parseend() / missing\n")
 
 	match getname(x)
-	| `std.Ok o:	(start, stop) = o
-	| `std.Err `Trunc `bio.Eof:
-		goto unclosed
-	| `std.Err e:	-> `std.Err error(x, e)
+	| `std.Ok o:			(start, stop) = o
+	| `std.Err `Trunc `bio.Eof:	goto unclosed
+	| `std.Err e:			-> `std.Err error(x, e)
 	;;
 
 	beatspace(x)
 
 	match bexpect(x, '>')
-	| `std.Ok _:	goto end
-	| `std.Err `Trunc `bio.Eof:
-			goto unclosed
-	| `std.Err e:
-		-> `std.Err error(x, e)
+	| `std.Ok _:			-> `std.Ok `End x.p.buf[start:stop]
+	| `std.Err `Trunc `bio.Eof:	goto unclosed
+	| `std.Err e:			-> `std.Err error(x, e)
 	;;
-
-:end
-	-> `std.Ok `End x.p.buf[start:stop]
 
 :unclosed
 	-> `std.Err error(x, `Unclosed ("</", ">"))
