@@ -177,7 +177,7 @@ const simple_test = {ctx
 
 	compareerr(ctx, "<doc></doc?>", [
 		`xml.Start ("doc", [][:])
-	][:], [.line=1, .off=11, .err=`xml.Inval '?'])
+	][:], [.line=1, .off=11, .err=`xml.Unexpected ('?', '>')])
 
 	compareerr(ctx, "<doc", [][:],
 		[.line=1, .off=4, .err=`xml.Unclosed ("<", ">")])
