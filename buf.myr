@@ -8,7 +8,6 @@ use "types"
 pkg xml =
 	pkglocal const newbuf :		(x : ctx#, buf : byte[:] -> void)
 	pkglocal const expandbuf :	(x : ctx#, buf : byte[:] -> void)
-	pkglocal const fillbuf :	(x : ctx#, full : byte[:], pref : byte[:], suf : byte[:] -> std.result(byte[:], err))
 
 	pkglocal const bexpect :	(x : ctx#, want : char -> std.result(void, errtype))
 	pkglocal const bget :		(x : ctx# -> std.option(char))
@@ -28,44 +27,6 @@ const newbuf = {x, buf
 const expandbuf = {x, buf
 	x.p.buf = std.sljoin(&x.p.buf, buf)
 	std.slfree(buf)
-}
-
-const fillbuf = {x, full, pref, suf
-	var start, stop
-
-	for p : std.bychar(pref)
-		match bio.getc(x.file)
-		| `std.Ok c:
-			x.p.off += 1
-			if c != p
-				-> `std.Err error(x, `Unexpected (c, p))
-			;;
-		| `std.Err e:
-			-> `std.Err error(x, `Trunc e)
-		;;
-	;;
-
-
-	match bio.readterm(x.file, suf)
-	| `std.Ok s:	newbuf(x, s)
-	| `std.Err e:	-> `std.Err error(x, `Trunc e)
-	;;
-
-	start = x.p.bidx
-
-	while x.p.bidx < x.p.buf.len - suf.len
-		bnext(x)
-	;;
-
-	stop = x.p.bidx
-
-	for s : std.bychar(suf)
-		if s != bnext(x)
-			-> `std.Err error(x, `Unclosed (full, suf))
-		;;
-	;;
-
-	-> `std.Ok x.p.buf[start:stop]
 }
 
 const bexpect = {x, want
