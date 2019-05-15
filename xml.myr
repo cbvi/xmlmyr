@@ -224,14 +224,9 @@ const parsecomment = {x
 	| `std.Err e:	-> `std.Err `Trunc e
 	;;
 
-	/* to get here peek has to show a - was next up */
-	std.assert(bnext(x) == '-', "BUG: parsecomment() '-' missing\n")
-
-	/* another - is needed but this one isn't guaranteed */
-	match bget(x)
-	| `std.Some '-':
-	| `std.Some ch:	-> `std.Err `Unexpected (ch, '-')
-	| `std.None:	-> `std.Err `Trunc `bio.Eof
+	match bexpect(x, "--")
+	| `std.Ok _:	x.p.off += 2
+	| `std.Err e:	-> `std.Err e
 	;;
 
 	end = 0
