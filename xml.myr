@@ -172,7 +172,7 @@ const parseend = {x
 }
 
 const parsecdata = {x
-	const pre = "CDATA[" /* ![ is already checked */
+	const pre = "[CDATA["
 	const suf = "]]>"
 	var st
 	var end
@@ -182,11 +182,8 @@ const parsecdata = {x
 	| `std.Err e:	-> `std.Err `Trunc e
 	;;
 
-	/* to get here peek has to show a [ was next up */
-	std.assert(bnext(x) == '[', "BUG: parsecdata() '[' missing\n")
-
 	match bexpect(x, pre)
-	| `std.Ok _:	x.p.off += 6	/* number of chars in CDATA[ */
+	| `std.Ok _:	x.p.off += 7
 	| `std.Err e:	-> `std.Err e
 	;;
 
