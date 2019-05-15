@@ -10,7 +10,7 @@ use "mk"
 use "types"
 
 pkg xml =
-	pkglocal const dispatch	: (x : ctx# -> std.result(event, err))
+	pkglocal const dispatch	: (x : ctx# -> std.result(event, errtype))
 ;;
 
 const dispatch = {x
@@ -29,7 +29,7 @@ const close = {x
 	| `std.Err `bio.Eof:
 		x.p.more = false
 		-> `std.Ok `Eof
-	| `std.Err e:	-> `std.Err error(x, `Trunc e)
+	| `std.Err e:	-> `std.Err `Trunc e
 	;;
 
 	start = x.p.bidx
@@ -62,7 +62,7 @@ const open = {x
 	| `std.Ok '/':	-> parseend(x)
 	| `std.Ok '?':	-> parseinstruction(x)
 	| `std.Ok _:	-> parseelemname(x)
-	| `std.Err e:	-> `std.Err error(x, `Trunc e)
+	| `std.Err e:	-> `std.Err `Trunc e
 	;;
 }
 
@@ -77,13 +77,13 @@ const parseelemname = {x
 
 	match bio.readterm(x.file, ">")
 	| `std.Ok s:	newbuf(x, s)
-	| `std.Err e:	-> `std.Err error(x, `Trunc e)
+	| `std.Err e:	-> `std.Err `Trunc e
 	;;
 
 	match getname(x)
 	| `std.Ok o:			(start, stop) = o
 	| `std.Err `Trunc `bio.Eof:	goto unclosed
-	| `std.Err e:			-> `std.Err error(x, e)
+	| `std.Err e:			-> `std.Err e
 	;;
 
 	match bget(x)
@@ -91,7 +91,7 @@ const parseelemname = {x
 	| `std.Some '/':	goto selfclose
 	| `std.Some c:
 		if !isspace(c)
-			-> `std.Err error(x, `Inval c)
+			-> `std.Err `Inval c
 		;;
 		/* fallthrough to parseattrs */
 	| `std.None:	goto unclosed
@@ -105,7 +105,7 @@ const parseelemname = {x
 	match bget(x)
 	| `std.Some '>':	/* fallthrough to end */
 	| `std.Some '/':	goto selfclose
-	| `std.Some c:		-> `std.Err error(x, `Unexpected (c, '>'))
+	| `std.Some c:		-> `std.Err `Unexpected (c, '>')
 	| `std.None:		goto unclosed
 	;;
 
@@ -117,12 +117,12 @@ const parseelemname = {x
 	| `std.Some '>':
 		x.p.state = `Closing x.p.buf[start:stop]
 		-> `std.Ok `Start (x.p.buf[start:stop], x.a.attrs[:cnt])
-	| `std.Some c:	-> `std.Err error(x, `Unexpected (c, '>'))
-	| `std.None:	-> `std.Err error(x, `Unclosed ("<", "/>"))
+	| `std.Some c:	-> `std.Err `Unexpected (c, '>')
+	| `std.None:	-> `std.Err `Unclosed ("<", "/>")
 	;;
 
 :unclosed
-	-> `std.Err error(x, `Unclosed ("<", ">"))
+	-> `std.Err `Unclosed ("<", ">")
 }
 
 const parseexclamation = {x
@@ -130,15 +130,15 @@ const parseexclamation = {x
 	| `std.Ok c:
 		std.assert(c == '!', "BUG: parseexclamation() ! missing\n")
 		x.p.off++
-	| `std.Err e:	-> `std.Err error(x, `Trunc e)
+	| `std.Err e:	-> `std.Err `Trunc e
 	;;
 
 	match bio.peekc(x.file)
 	| `std.Ok '[':	-> parsecdata(x)
 	| `std.Ok '-':	-> parsecomment(x)
 	| `std.Ok 'D':	-> parsedoctype(x)
-	| `std.Ok c:	-> `std.Err error(x, `Inval c)
-	| `std.Err e:	-> `std.Err error(x, `Trunc e)
+	| `std.Ok c:	-> `std.Err `Inval c
+	| `std.Err e:	-> `std.Err `Trunc e
 	;;
 }
 
@@ -147,7 +147,7 @@ const parseend = {x
 
 	match bio.readterm(x.file, ">")
 	| `std.Ok s:	newbuf(x, s)
-	| `std.Err e:	-> `std.Err error(x, `Trunc e)
+	| `std.Err e:	-> `std.Err `Trunc e
 	;;
 
 	/* to get here peek has to show a / was next up */
@@ -156,19 +156,19 @@ const parseend = {x
 	match getname(x)
 	| `std.Ok o:			(start, stop) = o
 	| `std.Err `Trunc `bio.Eof:	goto unclosed
-	| `std.Err e:			-> `std.Err error(x, e)
+	| `std.Err e:			-> `std.Err e
 	;;
 
 	beatspace(x)
 
 	match bget(x)
 	| `std.Some '>':	-> `std.Ok `End x.p.buf[start:stop]
-	| `std.Some c:		-> `std.Err error(x, `Unexpected (c, '>'))
+	| `std.Some c:		-> `std.Err `Unexpected (c, '>')
 	| `std.None:		goto unclosed
 	;;
 
 :unclosed
-	-> `std.Err error(x, `Unclosed ("</", ">"))
+	-> `std.Err `Unclosed ("</", ">")
 }
 
 const parsecdata = {x
@@ -180,7 +180,7 @@ const parsecdata = {x
 
 	match bio.readterm(x.file, ">")
 	| `std.Ok b:	newbuf(x, b)
-	| `std.Err e:	-> `std.Err error(x, `Trunc e)
+	| `std.Err e:	-> `std.Err `Trunc e
 	;;
 
 	/* to get here peek has to show a [ was next up */
@@ -195,7 +195,7 @@ const parsecdata = {x
 		/* match failed so determine what the error is */
 		for c : std.bychar(pre)
 			match bexpect(x, c)
-			| `std.Err e:	-> `std.Err error(x, e)
+			| `std.Err e:	-> `std.Err e
 			| _:
 			;;
 		;;
@@ -222,8 +222,8 @@ const parsecdata = {x
 	match bio.readterm(x.file, ">")
 	| `std.Ok b:	expandbuf(x, b)
 	| `std.Err `bio.Eof:
-			-> `std.Err error(x, `Unclosed ("<![CDATA[", "]]>"))
-	| `std.Err e:	-> `std.Err error(x, `Trunc e)
+			-> `std.Err `Unclosed ("<![CDATA[", "]]>")
+	| `std.Err e:	-> `std.Err `Trunc e
 	;;
 
 	goto again
@@ -236,7 +236,7 @@ const parsecomment = {x
 
 	match bio.readterm(x.file, ">")
 	| `std.Ok b:	newbuf(x, b)
-	| `std.Err e:	-> `std.Err error(x, `Trunc e)
+	| `std.Err e:	-> `std.Err `Trunc e
 	;;
 
 	/* to get here peek has to show a - was next up */
@@ -245,7 +245,7 @@ const parsecomment = {x
 	/* another - is needed but this one isn't guaranteed */
 	match bexpect(x, '-')
 	| `std.Ok _:
-	| `std.Err e:	-> `std.Err error(x, e)
+	| `std.Err e:	-> `std.Err e
 	;;
 
 	end = 0
@@ -258,7 +258,7 @@ const parsecomment = {x
 		if end == 2
 			if c != '>'
 				/* stray -- in comments is invalid */
-				-> `std.Err error(x, `Unexpected (c, '>'))
+				-> `std.Err `Unexpected (c, '>')
 			;;
 			-> `std.Ok `Comment prune(x.p.buf[st:x.p.bidx-suf.len])
 		elif c == '-'
@@ -271,8 +271,8 @@ const parsecomment = {x
 	match bio.readterm(x.file, ">")
 	| `std.Ok b:	expandbuf(x, b)
 	| `std.Err `bio.Eof:
-			-> `std.Err error(x, `Unclosed ("<!--", "-->"))
-	| `std.Err e:	-> `std.Err error(x, `Trunc e)
+			-> `std.Err `Unclosed ("<!--", "-->")
+	| `std.Err e:	-> `std.Err `Trunc e
 	;;
 
 	goto again
@@ -295,7 +295,7 @@ const parseinstruction = {x
 
 	match getname(x)
 	| `std.Ok o:	(ts, te) = o
-	| `std.Err e:	-> `std.Err error(x, e)
+	| `std.Err e:	-> `std.Err e
 	;;
 
 	match bget(x)
@@ -342,5 +342,5 @@ const parseinstruction = {x
 	err = `Unclosed ("<?", "?>")
 
 :err
-	-> `std.Err error(x, err)
+	-> `std.Err err
 }

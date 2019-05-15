@@ -21,7 +21,12 @@ impl iterable eventiter -> event =
 			valp# = e
 			-> true
 		| `std.Err e:
-			iterp.p.error = `std.Some e
+			iterp.p.error = `std.Some [
+				.line=iterp.p.line,
+				.off=iterp.p.off,
+				.err=e
+			]
+			iterp.p.more = false
 			-> false
 		;;
 	}

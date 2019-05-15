@@ -7,7 +7,7 @@ use "err"
 use "types"
 
 pkg xml =
-	pkglocal const parseattrs : (x : ctx# -> std.result(std.size, err))
+	pkglocal const parseattrs : (x : ctx# -> std.result(std.size, errtype))
 ;;
 
 const parseattrs = {x
@@ -55,7 +55,7 @@ const parseattrs = {x
 				if isspace(c)
 					beatspace(x)
 				else
-					err = error(x, `Inval c)
+					err = `Inval c
 					goto err
 				;;
 			;;
@@ -64,7 +64,7 @@ const parseattrs = {x
 		;;
 	;;
 
-	err = error(x, `Trunc `bio.Eof)
+	err = `Trunc `bio.Eof
 	goto err
 
 :done
@@ -89,23 +89,23 @@ const parseattrname = {x
 
 	match getname(x)
 	| `std.Ok o:	(start, stop) = o
-	| `std.Err e:	-> `std.Err error(x, e)
+	| `std.Err e:	-> `std.Err e
 	;;
 
 	match bget(x)
 	| `std.Some '=':	-> `std.Ok (start, stop)
 	| `std.Some c:
 		if !isspace(c)
-			-> `std.Err error(x, `Inval c)
+			-> `std.Err `Inval c
 		;;
-	| `std.None:	-> `std.Err error(x, `Trunc `bio.Eof)
+	| `std.None:	-> `std.Err `Trunc `bio.Eof
 	;;
 
 	beatspace(x)
 
 	match bexpect(x, '=')
 	| `std.Ok _:	-> `std.Ok (start, stop)
-	| `std.Err e:	-> `std.Err error(x, e)
+	| `std.Err e:	-> `std.Err e
 	;;
 }
 
@@ -116,8 +116,8 @@ const parseattrval = {x
 	match bget(x)
 	| `std.Some '"':	q = '"'
 	| `std.Some '\'':	q = '\''
-	| `std.Some c:		-> `std.Err error(x, `Unexpected (c, '"'))
-	| `std.None:		-> `std.Err error(x, `Trunc `bio.Eof)
+	| `std.Some c:		-> `std.Err `Unexpected (c, '"')
+	| `std.None:		-> `std.Err `Trunc `bio.Eof
 	;;
 
 	start = x.p.bidx
@@ -131,7 +131,7 @@ const parseattrval = {x
 
 	match bio.readterm(x.file, ">")
 	| `std.Ok s:	expandbuf(x, s)
-	| `std.Err e:	-> `std.Err error(x, `Trunc e)
+	| `std.Err e:	-> `std.Err `Trunc e
 	;;
 
 	goto again

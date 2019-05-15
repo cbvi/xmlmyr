@@ -7,7 +7,7 @@ use "err"
 use "types"
 
 pkg xml =
-	pkglocal const parsedoctype : (x : ctx# -> std.result(event, err))
+	pkglocal const parsedoctype : (x : ctx# -> std.result(event, errtype))
 ;;
 
 const parsedoctype = {x
@@ -19,23 +19,23 @@ const parsedoctype = {x
 
 	match bio.readterm(x.file, suf)
 	| `std.Ok b:	newbuf(x, b)
-	| `std.Err e:	-> `std.Err error(x, `Trunc e)
+	| `std.Err e:	-> `std.Err `Trunc e
 	;;
 
 	if !std.hassuffix(x.p.buf, suf)
-		-> `std.Err error(x, `Unclosed ("<!DOCTYPE", suf))
+		-> `std.Err `Unclosed ("<!DOCTYPE", suf)
 	;;
 
 	for cc : std.bychar(pref)
 		c = bnext(x)
 		if c != cc
-			-> `std.Err error(x, `Unexpected (c, cc))
+			-> `std.Err `Unexpected (c, cc)
 		;;
 	;;
 
 	c = bnext(x)
 	if !isspace(c)
-		-> `std.Err error(x, `Unexpected (c, ' '))
+		-> `std.Err `Unexpected (c, ' ')
 	;;
 
 	beatspace(x)
@@ -65,7 +65,7 @@ const parsedoctype = {x
 		;;
 	;;
 
-	-> `std.Err error(x, `Trunc `bio.Eof)
+	-> `std.Err `Trunc `bio.Eof
 }
 
 const refill = {x
