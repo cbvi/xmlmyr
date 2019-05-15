@@ -92,15 +92,21 @@ const parseattrname = {x
 	| `std.Err e:	-> `std.Err error(x, e)
 	;;
 
-	beatspace(x)
-
 	match bget(x)
-	| `std.Some '=':
-	| `std.Some c:	-> `std.Err error(x, `Inval c)
+	| `std.Some '=':	-> `std.Ok (start, stop)
+	| `std.Some c:
+		if !isspace(c)
+			-> `std.Err error(x, `Inval c)
+		;;
 	| `std.None:	-> `std.Err error(x, `Trunc `bio.Eof)
 	;;
 
-	-> `std.Ok (start, stop)
+	beatspace(x)
+
+	match bexpect(x, '=')
+	| `std.Ok _:	-> `std.Ok (start, stop)
+	| `std.Err e:	-> `std.Err error(x, e)
+	;;
 }
 
 const parseattrval = {x
