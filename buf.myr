@@ -9,7 +9,7 @@ pkg xml =
 	pkglocal const newbuf :		(x : ctx#, buf : byte[:] -> void)
 	pkglocal const expandbuf :	(x : ctx#, buf : byte[:] -> void)
 
-	pkglocal const bexpect :	(x : ctx#, want : char -> std.result(void, errtype))
+	pkglocal const bexpect :	(x : ctx#, want : byte[:] -> std.result(void, errtype))
 	pkglocal const bget :		(x : ctx# -> std.option(char))
 	pkglocal const bnext :		(x : ctx# -> char)
 	pkglocal const beatspace :	(x : ctx# -> void)
@@ -30,18 +30,27 @@ const expandbuf = {x, buf
 }
 
 const bexpect = {x, want
-	var c
+	var nidx
 
-	if x.p.bidx < x.p.buf.len
-		c = bnext(x)
-		if c == want
-			-> `std.Ok void
-		else
-			-> `std.Err `Unexpected (c, want)
-		;;
+	nidx = x.p.bidx + want.len
+	if nidx < x.p.buf.len && std.sleq(x.p.buf[x.p.bidx:nidx], want)
+		x.p.bidx = nidx
 	else
+		/* figure out what the error was */
+		for w : std.bychar(want)
+			match bget(x)
+			| `std.Some c:
+				if c != w
+					-> `std.Err `Unexpected (c, w)
+				;;
+			| `std.None:	-> `std.Err `Trunc `bio.Eof
+			;;
+		;;
+		/* a match right before eof */
 		-> `std.Err `Trunc `bio.Eof
 	;;
+
+	-> `std.Ok void
 }
 
 const bget = {x

@@ -174,7 +174,6 @@ const parseend = {x
 const parsecdata = {x
 	const pre = "CDATA[" /* ![ is already checked */
 	const suf = "]]>"
-	var nidx
 	var st
 	var end
 
@@ -186,23 +185,9 @@ const parsecdata = {x
 	/* to get here peek has to show a [ was next up */
 	std.assert(bnext(x) == '[', "BUG: parsecdata() '[' missing\n")
 
-	nidx = x.p.bidx + pre.len
-
-	if nidx < x.p.buf.len && std.sleq(x.p.buf[x.p.bidx:nidx], pre)
-		x.p.bidx = nidx
-		x.p.off += 6
-	else
-		/* match failed so determine what the error is */
-		for c : std.bychar(pre)
-			match bexpect(x, c)
-			| `std.Err e:	-> `std.Err e
-			| _:
-			;;
-		;;
-
-		/* a document that ends with "<![CDATA[" will reach
-		 * here, let it keep going and error naturally
-		 */
+	match bexpect(x, pre)
+	| `std.Ok _:	x.p.off += 6	/* number of chars in CDATA[ */
+	| `std.Err e:	-> `std.Err e
 	;;
 
 	st = x.p.bidx

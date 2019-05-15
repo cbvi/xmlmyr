@@ -399,7 +399,7 @@ const twigil_test = {ctx
 
 	compareerr(ctx, "<doc><![CDATA[", [
 		`xml.Start ("doc", [][:])
-	][:], [.line=1, .off=14, .err=`xml.Unclosed ("<![CDATA[", "]]>")])
+	][:], [.line=1, .off=14, .err=`xml.Trunc `bio.Eof])
 
 	compareerr(ctx, "<??><doc></doc>", [][:],
 		[.line=1, .off=3, .err=`xml.Inval '?'])
