@@ -56,8 +56,8 @@ const parsedoctype = {x
 
 	match refillbuf(x)
 	| `Done:	goto again
-	| `Fail e:	-> `std.Err e
 	| `Empty:	-> `std.Err `Unclosed ("<!DOCTYPE", ">")
+	| `Fail e:	-> `std.Err e
 	;;
 }
 

@@ -132,7 +132,7 @@ const parseattrval = {x
 
 	match refillbuf(x)
 	| `Done:	goto again
-	| `Fail e:	-> `std.Err e
 	| `Empty:	-> `std.Err `Trunc `bio.Eof
+	| `Fail e:	-> `std.Err e
 	;;
 }

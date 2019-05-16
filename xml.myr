@@ -190,8 +190,8 @@ const parsecdata = {x
 
 	match refillbuf(x)
 	| `Done:	goto again
-	| `Fail e:	-> `std.Err e
 	| `Empty:	-> `std.Err `Unclosed ("<![CDATA[", "]]>")
+	| `Fail e:	-> `std.Err e
 	;;
 }
 
@@ -227,8 +227,8 @@ const parsecomment = {x
 
 	match refillbuf(x)
 	| `Done:	goto again
-	| `Fail e:	-> `std.Err e
 	| `Empty:	-> `std.Err `Unclosed ("<!--", "-->")
+	| `Fail e:	-> `std.Err e
 	;;
 }
 
@@ -281,8 +281,8 @@ const parseinstruction = {x
 
 	match refillbuf(x)
 	| `Done:	goto again
-	| `Fail e:	-> `std.Err e
 	| `Empty:	goto unclosed
+	| `Fail e:	-> `std.Err e
 	;;
 
 :unclosed
