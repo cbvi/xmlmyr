@@ -33,7 +33,7 @@ const bexpect = {x, want
 	var nidx
 
 	nidx = x.p.bidx + want.len
-	if nidx < x.p.buf.len && std.sleq(x.p.buf[x.p.bidx:nidx], want)
+	if nidx <= x.p.buf.len && std.sleq(x.p.buf[x.p.bidx:nidx], want)
 		x.p.bidx = nidx
 	else
 		/* figure out what the error was */
