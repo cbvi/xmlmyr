@@ -57,12 +57,16 @@ const close = {x
 const open = {x
 	x.p.state = `Close
 
-	match bio.peekc(x.file)
-	| `std.Ok '!':	-> parseexclamation(x)
-	| `std.Ok '/':	-> parseend(x)
-	| `std.Ok '?':	-> parseinstruction(x)
-	| `std.Ok _:	-> parseelemname(x)
+	match bio.readterm(x.file, ">")
+	| `std.Ok b:	newbuf(x, b)
 	| `std.Err e:	-> `std.Err `Trunc e
+	;;
+
+	match std.decode(x.p.buf[x.p.bidx:])
+	| '!':	-> parseexclamation(x)
+	| '/':	-> parseend(x)
+	| '?':	-> parseinstruction(x)
+	| _:	-> parseelemname(x)
 	;;
 }
 
@@ -74,11 +78,6 @@ const closing = {x, name
 const parseelemname = {x
 	var start, stop
 	var cnt = 0
-
-	match bio.readterm(x.file, ">")
-	| `std.Ok s:	newbuf(x, s)
-	| `std.Err e:	-> `std.Err `Trunc e
-	;;
 
 	match getname(x)
 	| `std.Ok o:			(start, stop) = o
@@ -126,29 +125,22 @@ const parseelemname = {x
 }
 
 const parseexclamation = {x
-	match bio.getc(x.file)
-	| `std.Ok c:
-		std.assert(c == '!', "BUG: parseexclamation() ! missing\n")
-		x.p.off++
-	| `std.Err e:	-> `std.Err `Trunc e
+	std.assert(bnext(x) == '!', "BUG: parseexclamation() ! missing\n")
+
+	if x.p.bidx >= x.p.buf.len
+		-> `std.Err `Trunc `bio.Eof
 	;;
 
-	match bio.peekc(x.file)
-	| `std.Ok '[':	-> parsecdata(x)
-	| `std.Ok '-':	-> parsecomment(x)
-	| `std.Ok 'D':	-> parsedoctype(x)
-	| `std.Ok c:	-> `std.Err `Inval c
-	| `std.Err e:	-> `std.Err `Trunc e
+	match std.decode(x.p.buf[x.p.bidx:])
+	| '[':	-> parsecdata(x)
+	| '-':	-> parsecomment(x)
+	| 'D':	-> parsedoctype(x)
+	| c:	-> `std.Err `Inval c
 	;;
 }
 
 const parseend = {x
 	var start, stop
-
-	match bio.readterm(x.file, ">")
-	| `std.Ok s:	newbuf(x, s)
-	| `std.Err e:	-> `std.Err `Trunc e
-	;;
 
 	/* to get here peek has to show a / was next up */
 	std.assert(bnext(x) == '/', "BUG: parseend() / missing\n")
@@ -176,11 +168,6 @@ const parsecdata = {x
 	const suf = "]]>"
 	var st
 	var end
-
-	match bio.readterm(x.file, ">")
-	| `std.Ok b:	newbuf(x, b)
-	| `std.Err e:	-> `std.Err `Trunc e
-	;;
 
 	match bexpect(x, pre)
 	| `std.Ok _:	x.p.off += 7
@@ -215,11 +202,6 @@ const parsecomment = {x
 	const suf = "-->"
 	var c, end
 	var st
-
-	match bio.readterm(x.file, ">")
-	| `std.Ok b:	newbuf(x, b)
-	| `std.Err e:	-> `std.Err `Trunc e
-	;;
 
 	match bexpect(x, "--")
 	| `std.Ok _:	x.p.off += 2
@@ -262,11 +244,6 @@ const parseinstruction = {x
 	var ds
 	var end
 	var err
-
-	match bio.readterm(x.file, ">")
-	| `std.Ok b:	newbuf(x, b)
-	| `std.Err e:	err = `Trunc e ; goto err
-	;;
 
 	/* to get here peek has to show a ? was next up */
 	std.assert(bnext(x) == '?', "BUG: parseinstruction() '?' missing\n")

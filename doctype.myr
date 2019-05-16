@@ -15,11 +15,6 @@ const parsedoctype = {x
 	var a, z
 	var open
 
-	match bio.readterm(x.file, ">")
-	| `std.Ok b:	newbuf(x, b)
-	| `std.Err e:	-> `std.Err `Trunc e
-	;;
-
 	match bexpect(x, pref)
 	| `std.Ok _:	x.p.off += 7
 	| `std.Err e:	-> `std.Err e
