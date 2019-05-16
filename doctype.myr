@@ -11,11 +11,10 @@ pkg xml =
 ;;
 
 const parsedoctype = {x
-	const pref = "DOCTYPE"
 	var a, z
 	var open
 
-	match bexpect(x, pref)
+	match bexpect(x, "DOCTYPE")
 	| `std.Ok _:	x.p.off += 7
 	| `std.Err e:	-> `std.Err e
 	;;
