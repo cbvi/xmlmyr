@@ -12,7 +12,7 @@ pkg xml =
 
 const parsedoctype = {x
 	const pref = "DOCTYPE"
-	var start, stop
+	var a, z
 	var open
 
 	match bio.readterm(x.file, ">")
@@ -35,11 +35,10 @@ const parsedoctype = {x
 
 	beatspace(x)
 
-	start = x.p.bidx
+	a = x.p.bidx
 	open = 1
 
 	while x.p.bidx < x.p.buf.len
-		stop = x.p.bidx
 		match bnext(x)
 		| '<':
 			if std.hasprefix(x.p.buf[x.p.bidx:], "!--")
@@ -52,7 +51,8 @@ const parsedoctype = {x
 		| '>':
 			open--
 			if open == 0
-				-> `std.Ok `Doctype prune(x.p.buf[start:stop])
+				z = x.p.bidx - std.charlen('>')
+				-> `std.Ok `Doctype prune(x.p.buf[a:z])
 			else
 				refill(x)
 			;;
