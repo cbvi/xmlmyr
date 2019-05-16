@@ -38,6 +38,7 @@ const parsedoctype = {x
 	a = x.p.bidx
 	open = 1
 
+:again
 	while x.p.bidx < x.p.buf.len
 		match bnext(x)
 		| '<':
@@ -53,14 +54,17 @@ const parsedoctype = {x
 			if open == 0
 				z = x.p.bidx - std.charlen('>')
 				-> `std.Ok `Doctype prune(x.p.buf[a:z])
-			else
-				refill(x)
 			;;
 		| _:
 		;;
 	;;
 
-	-> `std.Err `Trunc `bio.Eof
+	match bio.readterm(x.file, ">")
+	| `std.Ok b:	expandbuf(x, b)
+	| `std.Err e:	-> `std.Err `Trunc e
+	;;
+
+	goto again
 }
 
 const refill = {x
