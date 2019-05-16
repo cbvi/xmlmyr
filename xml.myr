@@ -237,7 +237,6 @@ const parseinstruction = {x
 	var ts, te
 	var ds
 	var end
-	var err
 
 	/* to get here peek has to show a ? was next up */
 	std.assert(bnext(x) == '?', "BUG: parseinstruction() '?' missing\n")
@@ -258,7 +257,7 @@ const parseinstruction = {x
 		if isspace(c)
 			beatspace(x)
 		else
-			err = `Inval c ; goto err
+			-> `std.Err `Inval c
 		;;
 	| `std.None:
 		goto unclosed
@@ -286,8 +285,5 @@ const parseinstruction = {x
 	;;
 
 :unclosed
-	err = `Unclosed ("<?", "?>")
-
-:err
-	-> `std.Err err
+	-> `std.Err `Unclosed ("<?", "?>")
 }
