@@ -12,28 +12,25 @@ pkg xml =
 
 const parsedoctype = {x
 	const pref = "DOCTYPE"
-	const suf = ">"
 	var start, stop
 	var open
-	var c
 
-	match bio.readterm(x.file, suf)
+	match bio.readterm(x.file, ">")
 	| `std.Ok b:	newbuf(x, b)
 	| `std.Err e:	-> `std.Err `Trunc e
 	;;
 
-	if !std.hassuffix(x.p.buf, suf)
-		-> `std.Err `Unclosed ("<!DOCTYPE", suf)
-	;;
-
-	match bexpect(x, "DOCTYPE")
+	match bexpect(x, pref)
 	| `std.Ok _:	x.p.off += 7
 	| `std.Err e:	-> `std.Err e
 	;;
 
-	c = bnext(x)
-	if !isspace(c)
-		-> `std.Err `Unexpected (c, ' ')
+	match bget(x)
+	| `std.Some c:
+		if !isspace(c)
+			-> `std.Err `Unexpected (c, ' ')
+		;;
+	| `std.None:	-> `std.Err `Unclosed ("<!DOCTYPE", ">")
 	;;
 
 	beatspace(x)
