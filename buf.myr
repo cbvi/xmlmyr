@@ -46,8 +46,8 @@ const bexpect = {x, want
 			| `std.None:	-> `std.Err `Trunc `bio.Eof
 			;;
 		;;
-		/* a match right before eof */
-		-> `std.Err `Trunc `bio.Eof
+		/* the condition shouldn't have failed if this is reached */
+		std.die("BUG: bexpect() match failed but no error found\n")
 	;;
 
 	-> `std.Ok void
