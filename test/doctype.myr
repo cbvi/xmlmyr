@@ -111,13 +111,13 @@ const comment_test = {ctx
 	][:])
 
 	compareerr(ctx, "<!DOCTYPE doc [ <!-- --]><doc></doc>", [][:],
-		[.line=1, .off=36, .err=`xml.Trunc `bio.Eof])
+		[.line=1, .off=36, .err=`xml.Unclosed ("<!DOCTYPE", ">")])
 
 	compareerr(ctx, "<!DOCTYPE doc [ <!-- --> <!-- ->", [][:],
-		[.line=1, .off=32, .err=`xml.Trunc `bio.Eof])
+		[.line=1, .off=32, .err=`xml.Unclosed ("<!DOCTYPE", ">")])
 
 	compareerr(ctx, "<!DOCTYPE doc [ <!-->", [][:],
-		[.line=1, .off=21, .err=`xml.Trunc `bio.Eof])
+		[.line=1, .off=21, .err=`xml.Unclosed ("<!DOCTYPE", ">")])
 }
 
 const malformed_test = {ctx
@@ -125,10 +125,10 @@ const malformed_test = {ctx
 		[.line=1, .off=10, .err= `xml.Unexpected ('>', ' ')])
 
 	compareerr(ctx, "<!DOCTYPE doc [ < ]><doc></doc>", [][:],
-		[.line=1, .off=31, .err=`xml.Trunc `bio.Eof])
+		[.line=1, .off=31, .err=`xml.Unclosed ("<!DOCTYPE", ">")])
 
 	compareerr(ctx, "<!DOCTYPE doc [ <!>", [][:],
-		[.line=1, .off=19, .err=`xml.Trunc `bio.Eof])
+		[.line=1, .off=19, .err=`xml.Unclosed ("<!DOCTYPE", ">")])
 
 	compareerr(ctx, "<!DOCTYPE", [][:],
 		[.line=1, .off=9, .err=`xml.Unclosed ("<!DOCTYPE", ">")])
