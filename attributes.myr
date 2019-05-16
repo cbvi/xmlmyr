@@ -130,10 +130,9 @@ const parseattrval = {x
 		;;
 	;;
 
-	match bio.readterm(x.file, ">")
-	| `std.Ok s:	expandbuf(x, s)
-	| `std.Err e:	-> `std.Err `Trunc e
+	match refillbuf(x)
+	| `Done:	goto again
+	| `Fail e:	-> `std.Err e
+	| `Empty:	-> `std.Err `Trunc `bio.Eof
 	;;
-
-	goto again
 }

@@ -188,14 +188,11 @@ const parsecdata = {x
 		;;
 	;;
 
-	match bio.readterm(x.file, ">")
-	| `std.Ok b:	expandbuf(x, b)
-	| `std.Err `bio.Eof:
-			-> `std.Err `Unclosed ("<![CDATA[", "]]>")
-	| `std.Err e:	-> `std.Err `Trunc e
+	match refillbuf(x)
+	| `Done:	goto again
+	| `Fail e:	-> `std.Err e
+	| `Empty:	-> `std.Err `Unclosed ("<![CDATA[", "]]>")
 	;;
-
-	goto again
 }
 
 const parsecomment = {x
@@ -228,14 +225,11 @@ const parsecomment = {x
 		;;
 	;;
 
-	match bio.readterm(x.file, ">")
-	| `std.Ok b:	expandbuf(x, b)
-	| `std.Err `bio.Eof:
-			-> `std.Err `Unclosed ("<!--", "-->")
-	| `std.Err e:	-> `std.Err `Trunc e
+	match refillbuf(x)
+	| `Done:	goto again
+	| `Fail e:	-> `std.Err e
+	| `Empty:	-> `std.Err `Unclosed ("<!--", "-->")
 	;;
-
-	goto again
 }
 
 const parseinstruction = {x
@@ -285,13 +279,11 @@ const parseinstruction = {x
 		;;
 	;;
 
-	match bio.readterm(x.file, ">")
-	| `std.Ok b:		expandbuf(x, b)
-	| `std.Err `bio.Eof:	goto unclosed
-	| `std.Err e:		err = `Trunc e ; goto err
+	match refillbuf(x)
+	| `Done:	goto again
+	| `Fail e:	-> `std.Err e
+	| `Empty:	goto unclosed
 	;;
-
-	goto again
 
 :unclosed
 	err = `Unclosed ("<?", "?>")

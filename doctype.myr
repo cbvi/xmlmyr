@@ -54,19 +54,15 @@ const parsedoctype = {x
 		;;
 	;;
 
-	match bio.readterm(x.file, ">")
-	| `std.Ok b:	expandbuf(x, b)
-	| `std.Err e:	-> `std.Err `Trunc e
+	match refillbuf(x)
+	| `Done:	goto again
+	| `Fail e:	-> `std.Err e
+	| `Empty:	-> `std.Err `Trunc `bio.Eof
 	;;
-
-	goto again
 }
 
 const refill = {x
-	match bio.readterm(x.file, ">")
-	| `std.Ok b:	expandbuf(x, b)
-	| `std.Err e:
-	;;
+	refillbuf(x)
 }
 
 const doquote = {x, q

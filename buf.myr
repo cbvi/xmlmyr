@@ -7,7 +7,7 @@ use "types"
 
 pkg xml =
 	pkglocal const newbuf :		(x : ctx#, buf : byte[:] -> void)
-	pkglocal const expandbuf :	(x : ctx#, buf : byte[:] -> void)
+	pkglocal const refillbuf :	(x : ctx# -> refill)
 
 	pkglocal const bexpect :	(x : ctx#, want : byte[:] -> std.result(void, errtype))
 	pkglocal const bget :		(x : ctx# -> std.option(char))
@@ -16,6 +16,12 @@ pkg xml =
 	pkglocal const bskip :		(x : ctx#, n : int -> void)
 
 	pkglocal const getname :	(x : ctx# -> std.result((std.size, std.size), errtype))
+
+	type refill = union
+		`Done
+		`Fail	errtype
+		`Empty
+	;;
 ;;
 
 const newbuf = {x, buf
@@ -24,9 +30,15 @@ const newbuf = {x, buf
 	x.p.buf = buf
 }
 
-const expandbuf = {x, buf
-	x.p.buf = std.sljoin(&x.p.buf, buf)
-	std.slfree(buf)
+const refillbuf = {x
+	match bio.readterm(x.file, ">")
+	| `std.Ok b:
+		x.p.buf = std.sljoin(&x.p.buf, b)
+		std.slfree(b)
+		-> `Done
+	| `std.Err `bio.Eof:	-> `Empty
+	| `std.Err e:		-> `Fail `Trunc e
+	;;
 }
 
 const bexpect = {x, want
