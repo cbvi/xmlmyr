@@ -6,7 +6,7 @@ use "types"
 
 pkg xml =
 	pkglocal const newbuf :		(x : ctx#, buf : byte[:] -> void)
-	pkglocal const refillbuf :	(x : ctx# -> refill)
+	pkglocal const refillbuf :	(x : ctx# -> fill)
 
 	pkglocal const bexpect :	(x : ctx#, want : byte[:] -> std.result(void, errtype))
 	pkglocal const bget :		(x : ctx# -> std.option(char))
@@ -17,7 +17,7 @@ pkg xml =
 
 	pkglocal const getname :	(x : ctx# -> std.result((std.size, std.size), errtype))
 
-	type refill = union
+	type fill = union
 		`Done
 		`Fail	errtype
 		`Empty
