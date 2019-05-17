@@ -1,7 +1,6 @@
 use std
 use bio
 
-use "err"
 use "chars"
 use "types"
 

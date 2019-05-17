@@ -3,7 +3,6 @@ use bio
 
 use "buf"
 use "chars"
-use "err"
 use "types"
 
 pkg xml =

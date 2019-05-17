@@ -5,7 +5,6 @@ use "attributes"
 use "buf"
 use "chars"
 use "doctype"
-use "err"
 use "mk"
 use "types"
 
