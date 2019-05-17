@@ -447,6 +447,9 @@ const twigil_test = {ctx
 
 	compareerr(ctx, "<?x", [][:],
 		[.line=1, .off=3, .err=`xml.Unclosed ("<?", "?>")])
+
+	compareerr(ctx, "<?x\t\t\t\t", [][:],
+		[.line=1, .off=7, .err=`xml.Unclosed ("<?", "?>")])
 }
 
 const crlf_test = {ctx
