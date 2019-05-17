@@ -12,7 +12,6 @@ pkg xml =
 const unclosed = `Unclosed ("<!DOCTYPE", ">")
 
 const parsedoctype = {x
-	const cp = "!--"
 	var a, z
 	var open
 
