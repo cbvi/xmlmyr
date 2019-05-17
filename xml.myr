@@ -125,7 +125,7 @@ const parseelemname = {x
 }
 
 const parseexclamation = {x
-	std.assert(bnext(x) == '!', "BUG: parseexclamation() ! missing\n")
+	beatchar(x, '!')
 
 	if x.p.bidx >= x.p.buf.len
 		-> `std.Err `Trunc `bio.Eof
@@ -142,8 +142,7 @@ const parseexclamation = {x
 const parseend = {x
 	var start, stop
 
-	/* to get here peek has to show a / was next up */
-	std.assert(bnext(x) == '/', "BUG: parseend() / missing\n")
+	beatchar(x, '/')
 
 	match getname(x)
 	| `std.Ok o:			(start, stop) = o
@@ -238,8 +237,7 @@ const parseinstruction = {x
 	var ds
 	var end
 
-	/* to get here peek has to show a ? was next up */
-	std.assert(bnext(x) == '?', "BUG: parseinstruction() '?' missing\n")
+	beatchar(x, '?')
 
 	match getname(x)
 	| `std.Ok o:	(ts, te) = o

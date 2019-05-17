@@ -13,6 +13,7 @@ pkg xml =
 	pkglocal const bget :		(x : ctx# -> std.option(char))
 	pkglocal const bnext :		(x : ctx# -> char)
 	pkglocal const beatspace :	(x : ctx# -> void)
+	pkglocal const beatchar : 	(x : ctx#, c : char -> void)
 	pkglocal const bskip :		(x : ctx#, n : int -> void)
 
 	pkglocal const getname :	(x : ctx# -> std.result((std.size, std.size), errtype))
@@ -109,6 +110,11 @@ const beatspace = {x
 :next
 		x.p.bidx += std.charlen(p)
 	;;
+}
+
+const beatchar = {x, c
+	x.p.bidx += std.charlen(c)
+	x.p.off++
 }
 
 const bskip = {x, n
