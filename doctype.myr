@@ -9,7 +9,10 @@ pkg xml =
 	pkglocal const parsedoctype : (x : ctx# -> std.result(event, errtype))
 ;;
 
+const unclosed = `Unclosed ("<!DOCTYPE", ">")
+
 const parsedoctype = {x
+	const cp = "!--"
 	var a, z
 	var open
 
@@ -23,7 +26,7 @@ const parsedoctype = {x
 		if !isspace(c)
 			-> `std.Err `Unexpected (c, ' ')
 		;;
-	| `std.None:	-> `std.Err `Unclosed ("<!DOCTYPE", ">")
+	| `std.None:	-> `std.Err unclosed
 	;;
 
 	beatspace(x)
@@ -35,16 +38,23 @@ const parsedoctype = {x
 	while x.p.bidx < x.p.buf.len
 		match bnext(x)
 		| '<':
-			if std.hasprefix(x.p.buf[x.p.bidx:], "!--")
-				docomment(x)
-			else
-				open++
+			match docomment(x)
+			| `std.Ok false:	open++
+			| `std.Ok true:
+			| `std.Err e:		-> `std.Err e
 			;;
-		| '"':	doquote(x, '"')
-		| '\'':	doquote(x, '\'')
+		| '"':
+			match doquote(x, '"')
+			| `std.Ok _:
+			| `std.Err e:	-> `std.Err e
+			;;
+		| '\'':
+			match doquote(x, '\'')
+			| `std.Ok _:
+			| `std.Err e:	-> `std.Err e
+			;;
 		| '>':
-			open--
-			if open == 0
+			if --open == 0
 				z = x.p.bidx - std.charlen('>')
 				-> `std.Ok `Doctype prune(x.p.buf[a:z])
 			;;
@@ -54,38 +64,45 @@ const parsedoctype = {x
 
 	match refillbuf(x)
 	| `Done:	goto again
-	| `Empty:	-> `std.Err `Unclosed ("<!DOCTYPE", ">")
+	| `Empty:	-> `std.Err unclosed
 	| `Fail e:	-> `std.Err e
 	;;
 }
 
-const refill = {x
-	refillbuf(x)
-}
-
 const doquote = {x, q
-	var c
+:again
 	while x.p.bidx < x.p.buf.len
-		c = bnext(x)
-		if c == q
-			break
-		elif c == '>'
-			refill(x)
+		if bnext(x) == q
+			-> `std.Ok void
 		;;
+	;;
+
+	match refillbuf(x)
+	| `Done:	goto again
+	| `Empty:	-> `std.Err unclosed
+	| `Fail e:	-> `std.Err e
 	;;
 }
 
 const docomment = {x
+	const cms = "!--"
+	var n
 	var end = 0
 
-	bskip(x, "!--".len)
+	n = x.p.bidx + cms.len
+	if n <= x.p.buf.len && std.sleq(x.p.buf[x.p.bidx:n], cms)
+		x.p.bidx = n
+		x.p.off += 3
+	else
+		-> `std.Ok false
+	;;
 
+:again
 	while x.p.bidx < x.p.buf.len
 		match bnext(x)
 		| '>':
-			refill(x)
 			if end > 1
-				break
+				-> `std.Ok true
 			else
 				end = 0
 			;;
@@ -93,5 +110,11 @@ const docomment = {x
 		| _:
 			end = 0
 		;;
+	;;
+
+	match refillbuf(x)
+	| `Done:	goto again
+	| `Empty:	-> `std.Err unclosed
+	| `Fail e:	-> `std.Err e
 	;;
 }
