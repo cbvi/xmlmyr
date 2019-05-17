@@ -5,7 +5,7 @@ use "chars"
 use "types"
 
 pkg xml =
-	pkglocal const newbuf :		(x : ctx#, buf : byte[:] -> void)
+	pkglocal const newbuf :		(x : ctx#, d : byte[:] -> fill)
 	pkglocal const refillbuf :	(x : ctx# -> fill)
 
 	pkglocal const bexpect :	(x : ctx#, want : byte[:] -> std.result(void, errtype))
@@ -25,10 +25,18 @@ pkg xml =
 ;;
 
 /* replace the ctx buffer with the provided buf and reset the idx */
-const newbuf = {x, buf
-	std.slfree(x.p.buf)
-	x.p.bidx = 0
-	x.p.buf = buf
+const newbuf = {x, d
+	match bio.readterm(x.file, d)
+	| `std.Ok b:
+		std.slfree(x.p.buf)
+		x.p.bidx = 0
+		x.p.buf = b
+		-> `Done
+	| `std.Err `bio.Eof:
+		-> `Empty
+	| `std.Err e:
+		-> `Fail `Trunc e
+	;;
 }
 
 /* extend the ctx buffer with more file bytes up to the next > character */

@@ -23,12 +23,12 @@ const dispatch = {x
 const close = {x
 	var start, stop
 
-	match bio.readterm(x.file, "<")
-	| `std.Ok s:	newbuf(x, s)
-	| `std.Err `bio.Eof:
+	match newbuf(x, "<")
+	| `Done:
+	| `Empty:
 		x.p.more = false
 		-> `std.Ok `Eof
-	| `std.Err e:	-> `std.Err `Trunc e
+	| `Fail e:	-> `std.Err e
 	;;
 
 	start = x.p.bidx
@@ -54,9 +54,10 @@ const close = {x
 }
 
 const open = {x
-	match bio.readterm(x.file, ">")
-	| `std.Ok b:	newbuf(x, b)
-	| `std.Err e:	-> `std.Err `Trunc e
+	match newbuf(x, ">")
+	| `Done:
+	| `Empty:	-> `std.Err `Trunc `bio.Eof
+	| `Fail e:	-> `std.Err e
 	;;
 
 	x.p.state = `Close
