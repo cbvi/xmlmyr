@@ -5,6 +5,7 @@ pkg xml =
 	pkglocal const namestartchar	:	(c : char -> bool)
 	pkglocal const isspace		:	(c : char -> bool)
 	pkglocal const prune		:	(b : byte[:] -> byte[:])
+	pkglocal const haschars		:	(b : byte[:] -> bool)
 ;;
 
 /* common chars that a name is allowed to start with */
@@ -66,4 +67,17 @@ const prune = {b
 	std.assert(bk > ft, "BUG: prune() end is before start\n")
 
 	-> b[ft:bk]
+}
+
+/* return true if the buffer contains any non-whitespace chars */
+const haschars = {b
+	var c
+	for var i = 0; i < b.len; i += std.charlen(c)
+		c = std.decode(b[i:])
+		if !isspace(c)
+			-> true
+		;;
+	;;
+
+	-> false
 }

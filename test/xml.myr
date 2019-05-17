@@ -11,6 +11,7 @@ const main = {
 		[.name="crlf", .fn=crlf_test],
 		[.name="space", .fn=space_test],
 		[.name="frag", .fn=frag_test],
+		[.name="chars", .fn=chars_test],
 		[.name="break", .fn=break_test],
 		[.name="unicode", .fn=unicode_test],
 		[.name="validate", .fn=validate_test],
@@ -515,6 +516,38 @@ const frag_test = {ctx
 		`xml.End "doc",
 		`xml.End "doc",
 		`xml.End "doc",
+		`xml.Eof
+	][:])
+}
+
+const chars_test = {ctx
+	var b
+
+	b = "\t\t\ttesting\t\t"
+	comparebuf(ctx, b, [
+		`xml.Characters b,
+		`xml.Eof
+	][:])
+
+	comparebuf(ctx, "\t\t\t\n\n\r\n    \r\n\n\n\t\t\t\t", [
+		`xml.Eof
+	][:])
+
+	b = "\t\t\t\n\n\r\n  .  \r\n\n\n\t\t\t\t" 
+	comparebuf(ctx, b, [
+		`xml.Characters b,
+		`xml.Eof
+	][:])
+
+	b = "\t\t\t\r\n\n\n\n \t \n \r  \n\t   ."
+	comparebuf(ctx, b, [
+		`xml.Characters b,
+		`xml.Eof
+	][:])
+
+	b = ".\t\t\t\r\n\n\n\n \t \n \r  \n\t   "
+	comparebuf(ctx, b, [
+		`xml.Characters b,
 		`xml.Eof
 	][:])
 }

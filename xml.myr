@@ -37,7 +37,7 @@ const close = {x
 		if bnext(x) == '<'
 			x.p.state = `Open
 			stop = x.p.bidx - std.charlen('<')
-			if prune(x.p.buf[start:stop]).len > 0
+			if haschars(x.p.buf[start:stop])
 				-> `std.Ok `Characters x.p.buf[start:stop]
 			else
 				-> dispatch(x)
@@ -45,7 +45,7 @@ const close = {x
 		;;
 	;;
 
-	if prune(x.p.buf).len > 0
+	if haschars(x.p.buf)
 		-> `std.Ok `Characters x.p.buf[start:x.p.bidx]
 	else
 		x.p.more = false
