@@ -24,7 +24,7 @@ pkg xml =
 	;;
 ;;
 
-/* replace the ctx buffer with the provided buf and reset the idx */
+/* replace the ctx buffer with file bytes read up to the provided delim */
 const newbuf = {x, d
 	match bio.readterm(x.file, d)
 	| `std.Ok b:
