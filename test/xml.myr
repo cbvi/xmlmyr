@@ -423,6 +423,30 @@ const twigil_test = {ctx
 	compareerr(ctx, "<doc><!", [
 		`xml.Start ("doc", [][:])
 	][:], [.line=1, .off=7, .err=`xml.Trunc `bio.Eof])
+
+	compareerr(ctx, "<!-", [][:],
+		[.line=1, .off=3, .err=`xml.Trunc `bio.Eof])
+
+	compareerr(ctx, "<![", [][:],
+		[.line=1, .off=3, .err=`xml.Trunc `bio.Eof])
+
+	compareerr(ctx, "<!D", [][:],
+		[.line=1, .off=3, .err=`xml.Trunc `bio.Eof])
+
+	compareerr(ctx, "<?", [][:],
+		[.line=1, .off=2, .err=`xml.Trunc `bio.Eof])
+
+	compareerr(ctx, "<!--", [][:],
+		[.line=1, .off=4, .err=`xml.Unclosed ("<!--", "-->")])
+
+	compareerr(ctx, "<![C", [][:],
+		[.line=1, .off=4, .err=`xml.Trunc `bio.Eof])
+
+	compareerr(ctx, "<!DO", [][:],
+		[.line=1, .off=4, .err=`xml.Trunc `bio.Eof])
+
+	compareerr(ctx, "<?x", [][:],
+		[.line=1, .off=3, .err=`xml.Unclosed ("<?", "?>")])
 }
 
 const crlf_test = {ctx
