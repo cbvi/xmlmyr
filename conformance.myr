@@ -129,6 +129,16 @@ const xmltest = {dir, suite
 }
 
 const main = {
+	if !std.fisdir("xmlconf/")
+		std.fatal("ERROR: conformance suite not found\n\n"\
+			"To run these tests, you must first download the "\
+			"XML conformance suite from\n"\
+			"\t"\
+			"https://www.w3.org/XML/Test/xmlts20130923.tar.gz"\
+			"\n"\
+			"and extract it into this directory\n\n")
+	;;
+
 	xmltest("xmlconf/xmltest", "xmlconf/xmltest/xmltest.xml")
 	xmltest("xmlconf/sun", "xmlconf/sun/sun-valid.xml")
 	xmltest("xmlconf/oasis", "xmlconf/oasis/oasis.xml")
