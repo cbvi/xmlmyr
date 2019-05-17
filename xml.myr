@@ -45,7 +45,7 @@ const close = {x
 		;;
 	;;
 
-	if haschars(x.p.buf)
+	if haschars(x.p.buf[start:x.p.bidx])
 		-> `std.Ok `Characters x.p.buf[start:x.p.bidx]
 	else
 		x.p.more = false
