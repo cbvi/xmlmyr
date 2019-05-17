@@ -25,12 +25,14 @@ pkg xml =
 	;;
 ;;
 
+/* replace the ctx buffer with the provided buf and reset the idx */
 const newbuf = {x, buf
 	std.slfree(x.p.buf)
 	x.p.bidx = 0
 	x.p.buf = buf
 }
 
+/* extend the ctx buffer with more file bytes up to the next > character */
 const refillbuf = {x
 	match bio.readterm(x.file, ">")
 	| `std.Ok b:
@@ -42,6 +44,7 @@ const refillbuf = {x
 	;;
 }
 
+/* check if the head of the ctx buffer is the given string */
 const bexpect = {x, want
 	var nidx
 
@@ -66,6 +69,7 @@ const bexpect = {x, want
 	-> `std.Ok void
 }
 
+/* take the next character from the ctx buffer if possible */
 const bget = {x
 	if x.p.bidx < x.p.buf.len
 		-> `std.Some bnext(x)
@@ -74,6 +78,7 @@ const bget = {x
 	;;
 }
 
+/* take the next character from the ctx buffer, the idx must be in range */
 const bnext = {x
 	var c
 
@@ -91,6 +96,7 @@ const bnext = {x
 	-> c
 }
 
+/* skips all xml whitespace at the head of the ctx buffer XXX FIXME */
 const beatspace = {x
 	var p
 	while true
@@ -112,17 +118,20 @@ const beatspace = {x
 	;;
 }
 
+/* the head of the ctx buffer is moved as if the given char was taken */
 const beatchar = {x, c
 	x.p.bidx += std.charlen(c)
 	x.p.off++
 }
 
+/* skips n chars from the front of the ctx buffer */
 const bskip = {x, n
 	for var i = 0; i < n; i++
 		bnext(x)
 	;;
 }
 
+/* gets an xml name from the head of the ctx buffer if possible */
 const getname = {x
 	var c
 	var start
