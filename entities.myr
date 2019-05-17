@@ -125,13 +125,9 @@ const dodecode = {s, fatal
 		c = std.decode(s[idx:])
 		if c != ';'
 			/* sanity checks so decodef can't run away too far */
-			if charrefchars(c)
-				if idx <= max
-					idx += std.charlen(c)
-					goto findrefend
-				else
-					goto err
-				;;
+			if charrefchars(c) && idx <= max
+				idx += std.charlen(c)
+				goto findrefend
 			else
 				goto err
 			;;
