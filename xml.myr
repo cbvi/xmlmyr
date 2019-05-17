@@ -55,12 +55,12 @@ const close = {x
 }
 
 const open = {x
-	x.p.state = `Close
-
 	match bio.readterm(x.file, ">")
 	| `std.Ok b:	newbuf(x, b)
 	| `std.Err e:	-> `std.Err `Trunc e
 	;;
+
+	x.p.state = `Close
 
 	match std.decode(x.p.buf[x.p.bidx:])
 	| '!':	-> parseexclamation(x)
