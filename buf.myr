@@ -96,7 +96,7 @@ const bnext = {x
 	-> c
 }
 
-/* skips all xml whitespace at the head of the ctx buffer XXX FIXME */
+/* skips any xml whitespace at the head of the ctx buffer */
 const beatspace = {x
 	var p
 	while true
