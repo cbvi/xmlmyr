@@ -133,6 +133,12 @@ const malformed_test = {ctx
 	compareerr(ctx, "<!DOCTYPE", [][:],
 		[.line=1, .off=9, .err=`xml.Unclosed ("<!DOCTYPE", ">")])
 
+	compareerr(ctx, "<!DOCTYPE ", [][:],
+		[.line=1, .off=10, .err=`xml.Unclosed ("<!DOCTYPE", ">")])
+
+	compareerr(ctx, "<!DOCTYPE a", [][:],
+		[.line=1, .off=11, .err=`xml.Unclosed ("<!DOCTYPE", ">")])
+
 	compareerr(ctx, "<!DOCT>", [][:],
 		[.line=1, .off=7, .err=`xml.Unexpected ('>', 'Y')])
 }
