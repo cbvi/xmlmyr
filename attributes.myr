@@ -11,7 +11,6 @@ pkg xml =
 
 const parseattrs = {x
 	var name, val
-	var err
 	var cnt = 0
 
 	beatspace(x)
@@ -25,18 +24,14 @@ const parseattrs = {x
 
 		match parseattrname(x)
 		| `std.Ok n:	name = n
-		| `std.Err e:
-			err = e
-			goto err
+		| `std.Err e:	-> `std.Err e
 		;;
 
 		beatspace(x)
 
 		match parseattrval(x)
 		| `std.Ok v:	val = v
-		| `std.Err e:
-			err = e
-			goto err
+		| `std.Err e:	-> `std.Err e
 		;;
 
 		if cnt >= x.a.offs.len
@@ -54,8 +49,7 @@ const parseattrs = {x
 				if isspace(c)
 					beatspace(x)
 				else
-					err = `Inval c
-					goto err
+					-> `std.Err `Inval c
 				;;
 			;;
 		else
@@ -63,8 +57,7 @@ const parseattrs = {x
 		;;
 	;;
 
-	err = `Trunc `bio.Eof
-	goto err
+	-> `std.Err `Trunc `bio.Eof
 
 :done
 	if x.a.attrs.len < x.a.offs.len
@@ -78,9 +71,6 @@ const parseattrs = {x
 		;;
 	;;
 	-> `std.Ok cnt
-
-:err
-	-> `std.Err err
 }
 
 const parseattrname = {x
