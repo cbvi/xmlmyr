@@ -1,54 +1,43 @@
 use std
-use bio
 use xml
 
-const processtext = {s
-	var d = xml.decodef(s)
-	std.slfree(d)
-
-	match xml.decode(s)
-	| `std.Ok o:
-		std.sleq(d, s)
-		std.slfree(o)
-	| `std.Err e:
-		d = xml.decodef(e)
-		std.sleq(d, s)
-		std.slfree(d)
-	;;
-}
-
 const main = {arg : byte[:][:]
+	var elem
+	var elems = [][:]
+
 	if arg.len < 2
 		std.fatal("requries an arg\n")
 	;;
 
 	var x = std.try(xml.mkpath(arg[1]))
 
-	for event : xml.byevent(x)
-		match event
-		| `xml.Characters c:	processtext(c)
-		| `xml.Cdata c:		processtext(c)
-		| `xml.Comment c:
-			processtext(c)
-		| `xml.Doctype d:	processtext(d)
-		| `xml.Start (n, a):
-			processtext(n)
-			for (k, v) : a
-				processtext(k)
-				processtext(v)
+	for ev : xml.byevent(x)
+		match ev
+		| `xml.Start (n, _):
+			std.slpush(&elems, std.sldup(n))
+		| `xml.End n:
+			elem = std.slpop(&elems)
+			if !std.sleq(elem, n)
+				std.put("tag {} closed while {} open\n", n, elem)
 			;;
-		| `xml.End n:		processtext(n)
-		| `xml.Instruction (targ, data):
-			processtext(targ)
-			processtext(data)
+			std.slfree(elem)
 		| `xml.Eof:
+			if elems.len > 0
+				std.put("{} unclosed tags\n", elems.len)
+			;;
+		| _:
 		;;
 	;;
 
+	for e : elems
+		std.slfree(e)
+	;;
+
 	match xml.geterr(x)
-	| `std.Some s:
+	| `std.Some e:	std.put("Error at {}:{}: {}\n", e.line, e.off, e.err)
 	| `std.None:
 	;;
 
+	std.slfree(elems)
 	xml.free(x)
 }
