@@ -16,11 +16,15 @@ const main = {arg : byte[:][:]
 		| `xml.Start (n, _):
 			std.slpush(&elems, std.sldup(n))
 		| `xml.End n:
-			elem = std.slpop(&elems)
-			if !std.eq(elem, n)
-				std.put("tag {} closed while {} open\n", n, elem)
+			if elems.len > 0
+				elem = std.slpop(&elems)
+				if !std.eq(elem, n)
+					std.put("tag {} closed while {} open\n", n, elem)
+				;;
+				std.slfree(elem)
+			else
+				std.put("tag {} closed while no tag open\n", n)
 			;;
-			std.slfree(elem)
 		| `xml.Eof:
 			if elems.len > 0
 				std.put("{} unclosed tags\n", elems.len)
