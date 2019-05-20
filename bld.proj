@@ -20,3 +20,8 @@ bin conformance {noinst} =
 	conformance.myr
 	lib xml
 ;;
+
+bin stress {noinst} =
+	stressentities.myr
+	lib xml
+;;
