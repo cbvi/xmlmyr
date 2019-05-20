@@ -154,7 +154,7 @@ remember to copy it:
 			std.slpush(&elems, std.sldup(name))
 		| `xml.End name:
 			ele = std.slpop(&elems)
-			if !std.sleq(ele, name)
+			if !std.eq(ele, name)
 				std.put("{} closed while {} open\n", ele, name)
 			;;
 			std.slfree(ele)

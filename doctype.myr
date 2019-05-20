@@ -89,7 +89,7 @@ const docomment = {x
 	var end = 0
 
 	n = x.p.bidx + cms.len
-	if n <= x.p.buf.len && std.sleq(x.p.buf[x.p.bidx:n], cms)
+	if n <= x.p.buf.len && std.eq(x.p.buf[x.p.bidx:n], cms)
 		x.p.bidx = n
 		x.p.off += 3
 	else

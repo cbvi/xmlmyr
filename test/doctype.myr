@@ -17,7 +17,7 @@ generic checkevent = {ctx, got : @a, expect : @a
 	g = std.fmt("{}", got)
 	e = std.fmt("{}", expect)
 
-	if !std.sleq(g, e)
+	if !std.eq(g, e)
 		testr.fail(ctx, "got \"{}\" expected \"{}\"", g, e)
 	;;
 

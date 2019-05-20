@@ -25,7 +25,7 @@ const check = {ctx, buf, ex
 		-> void
 	;;
 
-	testr.check(ctx, std.sleq(ex, u), "got {} expected {}", u, ex) 
+	testr.check(ctx, std.eq(ex, u), "got {} expected {}", u, ex) 
 	std.slfree(u)
 }
 
@@ -33,14 +33,14 @@ const checkbad = {ctx, buf, er
 	match xml.decode(buf)
 	| `std.Ok o:	testr.fail(ctx, "unexpectedly parsed: {}", o)
 	| `std.Err e:
-		testr.check(ctx, std.sleq(e, er), "got {} expected {}", e, er)
+		testr.check(ctx, std.eq(e, er), "got {} expected {}", e, er)
 	;;
 }
 
 const checkf = {ctx, buf, ex
 	var u = xml.decodef(buf)
 
-	testr.check(ctx, std.sleq(ex, u), "got {} expected {}", u, ex) 
+	testr.check(ctx, std.eq(ex, u), "got {} expected {}", u, ex) 
 	std.slfree(u)
 }
 

@@ -159,7 +159,7 @@ const checkevent = {name, got, expect
 	g = std.fmt("{}", got)
 	e = std.fmt("{}", expect)
 
-	if !std.sleq(g, e)
+	if !std.eq(g, e)
 		std.put("\nMISMATCH:\n")
 
 		for (one, two) : iter.byzip(g, e)

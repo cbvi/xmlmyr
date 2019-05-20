@@ -40,7 +40,7 @@ const utf8bom_test = {ctx
 		;;
 		g = std.fmt("{}", ev)
 		e = std.fmt("{}", ex[i])
-		if !std.sleq(g, e)
+		if !std.eq(g, e)
 			testr.fail(ctx, "got \"{}\" expected \"{}\"", g, e)
 		;;
 		std.slfree(g)
@@ -86,7 +86,7 @@ const unowned_test = {ctx
 
 	match bio.readterm(f, ">")
 	| `std.Ok s:
-		if !std.sleq(s, "</doc>")
+		if !std.eq(s, "</doc>")
 			testr.fail(ctx, "didn't match: {}", s)
 		;;
 	| `std.Err e:

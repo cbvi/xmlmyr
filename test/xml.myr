@@ -25,7 +25,7 @@ generic checkevent = {ctx, got : @a, expect : @a
 	g = std.fmt("{}", got)
 	e = std.fmt("{}", expect)
 
-	if !std.sleq(g, e)
+	if !std.eq(g, e)
 		testr.fail(ctx, "got \"{}\" expected \"{}\"", g, e)
 	;;
 
@@ -680,7 +680,7 @@ const validate_test = {ctx
 			std.slpush(&elems, std.sldup(n))
 		| `xml.End n:
 			elem = std.slpop(&elems)
-			if !std.sleq(elem, n)
+			if !std.eq(elem, n)
 				testr.fail(ctx, "mismatch {}:{}", elem, n)
 			;;
 			std.slfree(elem)

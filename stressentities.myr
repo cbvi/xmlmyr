@@ -8,11 +8,11 @@ const processtext = {s
 
 	match xml.decode(s)
 	| `std.Ok o:
-		std.sleq(d, s)
+		std.eq(d, s)
 		std.slfree(o)
 	| `std.Err e:
 		d = xml.decodef(e)
-		std.sleq(d, s)
+		std.eq(d, s)
 		std.slfree(d)
 	;;
 }
