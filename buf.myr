@@ -87,6 +87,14 @@ const bget = {x
 /* take the next character from the ctx buffer, the idx must be in range */
 const bnext = {x
 	var c
+	var b = x.p.buf[x.p.bidx]
+
+	/* XXX std lib should handle this */
+	if b >= 0x80 && b <= 0xc1 || b >= 0xf5 && b <= 0xff
+		x.p.bidx++
+		x.p.off++
+		-> std.Badchar
+	;;
 
 	c = std.decode(x.p.buf[x.p.bidx:])
 	x.p.bidx += std.charlen(c)
