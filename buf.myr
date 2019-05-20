@@ -13,7 +13,6 @@ pkg xml =
 	pkglocal const bnext :		(x : ctx# -> char)
 	pkglocal const beatspace :	(x : ctx# -> void)
 	pkglocal const beatchar : 	(x : ctx#, c : char -> void)
-	pkglocal const bskip :		(x : ctx#, n : int -> void)
 
 	pkglocal const getname :	(x : ctx# -> std.result((std.size, std.size), errtype))
 
@@ -129,13 +128,6 @@ const beatspace = {x
 const beatchar = {x, c
 	x.p.bidx += std.charlen(c)
 	x.p.off++
-}
-
-/* skip n chars from the front of the ctx buffer */
-const bskip = {x, n
-	for var i = 0; i < n; i++
-		bnext(x)
-	;;
 }
 
 /* get an xml name from the head of the ctx buffer if possible */
