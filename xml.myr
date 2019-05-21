@@ -21,7 +21,8 @@ const dispatch = {x
 }
 
 const close = {x
-	var start, stop
+	var start
+	var chars
 
 	match newbuf(x, "<")
 	| `Done:
@@ -36,17 +37,19 @@ const close = {x
 	while x.p.bidx < x.p.buf.len
 		if bnext(x) == '<'
 			x.p.state = `Open
-			stop = x.p.bidx - std.charlen('<')
-			if haschars(x.p.buf[start:stop])
-				-> `std.Ok `Characters x.p.buf[start:stop]
+			chars = x.p.buf[start:x.p.bidx-std.charlen('<')]
+
+			if haschars(chars)
+				-> `std.Ok `Characters chars
 			else
 				-> dispatch(x)
 			;;
 		;;
 	;;
 
-	if haschars(x.p.buf[start:x.p.bidx])
-		-> `std.Ok `Characters x.p.buf[start:x.p.bidx]
+	chars = x.p.buf[start:x.p.bidx]
+	if haschars(chars)
+		-> `std.Ok `Characters chars
 	else
 		x.p.more = false
 		-> `std.Ok `Eof
