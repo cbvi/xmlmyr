@@ -86,7 +86,6 @@ const doquote = {x, q
 const docomment = {x
 	const cms = "!--"
 	var n
-	var end = 0
 
 	n = x.p.bidx + cms.len
 	if n <= x.p.buf.len && std.eq(x.p.buf[x.p.bidx:n], cms)
@@ -98,16 +97,8 @@ const docomment = {x
 
 :again
 	while x.p.bidx < x.p.buf.len
-		match bnext(x)
-		| '>':
-			if end > 1
-				-> `std.Ok true
-			else
-				end = 0
-			;;
-		| '-':	end++
-		| _:
-			end = 0
+		if bnext(x) == '-'
+			goto maybe
 		;;
 	;;
 
@@ -116,4 +107,17 @@ const docomment = {x
 	| `Empty:	-> `std.Err unclosed
 	| `Fail e:	-> `std.Err e
 	;;
+
+:maybe
+	match bget(x)
+	| `std.Some '-':
+	| _:		goto again
+	;;
+
+	match bget(x)
+	| `std.Some '>':
+	| _:		goto again
+	;;
+
+	-> `std.Ok true
 }
