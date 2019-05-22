@@ -111,12 +111,16 @@ const docomment = {x
 :maybe
 	match bget(x)
 	| `std.Some '-':
-	| _:		goto again
+	| _:	goto again
 	;;
 
+:maybe2
 	match bget(x)
 	| `std.Some '>':
-	| _:		goto again
+	| `std.Some '-':
+		/* shouldn't be valid but the doctype is returned raw */
+		goto maybe2
+	| _:	goto again
 	;;
 
 	-> `std.Ok true

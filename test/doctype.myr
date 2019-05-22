@@ -141,4 +141,42 @@ const malformed_test = {ctx
 
 	compareerr(ctx, "<!DOCT>", [][:],
 		[.line=1, .off=7, .err=`xml.Unexpected ('>', 'Y')])
+
+	/* these comments are not valid but no validation is done so test
+	   the doctype can still be returned
+	 */
+	comparebuf(ctx, "<!DOCTYPE doc [ <!-----> ] >", [
+		`xml.Doctype "doc [ <!-----> ]",
+		`xml.Eof
+	][:])
+
+	comparebuf(ctx, "<!DOCTYPE doc [ <!------> ] >", [
+		`xml.Doctype "doc [ <!------> ]",
+		`xml.Eof
+	][:])
+
+	comparebuf(ctx, "<!DOCTYPE doc [ <!-------> ] >", [
+		`xml.Doctype "doc [ <!-------> ]",
+		`xml.Eof
+	][:])
+
+	comparebuf(ctx, "<!DOCTYPE doc [ <!--------> ] >", [
+		`xml.Doctype "doc [ <!--------> ]",
+		`xml.Eof
+	][:])
+
+	compareerr(ctx, "<!DOCTYPE doc [ <!-- -", [][:],
+		[.line=1, .off=22, .err=`xml.Unclosed ("<!DOCTYPE", ">")])
+
+	compareerr(ctx, "<!DOCTYPE doc [ <!-- --", [][:],
+		[.line=1, .off=23, .err=`xml.Unclosed ("<!DOCTYPE", ">")])
+
+	compareerr(ctx, "<!DOCTYPE doc [ <!-- ---", [][:],
+		[.line=1, .off=24, .err=`xml.Unclosed ("<!DOCTYPE", ">")])
+
+	compareerr(ctx, "<!DOCTYPE doc [ <!-- ----", [][:],
+		[.line=1, .off=25, .err=`xml.Unclosed ("<!DOCTYPE", ">")])
+
+	compareerr(ctx, "<!DOCTYPE doc [ <!-- -----", [][:],
+		[.line=1, .off=26, .err=`xml.Unclosed ("<!DOCTYPE", ">")])
 }
