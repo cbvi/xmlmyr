@@ -27,6 +27,7 @@ const mk = {f, owned
 		.owned = owned,
 		.p = std.mk([
 			.buf = [][:],
+			.ptr = (0 : byte#),
 			.bidx = 0,
 			.line = 1,
 			.off = 0,
@@ -36,9 +37,14 @@ const mk = {f, owned
 		]),
 		.a = std.mk([
 			.offs = std.slalloc(1),
-			.attrs = std.slalloc(1)
+			.attrs = std.slalloc(1),
+			.op = (0 : ((std.size, std.size), (std.size, std.size))#),
+			.ap = (0 : (byte[:], byte[:])#)
 		])
 	])
+
+	x.a.op = (x.a.offs : ((std.size, std.size), (std.size, std.size))#)
+	x.a.ap = (x.a.attrs : (byte[:], byte[:])#)
 
 	match bom(x)
 	| `std.Some s:	-> `std.Err `Eenc s

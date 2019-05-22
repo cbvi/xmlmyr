@@ -30,6 +30,7 @@ const newbuf = {x, d
 		std.slfree(x.p.buf)
 		x.p.bidx = 0
 		x.p.buf = b
+		x.p.ptr = (x.p.buf : byte#)
 		-> `Done
 	| `std.Err `bio.Eof:
 		-> `Empty
@@ -43,6 +44,7 @@ const refillbuf = {x
 	match bio.readterm(x.file, ">")
 	| `std.Ok b:
 		x.p.buf = std.sljoin(&x.p.buf, b)
+		x.p.ptr = (x.p.buf : byte#)
 		std.slfree(b)
 		-> `Done
 	| `std.Err `bio.Eof:	-> `Empty
@@ -55,7 +57,7 @@ const bexpect = {x, want
 	var nidx
 
 	nidx = x.p.bidx + want.len
-	if nidx <= x.p.buf.len && std.eq(x.p.buf[x.p.bidx:nidx], want)
+	if nidx <= x.p.buf.len && std.eq(x.p.ptr[x.p.bidx:nidx], want)
 		x.p.bidx = nidx
 	else
 		/* figure out what the error was */
@@ -87,7 +89,7 @@ const bget = {x
 /* take the next character from the ctx buffer, the idx must be in range */
 const bnext = {x
 	var c
-	var b = x.p.buf[x.p.bidx]
+	var b = (((x.p.ptr : std.size) + x.p.bidx) : byte#)#
 
 	/* XXX std lib should handle this */
 	if b >= 0x80 && b <= 0xc1 || b >= 0xf5 && b <= 0xff
@@ -96,7 +98,7 @@ const bnext = {x
 		-> std.Badchar
 	;;
 
-	c = std.decode(x.p.buf[x.p.bidx:])
+	c = std.decode(x.p.ptr[x.p.bidx:x.p.buf.len])
 	x.p.bidx += std.charlen(c)
 
 	match c
@@ -114,7 +116,7 @@ const bnext = {x
 const beatspace = {x
 	var p
 	while true
-		p = std.decode(x.p.buf[x.p.bidx:])
+		p = std.decode(x.p.ptr[x.p.bidx:x.p.buf.len])
 		match p
 		| ' ':
 		| '\n':
@@ -154,7 +156,7 @@ const getname = {x
 	;;
 
 	while x.p.bidx < x.p.buf.len
-		c = std.decode(x.p.buf[x.p.bidx:])
+		c = std.decode(x.p.ptr[x.p.bidx:x.p.buf.len])
 		if namechar(c)
 			x.p.off++
 			x.p.bidx += std.charlen(c)

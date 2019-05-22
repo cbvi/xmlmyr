@@ -13,6 +13,7 @@ pkg xml =
 
 	type parser = struct
 		buf	:	byte[:]
+		ptr	:	byte#
 		bidx	:	std.size
 		line	:	std.size
 		off	:	std.size
@@ -24,6 +25,9 @@ pkg xml =
 	type attrstore = struct
 		offs	:	((std.size, std.size), (std.size, std.size))[:]
 		attrs	:	(byte[:], byte[:])[:]
+
+		op	:	((std.size, std.size), (std.size, std.size))#
+		ap	:	(byte[:], byte[:])#
 	;;
 
 	type event = union
