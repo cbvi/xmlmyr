@@ -37,7 +37,7 @@ const close = {x
 	while x.p.bidx < x.p.buf.len
 		if bnext(x) == '<'
 			x.p.state = `Open
-			chars = x.p.ptr[start:x.p.bidx-std.charlen('<')]
+			chars = x.p.buf[start:x.p.bidx-std.charlen('<')]
 
 			if haschars(chars)
 				-> `std.Ok `Characters chars
@@ -47,7 +47,7 @@ const close = {x
 		;;
 	;;
 
-	chars = x.p.ptr[start:x.p.bidx]
+	chars = x.p.buf[start:x.p.bidx]
 	if haschars(chars)
 		-> `std.Ok `Characters chars
 	else
@@ -65,7 +65,7 @@ const open = {x
 
 	x.p.state = `Close
 
-	match std.decode(x.p.ptr[x.p.bidx:x.p.buf.len])
+	match std.decode(x.p.buf[x.p.bidx:])
 	| '!':	-> parseexclamation(x)
 	| '/':	-> parseend(x)
 	| '?':	-> parseinstruction(x)
@@ -112,13 +112,13 @@ const parseelemname = {x
 	;;
 
 :end
-	-> `std.Ok `Start (x.p.ptr[start:stop], x.a.attrs[:cnt])
+	-> `std.Ok `Start (x.p.buf[start:stop], x.a.attrs[:cnt])
 
 :selfclose
 	match bget(x)
 	| `std.Some '>':
-		x.p.state = `Closing x.p.ptr[start:stop]
-		-> `std.Ok `Start (x.p.ptr[start:stop], x.a.attrs[:cnt])
+		x.p.state = `Closing x.p.buf[start:stop]
+		-> `std.Ok `Start (x.p.buf[start:stop], x.a.attrs[:cnt])
 	| `std.Some c:	-> `std.Err `Unexpected (c, '>')
 	| `std.None:	-> `std.Err `Unclosed ("<", "/>")
 	;;
@@ -134,7 +134,7 @@ const parseexclamation = {x
 		-> `std.Err `Trunc `bio.Eof
 	;;
 
-	match std.decode(x.p.ptr[x.p.bidx:x.p.buf.len])
+	match std.decode(x.p.buf[x.p.bidx:])
 	| '[':	-> parsecdata(x)
 	| '-':	-> parsecomment(x)
 	| 'D':	-> parsedoctype(x)
@@ -156,7 +156,7 @@ const parseend = {x
 	beatspace(x)
 
 	match bget(x)
-	| `std.Some '>':	-> `std.Ok `End x.p.ptr[start:stop]
+	| `std.Some '>':	-> `std.Ok `End x.p.buf[start:stop]
 	| `std.Some c:		-> `std.Err `Unexpected (c, '>')
 	| `std.None:		goto unclosed
 	;;
@@ -184,7 +184,7 @@ const parsecdata = {x
 		match bnext(x)
 		| ']':	end++
 		| '>':	if end > 1
-				-> `std.Ok `Cdata x.p.ptr[st:x.p.bidx-suf.len]
+				-> `std.Ok `Cdata x.p.buf[st:x.p.bidx-suf.len]
 			;;
 		| _:	end = 0
 		;;
@@ -219,7 +219,7 @@ const parsecomment = {x
 				/* stray -- in comments is invalid */
 				-> `std.Err `Unexpected (c, '>')
 			;;
-			-> `std.Ok `Comment prune(x.p.ptr[st:x.p.bidx-suf.len])
+			-> `std.Ok `Comment prune(x.p.buf[st:x.p.bidx-suf.len])
 		elif c == '-'
 			end++
 		else
@@ -250,7 +250,7 @@ const parseinstruction = {x
 	match bget(x)
 	| `std.Some '?':
 		match bget(x)
-		| `std.Some '>': -> `std.Ok `Instruction (x.p.ptr[ts:te], "")
+		| `std.Some '>': -> `std.Ok `Instruction (x.p.buf[ts:te], "")
 		| `std.Some c:	 -> `std.Err `Unexpected (c, '>')
 		| `std.None:	 goto unclosed
 		;;
@@ -272,8 +272,8 @@ const parseinstruction = {x
 		match bnext(x)
 		| '?':	end = true
 		| '>':	if end
-				-> `std.Ok `Instruction (x.p.ptr[ts:te],
-					x.p.ptr[ds:x.p.bidx-suf.len])
+				-> `std.Ok `Instruction (x.p.buf[ts:te],
+					x.p.buf[ds:x.p.bidx-suf.len])
 			;;
 		| _:	end = false
 		;;

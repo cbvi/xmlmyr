@@ -32,16 +32,14 @@ const dodecode = {s, fatal
 	var base
 	var c
 
-	var p = (s : byte#)
-
 :again
 	if idx < s.len
-		c = std.decode(p[idx:s.len])
+		c = std.decode(s[idx:])
 		if c != '&'
 			idx += std.charlen(c)
 			goto again
 		else
-			std.sbputs(sb, p[stok:idx])
+			std.sbputs(sb, s[stok:idx])
 			stok = idx
 			idx += std.charlen(c)
 			sp = idx
@@ -51,7 +49,7 @@ const dodecode = {s, fatal
 	;;
 
 	if idx < s.len
-		c = std.decode(p[idx:s.len])
+		c = std.decode(s[idx:])
 		idx += std.charlen(c)
 		if c == '#'
 			goto charref
@@ -62,7 +60,7 @@ const dodecode = {s, fatal
 
 :findentend
 	if idx < s.len
-		c = std.decode(p[idx:s.len])
+		c = std.decode(s[idx:])
 		if c != ';'
 			/* sanity check so decodef can't run away too far */
 			if namechar(c)
@@ -80,7 +78,7 @@ const dodecode = {s, fatal
 		goto err
 	;;
 
-	match p[sp:idx]
+	match s[sp:idx]
 	| "amp":	std.sbputc(sb, '&')
 	| "lt":		std.sbputc(sb, '<')
 	| "gt":		std.sbputc(sb, '>')
@@ -98,7 +96,7 @@ const dodecode = {s, fatal
 :charref
 	if idx < s.len
 		sp += std.charlen(c)
-		c = std.decode(p[idx:s.len])
+		c = std.decode(s[idx:])
 		idx += std.charlen(c)
 		if c == 'x'
 			sp += std.charlen(c)
@@ -112,7 +110,7 @@ const dodecode = {s, fatal
 
 :findrefend
 	if idx < s.len
-		c = std.decode(p[idx:s.len])
+		c = std.decode(s[idx:])
 		if c != ';'
 			/* sanity check so decodef can't run away too far */
 			if charrefchars(c)
@@ -130,7 +128,7 @@ const dodecode = {s, fatal
 		goto err
 	;;
 
-	match std.intparsebase(p[sp:idx], base)
+	match std.intparsebase(s[sp:idx], base)
 	| `std.Some i:
 		if i > 255
 			std.sbputc(sb, (i : char))
@@ -145,14 +143,14 @@ const dodecode = {s, fatal
 	goto again
 
 :end
-	std.sbputs(sb, p[stok:s.len])
+	std.sbputs(sb, s[stok:])
 	-> `std.Ok std.sbfin(sb)
 
 :err
 	if fatal
 		std.sbfree(sb)
 		//-> `std.Err start
-		-> `std.Err errend(p[stok:s.len])
+		-> `std.Err errend(s[stok:])
 	else
 		goto again
 	;;
@@ -161,9 +159,9 @@ const dodecode = {s, fatal
 	if fatal
 		std.sbfree(sb)
 		//-> `std.Err start
-		-> `std.Err errend(p[stok:s.len])
+		-> `std.Err errend(s[stok:])
 	else
-		std.sbputs(sb, p[stok:s.len])
+		std.sbputs(sb, s[stok:])
 		-> `std.Ok std.sbfin(sb)
 	;;
 }

@@ -16,7 +16,7 @@ const parseattrs = {x
 	beatspace(x)
 
 	while x.p.bidx < x.p.buf.len
-		match std.decode(x.p.ptr[x.p.bidx:x.p.buf.len])
+		match std.decode(x.p.buf[x.p.bidx:])
 		| '>':	goto done
 		| '/':	goto done
 		| _:
@@ -36,16 +36,13 @@ const parseattrs = {x
 
 		if cnt >= x.a.offs.len
 			x.a.offs = std.slgrow(&x.a.offs, 2 * x.a.offs.len)
-			x.a.op = (x.a.offs : ((std.size, std.size), (std.size, std.size))#)
 		;;
 
-		(((x.a.op : std.size) + cnt*sizeof(((std.size, std.size), (std.size, std.size)))) : ((std.size, std.size), (std.size, std.size))#)# = (name, val)
-
-		//x.a.offs[cnt] = (name, val)
+		x.a.offs[cnt] = (name, val)
 		cnt++
 
 		if x.p.bidx < x.p.buf.len
-			match std.decode(x.p.ptr[x.p.bidx:x.p.buf.len])
+			match std.decode(x.p.buf[x.p.bidx:])
 			| '>':	goto done
 			| '/':	goto done
 			| c:
@@ -65,15 +62,12 @@ const parseattrs = {x
 :done
 	if x.a.attrs.len < x.a.offs.len
 		x.a.attrs = std.slgrow(&x.a.attrs, x.a.offs.len)
-		x.a.ap = (x.a.attrs : (byte[:], byte[:])#)
 	;;
 
 	for var i = 0; i < cnt; i++
-		var sz = i * sizeof(((std.size, std.size), (std.size, std.size)))
-		match (((x.a.op : std.size) + sz) : ((std.size, std.size), (std.size, std.size))#)#
+		match x.a.offs[i]
 		| ((ns, ne), (vs, ve)):
-			(((x.a.ap : std.size) + i*sizeof((byte[:], byte[:]))) : (byte[:], byte[:])#)# = (x.p.ptr[ns:ne], x.p.ptr[vs:ve])
-			//x.a.attrs[i] = (x.p.ptr[ns:ne], x.p.ptr[vs:ve])
+			x.a.attrs[i] = (x.p.buf[ns:ne], x.p.buf[vs:ve])
 		;;
 	;;
 	-> `std.Ok cnt
