@@ -10,9 +10,9 @@ const processtext = {s
 	| `std.Ok o:
 		std.eq(d, s)
 		std.slfree(o)
-	| `std.Err e:
-		d = xml.decodef(e)
-		std.eq(d, s)
+	| `std.Err i:
+		d = xml.decodef(s[i:])
+		std.eq(d, s[i:])
 		std.slfree(d)
 	;;
 }

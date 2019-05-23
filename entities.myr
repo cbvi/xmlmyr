@@ -3,7 +3,7 @@ use std
 use "chars"
 
 pkg xml =
-	const decode	: (s : byte[:] -> std.result(byte[:], byte[:]))
+	const decode	: (s : byte[:] -> std.result(byte[:], std.size))
 	const decodef	: (s : byte[:] -> byte[:])
 ;;
 
@@ -149,8 +149,7 @@ const dodecode = {s, fatal
 :err
 	if fatal
 		std.sbfree(sb)
-		//-> `std.Err start
-		-> `std.Err errend(s[stok:])
+		-> `std.Err stok
 	else
 		goto again
 	;;
@@ -158,29 +157,9 @@ const dodecode = {s, fatal
 :eof
 	if fatal
 		std.sbfree(sb)
-		//-> `std.Err start
-		-> `std.Err errend(s[stok:])
+		-> `std.Err stok
 	else
 		std.sbputs(sb, s[stok:])
 		-> `std.Ok std.sbfin(sb)
 	;;
-}
-
-const errend = {s
-	var i = 0
-	var c
-
-	while i < s.len
-		c = std.decode(s[i:])
-		if c == ';'
-			i += std.charlen(c)
-			break
-		elif c == '\r' || std.isspace(c)
-			break
-		else
-			i += std.charlen(c)
-		;;
-	;;
-
-	-> s[:i]
 }

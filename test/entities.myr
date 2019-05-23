@@ -54,30 +54,30 @@ const default_test = {ctx
 	check(ctx, "x&quot;x&amp;x&apos;x&lt;x&gt;x", "x\"x&x'x<x>x")
 	check(ctx, "", "")
 
-	checkbad(ctx, "&AMP;", "&AMP;")
-	checkbad(ctx, "&aMP;", "&aMP;")
-	checkbad(ctx, "&ampx;", "&ampx;")
-	checkbad(ctx, "&amp", "&amp")
+	checkbad(ctx, "&AMP;", 0)
+	checkbad(ctx, "&aMP;", 0)
+	checkbad(ctx, "&ampx;", 0)
+	checkbad(ctx, "&amp", 0)
 
-	checkbad(ctx, "testing &ampx; stuff", "&ampx;")
-	checkbad(ctx, "testing &amp stuff", "&amp")
-	checkbad(ctx, "testing & stuff", "&")
-	checkbad(ctx, "testing &; stuff", "&;")
-	checkbad(ctx, "& testing", "&")
-	checkbad(ctx, "&; testing", "&;")
-	checkbad(ctx, "testing &", "&")
-	checkbad(ctx, "testing &;", "&;")
+	checkbad(ctx, "testing &ampx; stuff", 8)
+	checkbad(ctx, "testing &amp stuff", 8)
+	checkbad(ctx, "testing & stuff", 8)
+	checkbad(ctx, "testing &; stuff", 8)
+	checkbad(ctx, "& testing", 0)
+	checkbad(ctx, "&; testing", 0)
+	checkbad(ctx, "testing &", 8)
+	checkbad(ctx, "testing &;", 8)
 
-	checkbad(ctx, "&l;", "&l;")
-	checkbad(ctx, "&;", "&;")
+	checkbad(ctx, "&l;", 0)
+	checkbad(ctx, "&;", 0)
 
-	checkbad(ctx, "&l", "&l")
-	checkbad(ctx, "&", "&")
+	checkbad(ctx, "&l", 0)
+	checkbad(ctx, "&", 0)
 
-	checkbad(ctx, "&&", "&&")
-	checkbad(ctx, "&&;", "&&;")
+	checkbad(ctx, "&&", 0)
+	checkbad(ctx, "&&;", 0)
 
-	checkbad(ctx, "&foo&amp;", "&foo&amp;")
+	checkbad(ctx, "&foo&amp;", 0)
 }
 
 const charref_test = {ctx
@@ -97,17 +97,17 @@ const charref_test = {ctx
 	check(ctx, "&#x26; stuff", "& stuff")
 	check(ctx, "&#x26;test;", "&test;")
 
-	checkbad(ctx, "&#;", "&#;")
-	checkbad(ctx, "&#x;", "&#x;")
-	checkbad(ctx, "&#", "&#")
-	checkbad(ctx, "&#x", "&#x")
+	checkbad(ctx, "&#;", 0)
+	checkbad(ctx, "&#x;", 0)
+	checkbad(ctx, "&#", 0)
+	checkbad(ctx, "&#x", 0)
 
-	checkbad(ctx, "&#42", "&#42")
-	checkbad(ctx, "&#42and stuff", "&#42and")
-	checkbad(ctx, "&#42& stuff", "&#42&")
-	checkbad(ctx, "stuff &#42", "&#42")
+	checkbad(ctx, "&#42", 0)
+	checkbad(ctx, "&#42and stuff", 0)
+	checkbad(ctx, "&#42& stuff", 0)
+	checkbad(ctx, "stuff &#42", 6)
 
-	checkbad(ctx, "&foo&#42;", "&foo&#42;")
+	checkbad(ctx, "&foo&#42;", 0)
 }
 
 const force_test = {ctx
