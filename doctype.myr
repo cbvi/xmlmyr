@@ -57,6 +57,8 @@ const parsedoctype = {x
 				z = x.p.bidx - std.charlen('>')
 				-> `std.Ok `Doctype prune(x.p.buf[a:z])
 			;;
+		| std.Badchar:
+			-> `std.Err `Badchar
 		| _:
 		;;
 	;;
@@ -69,10 +71,14 @@ const parsedoctype = {x
 }
 
 const doquote = {x, q
+	var c
 :again
 	while x.p.bidx < x.p.buf.len
-		if bnext(x) == q
+		c = bnext(x)
+		if c == q
 			-> `std.Ok void
+		elif c == std.Badchar
+			-> `std.Err `Badchar
 		;;
 	;;
 
@@ -97,8 +103,10 @@ const docomment = {x
 
 :again
 	while x.p.bidx < x.p.buf.len
-		if bnext(x) == '-'
-			goto maybe
+		match bnext(x)
+		| '-':		goto maybe
+		| std.Badchar:	-> `std.Err `Badchar
+		| _:
 		;;
 	;;
 
@@ -111,6 +119,7 @@ const docomment = {x
 :maybe
 	match bget(x)
 	| `std.Some '-':
+	| `std.Some std.Badchar:	-> `std.Err `Badchar
 	| _:	goto again
 	;;
 
@@ -120,6 +129,7 @@ const docomment = {x
 	| `std.Some '-':
 		/* shouldn't be valid but the doctype is returned raw */
 		goto maybe2
+	| `std.Some std.Badchar:	-> `std.Err `Badchar
 	| _:	goto again
 	;;
 
