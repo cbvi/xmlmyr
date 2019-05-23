@@ -25,3 +25,8 @@ bin stress {noinst} =
 	stressentities.myr
 	lib xml
 ;;
+
+bin nothing {noinst} =
+	empty.myr
+	lib xml
+;;

@@ -35,7 +35,8 @@ const close = {x
 	start = x.p.bidx
 
 	while x.p.bidx < x.p.buf.len
-		if bnext(x) == '<'
+		match bnext(x)
+		| '<':
 			x.p.state = `Open
 			chars = x.p.buf[start:x.p.bidx-std.charlen('<')]
 
@@ -44,6 +45,9 @@ const close = {x
 			else
 				-> dispatch(x)
 			;;
+		| std.Badchar:
+			-> `std.Err `Badchar
+		| _:
 		;;
 	;;
 
@@ -186,6 +190,8 @@ const parsecdata = {x
 		| '>':	if end > 1
 				-> `std.Ok `Cdata x.p.buf[st:x.p.bidx-suf.len]
 			;;
+		| std.Badchar:
+			-> `std.Err `Badchar
 		| _:	end = 0
 		;;
 	;;
@@ -222,6 +228,8 @@ const parsecomment = {x
 			-> `std.Ok `Comment prune(x.p.buf[st:x.p.bidx-suf.len])
 		elif c == '-'
 			end++
+		elif c == std.Badchar
+			-> `std.Err `Badchar
 		else
 			end = 0
 		;;
@@ -275,6 +283,8 @@ const parseinstruction = {x
 				-> `std.Ok `Instruction (x.p.buf[ts:te],
 					x.p.buf[ds:x.p.bidx-suf.len])
 			;;
+		| std.Badchar:
+			-> `std.Err `Badchar
 		| _:	end = false
 		;;
 	;;

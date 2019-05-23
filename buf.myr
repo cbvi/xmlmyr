@@ -107,7 +107,12 @@ const bnext = {x
 		x.p.off++
 	;;
 
-	-> c
+	if c == 0x9 || c == 0xa || c == 0xd || (c >= 0x20 && c <= 0xdf77) || \
+	   (c >= 0xe000 && c <= 0xfffd) || (c >= 0x10000 && c <= 0x10ffff)
+		-> c
+	else
+		-> std.Badchar
+	;;
 }
 
 /* skip any xml whitespace at the head of the ctx buffer */

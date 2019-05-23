@@ -114,8 +114,11 @@ const parseattrval = {x
 
 :again
 	while x.p.bidx < x.p.buf.len
-		if bnext(x) == q
+		var c = bnext(x)
+		if c == q
 			-> `std.Ok (start, x.p.bidx-std.charlen(q))
+		elif c == std.Badchar
+			-> `std.Err `Badchar
 		;;
 	;;
 
