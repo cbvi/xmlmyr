@@ -123,13 +123,10 @@ const docomment = {x
 	| _:	goto again
 	;;
 
-:maybe2
 	match bget(x)
 	| `std.Some '>':
-	| `std.Some '-':
-		/* shouldn't be valid but the doctype is returned raw */
-		goto maybe2
 	| `std.Some std.Badchar:	-> `std.Err `Badchar
+	| `std.Some c:	-> `std.Err `Unexpected (c, '>')
 	| _:	goto again
 	;;
 
