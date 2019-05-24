@@ -118,7 +118,7 @@ const parseattrval = {x
 		if c == q
 			-> `std.Ok (start, x.p.bidx-std.charlen(q))
 		elif c == std.Badchar
-			-> `std.Err `Badchar
+			-> `std.Err `Inval c
 		;;
 	;;
 

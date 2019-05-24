@@ -46,7 +46,7 @@ const close = {x
 				-> dispatch(x)
 			;;
 		| std.Badchar:
-			-> `std.Err `Badchar
+			-> `std.Err `Inval std.Badchar
 		| _:
 		;;
 	;;
@@ -191,7 +191,7 @@ const parsecdata = {x
 				-> `std.Ok `Cdata x.p.buf[st:x.p.bidx-suf.len]
 			;;
 		| std.Badchar:
-			-> `std.Err `Badchar
+			-> `std.Err `Inval std.Badchar
 		| _:	end = 0
 		;;
 	;;
@@ -229,7 +229,7 @@ const parsecomment = {x
 		elif c == '-'
 			end++
 		elif c == std.Badchar
-			-> `std.Err `Badchar
+			-> `std.Err `Inval c
 		else
 			end = 0
 		;;
@@ -284,7 +284,7 @@ const parseinstruction = {x
 					x.p.buf[ds:x.p.bidx-suf.len])
 			;;
 		| std.Badchar:
-			-> `std.Err `Badchar
+			-> `std.Err `Inval std.Badchar
 		| _:	end = false
 		;;
 	;;

@@ -58,7 +58,7 @@ const parsedoctype = {x
 				-> `std.Ok `Doctype prune(x.p.buf[a:z])
 			;;
 		| std.Badchar:
-			-> `std.Err `Badchar
+			-> `std.Err `Inval std.Badchar
 		| _:
 		;;
 	;;
@@ -78,7 +78,7 @@ const doquote = {x, q
 		if c == q
 			-> `std.Ok void
 		elif c == std.Badchar
-			-> `std.Err `Badchar
+			-> `std.Err `Inval std.Badchar
 		;;
 	;;
 
@@ -105,7 +105,7 @@ const docomment = {x
 	while x.p.bidx < x.p.buf.len
 		match bnext(x)
 		| '-':		goto maybe
-		| std.Badchar:	-> `std.Err `Badchar
+		| std.Badchar:	-> `std.Err `Inval std.Badchar
 		| _:
 		;;
 	;;
@@ -119,13 +119,13 @@ const docomment = {x
 :maybe
 	match bget(x)
 	| `std.Some '-':
-	| `std.Some std.Badchar:	-> `std.Err `Badchar
+	| `std.Some std.Badchar:	-> `std.Err `Inval std.Badchar
 	| _:	goto again
 	;;
 
 	match bget(x)
 	| `std.Some '>':
-	| `std.Some std.Badchar:	-> `std.Err `Badchar
+	| `std.Some std.Badchar:	-> `std.Err `Inval std.Badchar
 	| `std.Some c:	-> `std.Err `Unexpected (c, '>')
 	| _:	goto again
 	;;

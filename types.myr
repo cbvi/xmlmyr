@@ -49,7 +49,6 @@ pkg xml =
 	;;
 
 	type errtype = union
-		`Badchar		/* found char out of valid range */
 		`Inval		char	/* this char is invalid here */
 		`Trunc		bio.err	/* parsing ended due to io err */
 		`Unclosed	(byte[:], byte[:]) /* start with no end */
