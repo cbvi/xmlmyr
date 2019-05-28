@@ -711,4 +711,5 @@ const regress_test = {ctx
 	regress(ctx, "test/files/regress/bug4c.xml")
 	regress(ctx, "test/files/regress/bug5.xml")
 	regress(ctx, "test/files/regress/bug6.xml")
+	regress(ctx, "test/files/regress/bug7.xml")
 }
