@@ -1,4 +1,407 @@
-This is a (very rough) library for parsing xml in myrddin
+Summary
+-------
 
-       No copyright is claimed on this work; it is in the public domain:
-                              "Do what thou wilt"
+A low-level, non-validating, streaming XML parser. Provides an interface
+to load XML from a file or memory and iterate through its content.
+
+The parser will return arbitrary events as it finds them. It cares not for
+order, or arcane minitua. The penalty for the mortal sin of allowing "--" to 
+appear literally in comments is left for the application to determine.
+
+	pkg xml =
+		type ctx
+
+		impl disposable ctx#
+
+		type eventiter
+
+		impl iterable eventiter -> std.result(event, err)
+
+		type event = union
+			`Instruction	(byte[:], byte[:])
+			`Doctype	byte[:]
+			`Eof
+			`Start		(byte[:], (byte[:], byte[:])[:])
+			`End		byte[:]
+			`Characters	byte[:]
+			`Cdata		byte[:]
+			`Comment	byte[:]
+		;;
+
+		type mkerr = union
+			`Efile	byte[:] /* file open failed */
+			`Eenc	byte[:] /* file has unsupported encoding */
+		;;
+
+		type err = struct
+			line	:	std.size
+			off	:	std.size
+			err	:	errtype
+		;;
+
+		type errtype = union
+			`Inval char	/* this char is invalid here */
+			`Trunc bio.err	/* parsing ended due to io err */
+			`Unclosed (byte[:], byte[:]) /* start with no end */
+			`Unexpected (char, char) /* this wasn't that */
+		;;
+	;;
+
+Creation
+-------
+
+	pkg xml =
+		const mkbuf	: (s : byte[:] -> std.result(ctx#, mkerr))
+		const mkpath	: (p : byte[:] -> std.result(ctx#, mkerr))
+		const mkfile	: (f : bio.file# -> std.result(ctx#, mkerr))
+		const free	: (x : ctx# -> void)
+
+		type mkerr = union
+			`Efile	byte[:] /* file open failed */
+			`Eenc	byte[:] /* file has unsupported encoding */
+		;;
+	;;
+
+XML can be loaded in various ways to create the context that is used to
+read the content. Creation can fail if there is a problem opening the given
+file, in which was `Efile` is returned, with the slice being the error returned
+from `bio.open`. On creation an attempt is made to check the encoding of the
+file, if the encoding is unsupported, the error `Eenc` will be returned along
+with a description of the encoding found.
+
+	const mkbuf	: (s : byte[:] -> std.result(ctx#, mkerr))
+
+Creates a context from memory, the string `s` should contain the XML you
+want to process.
+
+	const mkpath	: (p : byte[:] -> std.result(ctx#, mkerr))
+
+Creates a context from a file, the string `p` should be the path to a file
+that contains XML.
+
+	const mkfile	: (f : bio.file# -> std.result(ctx#, mkerr))
+
+Creates a context from the already opened `bio.file` stream `f`. The file
+will not be closed when the context is freed.
+
+	const free	: (x : ctx# -> void)
+
+Frees any storage associated with the context `x` and closes any files
+opened by the context.
+
+The context type has the disposable trait can be declared auto to free it when
+it leaves the scope:
+
+	const main = {
+		var x = auto std.try(xml.mkpath("/path/to/document.xml"))
+
+		for event : xml.byevent(x)
+			/* do things here */
+		;;
+
+		/* `x` will be automatically freed here */
+	}
+
+Iteration
+-------
+
+	pkg xml =
+		const byevent	: (x : ctx# -> eventiter)
+	;;
+
+The primary way your application will interact with the XML data is through
+the iterator API.
+
+The content returned with an event is a slice into a temporary buffer that will
+change as further parsing occurs. This prevents allocations for data you don't
+need but means it is up to the application to copy any data that will be needed
+later. The guaranteed lifetime for content returned with an event is only
+during the current iteration; after the next iteration has occured all bets are
+off as to what any held slice may point to.
+
+	const byevent	: (x : ctx# -> eventiter)
+
+Makes an iterator from the context `x` which can be used to read events
+that represent the various XML components of the data.
+
+	for event : xml.byevent(x)
+		match event
+		| `xml.Instruction (target, data):
+			std.put("<?{} {}?>\n", target, data)
+		| `xml.Doctype d:	std.put("<!DOCTYPE {}>\n", d)
+		| `xml.Start (name, _):	std.put("<{}>\n", name)
+		| `xml.End name:	std.put("</{}>\n", name)
+		| `xml.Characters c:	std.put("\t{}", c)
+		| `xml.Cdata c:		std.put("<![CDATA[{}]]>\n", c)
+		| `xml.Comment c:	std.put("<!--{}-->\n", c)
+		| `xml.Eof:
+		;;
+	;;
+
+If you need something to stick around after the iteration it occured in, 
+remember to copy it:
+
+	var elems = [][:]
+	var ele
+
+	for event : xml.byevent(x)
+		match event
+		| `xml.Start (name, _):
+			// Mistake! Don't do this:
+			//std.slpush(&elems, name)
+
+			// Use sldup to copy it to the heap:
+			std.slpush(&elems, std.sldup(name))
+		| `xml.End name:
+			ele = std.slpop(&elems)
+			if !std.eq(ele, name)
+				std.put("{} closed while {} open\n", ele, name)
+			;;
+			std.slfree(ele)
+		| `xml.Eof:
+			if elems.len > 0
+				std.put("unclosed tags:\n")
+				for e : elems
+					std.put("{}\n", e)
+					std.slfree(e)
+				;;
+		| _:
+		;;
+	;;
+
+	std.slfree(elems)
+
+Events
+-------
+
+The components of the document are represented as events which are returned
+by the iterator.
+
+	pkg xml =
+		type event = union
+			`Instruction	(byte[:], byte[:])
+			`Doctype	byte[:]
+			`Eof
+			`Start		(byte[:], (byte[:], byte[:])[:])
+			`End		byte[:]
+			`Characters	byte[:]
+			`Cdata		byte[:]
+			`Comment	byte[:]
+		;;
+	;;
+
+	`Instruction	(byte[:], byte[:])
+
+Represents processing instructions and the XML prolog.
+
+The strings in the returned tuple respectively represent the target name
+and all other data in the element.
+
+### Instruction
+
+	<?target some instruction?>
+		-> `xml.Instruction ("target", "some instruction")
+	<?xml version='1.0'?>
+		-> `xml.Instruction ("xml", "version='1.0'")
+
+	`Doctype	byte[:]
+
+### Doctype
+
+The entire contents of a DOCTYPE element represented as a single string. No
+parsing is done on the contents.
+
+	<!DOCTYPE foo [ <!ENTITY x 'x'> ] >
+		-> `xml.Doctype "foo [ <!ENTITY x 'x'> ] >"
+
+### EOF
+
+	`Eof
+
+Indicates that the stream terminated at a point where there was no
+partially parsed content, such as at the end of the file. Note that as no
+validation is performed, you must track open and end tags yourself if you
+really care about ensuring the data was not truncated.
+
+### Start
+
+	`Start		(byte[:], (byte[:], byte[:])[:])
+
+A start tag such as `<foo>` or an empty tag such as `<foo />`. In the case of
+an empty tag, the next event following this will be a corresponding `End`
+event, ie. `<foo />` will cause the same sequence of events as `<foo></foo>`.
+
+Contains the name of the element, and a slice of tuples representing
+key-value pairs of the element's attributes, or an empty slice if there
+are none.
+
+	<foo>
+	<foo />
+		-> `xml.Start ("foo", [])
+	<foo bar="1" baz="2">
+	<foo bar="1" baz="2" />
+		-> `xml.Start ("foo", [("bar", "1"), ("baz", "2")])
+
+### End
+
+	`End		byte[:]
+
+An end tag such as `</foo>` or the follow up to an empty tag such as `<foo />`.
+
+	</foo>
+		-> `xml.End "foo"
+	<foo />		(after the Start event has been received)
+		-> `xml.End "foo"
+
+### Characters
+
+Character data is text that appears in the document outside of any other
+element. As no validation is performed, any stray text that is not otherwise
+XML data will be treated as character data.
+
+	foo bar baz
+		-> `xml.Characters "foo bar baz"
+	<doc>foo</doc>		(after the Start event has been received)
+		-> `xml.Characters "foo"
+
+Generally, character data is anything that appears between any element. In the
+example:
+
+	<doc>foo <b>bar</b> <i>baz</i></doc>
+
+This will return the following sequence of events:
+
+	`xml.Start		"doc"
+	`xml.Characters		"foo "
+	`xml.Start		"b"
+	`xml.Characters		"bar"
+	`xml.End		"b"
+	`xml.Start		"i"
+	`xml.End		"i"
+	`xmo.End		"doc"
+
+Note the trailing space in the "foo " event, and that there is no event for the
+whitespace between `</b> <i>` as character data that is only whitespace between
+elements is discarded.
+
+### Cdata
+
+CDATA is similar to character data except CDATA can contain characters that are
+normally forbidden and would otherwise have needed to be escaped. Any content
+in a CDATA section is interpreted literally and not parsed as XML.
+
+	<![CDATA[<doc>foo <b>bar</b> <i>baz</i></doc>]]>
+		-> `xml.Cdata "<doc>foo <b>bar</b> <i>baz</i></doc>"
+
+You should not decode any entities in CDATA.
+
+### Comment
+
+Comments are not considered to be part of the document structure but are 
+returned for convenience in case you have some need for them.
+
+	<!-- this is a comment -->
+		-> `xml.Comment "this is a comment"
+
+Decoding
+-------
+
+	pkg xml =
+		const decode	: (s : byte[:] -> std.result(byte[:], byte[:])
+	;;
+
+Data in XML (outside of CDATA) is escaped using entity references. The parser
+returns the literal data to the application and leaves it to the application to
+decide whether to decode it or not.
+
+	const decode	: (s : byte[:] -> std.result(byte[:], byte[:])
+
+Decodes character references (&#xx;) and the default XML entities (eg. &amp;) 
+in the string `s`. If successful the decoded content is returned. The slice
+is heap allocated and must be freed with std.slfree. An error will occur if an
+entity cannot be parsed, in which case a slice containing the token which
+caused the error is returned.
+
+Errors
+-------
+
+	pkg xml =
+		const geterr :	(x : ctx# -> std.option(err))
+
+		type err = struct
+			line	:	std.size
+			off	:	std.size
+			err	:	errtype
+		;;
+
+		type errtype = union
+			`Inval char	/* this char is invalid here */
+			`Trunc bio.err	/* parsing ended due to io err */
+			`Unclosed (byte[:], byte[:]) /* start with no end */
+			`Unexpected (char, char) /* this wasn't that */
+		;;
+	;;
+
+If an error occurs during parsing, the iterator will stop returning events. It
+is possible to tell an error occured by the absence of the `Eof` event. 
+
+	const geterr :	(x : ctx# -> std.option(err))
+
+This function can be used to get check if an error occured or to get the error
+that occured. The error includes the line it occured on, approximately where
+on the line it occured, and a tag representing the error that occured:
+
+
+	`Inval char
+
+The character `char` is invalid in the context it was found.
+
+	`Trunc bio.err
+
+Reading the stream failed, or it reached EOF while there was partially parsed
+content. The `bio.err` represents the underlying IO error that occured.
+
+	`Unclosed (byte[:], byte[:])
+
+A token that appeared to start a construct was found, but the expected
+terminator was missing. The tuple respetively contains the opening prefix and
+the missing terminator.
+
+	`Unexpected (char, char)
+
+The first char of the tuple was found where the second char of the tuple was
+expected.
+
+Entities
+-------
+
+	pkg xml =
+		const decode	: (s : byte[:] -> std.result(byte[:], byte[:]))
+		const decodef	: (s : byte[:] -> byte[:])
+	;;
+
+Entities and character references are not automatically parsed, instead helper
+functions are provided that applications can use to parse entities if they
+deem it necessary. Only the default XML entities are parsed, custom entities
+will need to be parsed and decoded by the application. Implementing entity
+expansion vulnerabilities is left as an exercise for the reader.
+
+	const decode	: (s : byte[:] -> std.result(byte[:], byte[:]))
+
+Parses the entities in the string `s` and returns a result. An error will be
+returned if any entitiy in the string could not be parsed, or was unrecognised,
+in which case the body of the error is the token that caused the error. The
+sucessfully decoded string needs to be freed with std.slfree.
+
+	const decodef	: (s : byte[:] -> byte[:])
+
+Like `decode` but forcibly decodes the string `s`. Any token that would have
+caused an error is skipped and included literally in the returned string. The
+returned string must be freed with std.slfree.
+
+	xml.decode("Hello &amp; welcome&#33;")	// `std.Ok "Hello and welcome!"
+	xml.decode("Hello & welcome&#33;")	// `std.Err "&"
+	xml.decode("Hello &amp; welcome&#33")	// `std.Err "&#33"
+
+	xml.decodef("Hello & welcome&#33;")	// "Hello & welcome!"
+	xml.decodef("Hello &amp; welcome&#33")	// "Hello & welcome&#33"
