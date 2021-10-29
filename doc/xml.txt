@@ -399,7 +399,7 @@ Like `decode` but forcibly decodes the string `s`. Any token that would have
 caused an error is skipped and included literally in the returned string. The
 returned string must be freed with std.slfree.
 
-	xml.decode("Hello &amp; welcome&#33;")	// `std.Ok "Hello and welcome!"
+	xml.decode("Hello &amp; welcome&#33;")	// `std.Ok "Hello & welcome!"
 	xml.decode("Hello & welcome&#33;")	// `std.Err "&"
 	xml.decode("Hello &amp; welcome&#33")	// `std.Err "&#33"
 
